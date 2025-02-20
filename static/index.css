@@ -47,8 +47,33 @@ table {
 	border-spacing: 0;
 }
 
-/* video { */
-/*     width: 100%; */
-/*     height: auto; */
-/* } */
+video {
+    width: 100%;
+    height: auto;
+}
 
+canvas {
+    background-color: rgba(0,0,0,1);
+    width: 100%;
+    height: auto;
+}
+
+.container {
+  display: flex;
+  height: 100vh; /* Full viewport height */
+}
+
+.left-section {
+  flex: 1; /* Takes up 50% of the container width */
+}
+
+.right-section {
+  flex: 1; /* Takes up 50% of the container width */
+}
+
+
+#skeletonSvg {
+background-color: #000000;
+width: 100%;
+height: auto;
+}
