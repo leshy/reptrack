@@ -68,5 +68,16 @@ export const defaultTarget = {
     [KeypointName.right_wrist]: true,
     [KeypointName.left_ankle]: true,
     [KeypointName.right_ankle]: true,
-    [KeypointName.body_center]: true,
+    [KeypointName.left_knee]: true,
+    [KeypointName.right_knee]: true,
+    [KeypointName.left_shoulder]: true,
+    [KeypointName.right_shoulder]: true,
+}
+
+export interface ValueEvent {
+    values: number[]
+}
+
+export interface MultiValueEvent {
+    values: { [name: string]: number[] }
 }

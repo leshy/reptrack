@@ -25,8 +25,14 @@ export function createWindow(
     return parent
 }
 
-export function createSvgWindow(viewbox: string = "-1 -1 2 2") {
+export function createSvgWindow(
+    viewbox: string = "-1 -1 2 2",
+    preserveRatio: Boolean = true,
+) {
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg")
+    if (!preserveRatio) {
+        svg.setAttributeNS(null, "preserveAspectRatio", "none")
+    }
     svg.style.width = "100%"
     svg.style.height = "100%"
     svg.style.position = "absolute"

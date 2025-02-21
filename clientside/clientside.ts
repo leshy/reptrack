@@ -6,6 +6,7 @@ import Stats from "npm:stats.js"
 import { Keypoint, Pose, PoseEvent, STATE } from "./types.ts"
 import { SkeletonDraw } from "./skeleton.ts"
 import { Tracer } from "./tracer.ts"
+import { Grapher } from "./grapher.ts"
 import { Smoother } from "./smoother.ts"
 import { TracerDraw } from "./tracerDraw.ts"
 import * as wm from "./wm.ts"
@@ -162,16 +163,19 @@ class PoseCenter extends EventEmitter<PoseEvent> {
 }
 
 async function init() {
-    const video = new Video("./video.mp4")
+    const video = new Video("./jazz.mp4")
     const poseEstimator = new PoseEstimator(video)
     const poseCenter = new PoseCenter(poseEstimator)
     const svg = wm.createSvgWindow()
-    //new SkeletonDraw(poseCenter, svg)
+    new SkeletonDraw(poseCenter, svg)
     //new FFTDetector(poseCenter)
     const smoother = new Smoother(poseCenter)
     const tracer = new Tracer(smoother)
+    const tracerSvg = wm.createSvgWindow()
     new TracerDraw(tracer, svg)
-
+    const graph = wm.createSvgWindow("0 0 100 100", false)
+    const grapher = new Grapher(tracer, graph)
+    window.tracer = tracer
     await poseEstimator.init()
     await video.el.play()
 }
