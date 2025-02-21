@@ -1,16 +1,13 @@
-import { KeypointName, Point, TraceEmitter, TraceMap } from "./types.ts"
+import { Point, TraceEmitter, TraceMap } from "./types.ts"
 
 type TracerDrawSettings = {
     traceColor: string
     traceWidth: number
-    showAllTraces: boolean
-    traces: Map<KeypointName, boolean>
 }
 
 const defaultSettings: TracerDrawSettings = {
-    traceColor: "#00FFFF",
+    traceColor: "#888888",
     traceWidth: 0.005,
-    showAllTraces: false,
 }
 
 export class TracerDraw {
@@ -38,10 +35,8 @@ export class TracerDraw {
         const currentTraces = new Set<string>()
 
         traceMap.forEach((points, name) => {
-            if (this.settings.showAllTraces || this.isKeyTracePoint(name)) {
-                currentTraces.add(name)
-                this.drawPath(name, points)
-            }
+            currentTraces.add(name)
+            this.drawPath(name, points)
         })
 
         // Remove any paths that are no longer present
@@ -85,19 +80,5 @@ export class TracerDraw {
         }
 
         return pathData
-    }
-
-    private isKeyTracePoint(name: string): boolean {
-        // You can customize this method to determine which traces to show
-        // when showAllTraces is false
-        const keyPoints = [
-            "nose",
-            "left_wrist",
-            "right_wrist",
-            "left_ankle",
-            "right_ankle",
-            "body_center",
-        ]
-        return keyPoints.includes(name)
     }
 }

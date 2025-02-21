@@ -5,6 +5,8 @@ import * as tf from "npm:@tensorflow/tfjs-core"
 import Stats from "npm:stats.js"
 import { Keypoint, Pose, PoseEvent, STATE } from "./types.ts"
 import { SkeletonDraw } from "./skeleton.ts"
+import { Tracer } from "./tracer.ts"
+import { TracerDraw } from "./tracerDraw.ts"
 import * as wm from "./wm.ts"
 import { Video } from "./source.ts"
 
@@ -161,11 +163,16 @@ class PoseCenter extends EventEmitter<PoseEvent> {
 }
 
 async function init() {
-    const video = new Video("./video.mp4")
+    const video = new Video("./sword.webm")
     const poseEstimator = new PoseEstimator(video)
     const poseCenter = new PoseCenter(poseEstimator)
-    new SkeletonDraw(poseCenter, wm.createSvgWindow())
-    new FFTDetector(poseCenter)
+    const svg = wm.createSvgWindow()
+    new SkeletonDraw(poseCenter, svg)
+    //new FFTDetector(poseCenter)
+    const tracer = new Tracer(poseCenter, svg)
+    new TracerDraw(tracer, svg)
+    window.tracer = tracer
+
     await poseEstimator.init()
     await video.el.play()
 }

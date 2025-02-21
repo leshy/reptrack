@@ -21,9 +21,9 @@ export class FFTDetector {
     private el: HTMLElement
     constructor(
         private poseEmitter: PoseEmitter,
-        minFrequency: number = 0.1,
-        maxFrequency: number = 4,
-        bufferSize: number = 128,
+        minFrequency: number = 0.5,
+        maxFrequency: number = 3,
+        bufferSize: number = 64,
         samplingRate: number = 30,
         thresholdMagnitude: number = 50,
     ) {
@@ -188,7 +188,7 @@ export class FFTDetector {
             },
             paper_bgcolor: "#000000",
             plot_bgcolor: "#000000",
-            margin: { t: 50, r: 20, l: 50, b: 50 },
+            margin: { t: 0, r: 0, l: 20, b: 20 },
             autosize: true,
             //height: 400, // Adjust as needed
             //width: 600, // Adjust as needed

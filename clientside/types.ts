@@ -8,6 +8,14 @@ export interface PoseEvent {
     pose: Pose
 }
 
+export type Point = [number, number]
+export type TraceMap = Map<string, Point[]>
+export interface TraceEvent {
+    trace: TraceMap
+}
+
+export type TraceEmitter = EventEmitter<TraceEvent>
+
 export type PoseEmitter = EventEmitter<PoseEvent>
 
 export const STATE = {
@@ -31,4 +39,25 @@ export const STATE = {
     "isModelChanged": false,
     "isFlagChanged": false,
     "isBackendChanged": false,
+}
+
+export enum KeypointName {
+    "nose",
+    "left_eye",
+    "right_eye",
+    "left_ear",
+    "right_ear",
+    "left_shoulder",
+    "right_shoulder",
+    "left_elbow",
+    "right_elbow",
+    "left_wrist",
+    "right_wrist",
+    "left_hip",
+    "right_hip",
+    "left_knee",
+    "right_knee",
+    "left_ankle",
+    "right_ankle",
+    "body_center",
 }
