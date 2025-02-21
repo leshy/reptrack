@@ -11,6 +11,9 @@ const defaultSettings: SkeletonDrawSettings = {
 
 export class SkeletonDraw {
     settings: SkeletonDrawSettings
+    private skeletonGroup: SVGGElement
+    private lineMap: Map<string, SVGLineElement> = new Map()
+
     constructor(
         private poseEmitter: PoseEmitter,
         private svg: SVGSVGElement,
@@ -18,74 +21,59 @@ export class SkeletonDraw {
     ) {
         this.settings = { ...defaultSettings, ...settings }
         this.poseEmitter.on("pose", this.drawSkeletonSVG)
+
+        // Create a single parent group element for all skeleton elements
+        this.skeletonGroup = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "g",
+        )
+        this.skeletonGroup.setAttribute("id", "skeleton-group")
+        this.svg.appendChild(this.skeletonGroup)
     }
 
     drawSkeletonSVG = (pose: Pose) => {
         const keypoints = pose.keypoints
         const namespace = "http://www.w3.org/2000/svg"
 
-        // Define the pairs of keypoints that form the skeleton
         const pairs = poseDetection.util.getAdjacentPairs(
             poseDetection.SupportedModels.MoveNet,
         )
 
-        // Ensure we have the correct number of lines
-        while (this.svg.children.length < pairs.length) {
-            const line = document.createElementNS(namespace, "line")
-            line.setAttribute("stroke", "white")
-            line.setAttribute("stroke-width", "0.01")
-            this.svg.appendChild(line)
-        }
+        const currentLines = new Set<string>()
 
-        // Remove extra lines if any
-        while (this.svg.children.length > pairs.length) {
-            // @ts-ignore
-            this.svg.removeChild(this.svg.lastChild)
-        }
-
-        // Update each line
-        pairs.forEach(([i, j], index: number) => {
+        // Draw or update lines
+        pairs.forEach(([i, j]) => {
             const kp1 = keypoints[i]
             const kp2 = keypoints[j]
 
-            const score1 = kp1.score != null ? kp1.score : 1
-            const score2 = kp2.score != null ? kp2.score : 1
-            const scoreThreshold = STATE.modelConfig.scoreThreshold || 0
+            const lineName = `${kp1.name}_${kp2.name}`
+            currentLines.add(lineName)
 
-            const line = this.svg.children[index]
+            let line = this.lineMap.get(lineName)
 
-            if (score1 >= scoreThreshold && score2 >= scoreThreshold) {
-                line.setAttribute("x1", String(kp1.x))
-                line.setAttribute("y1", String(kp1.y))
-                line.setAttribute("x2", String(kp2.x))
-                line.setAttribute("y2", String(kp2.y))
-                line.setAttribute("visibility", "visible")
-            } else {
-                line.setAttribute("visibility", "hidden")
+            if (!line) {
+                // Create new line if it doesn't exist
+                line = document.createElementNS(namespace, "line")
+                line.setAttribute("data-name", lineName)
+                line.setAttribute("stroke", "white")
+                line.setAttribute("stroke-width", "0.01")
+                this.skeletonGroup.appendChild(line)
+                this.lineMap.set(lineName, line)
             }
+
+            // Update line position
+            line.setAttribute("x1", String(kp1.x))
+            line.setAttribute("y1", String(kp1.y))
+            line.setAttribute("x2", String(kp2.x))
+            line.setAttribute("y2", String(kp2.y))
         })
 
-        // Optionally, draw keypoints
-        keypoints.forEach((keypoint, index) => {
-            if (keypoint.name === "body_center") return // Skip body_center as it's already drawn
-
-            let keypointElement = this.svg.querySelector(`#keypoint-${index}`)
-            if (!keypointElement) {
-                keypointElement = document.createElementNS(namespace, "circle")
-                keypointElement.setAttribute("id", `keypoint-${index}`)
-                keypointElement.setAttribute("r", "0.01") // Adjust this value as needed
-                keypointElement.setAttribute("fill", "#00FF00")
-                this.svg.appendChild(keypointElement)
+        // Remove any lines that are no longer needed
+        this.lineMap.forEach((line, name) => {
+            if (!currentLines.has(name)) {
+                this.skeletonGroup.removeChild(line)
+                this.lineMap.delete(name)
             }
-
-            keypointElement.setAttribute("cx", String(keypoint.x))
-            keypointElement.setAttribute("cy", String(keypoint.y))
-            keypointElement.setAttribute(
-                "visibility",
-                keypoint.score >= (STATE.modelConfig.scoreThreshold || 0)
-                    ? "visible"
-                    : "hidden",
-            )
         })
     }
 }
