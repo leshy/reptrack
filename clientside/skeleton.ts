@@ -1,16 +1,12 @@
 import * as poseDetection from "npm:@tensorflow-models/pose-detection"
 import { Pose, PoseEmitter, STATE } from "./types.ts"
-import { Video } from "./source.ts"
 
 export class SkeletonOverlay {
-    private svg: SVGSVGElement
-    constructor(private poseEmitter: PoseEmitter, video: Video) {
+    constructor(private poseEmitter: PoseEmitter, private svg: SVGSVGElement) {
         this.poseEmitter.on("pose", this.drawSkeletonSVG)
-        this.svg = video.overlay
     }
 
     drawSkeletonSVG = (pose: Pose) => {
-        console.log(pose)
         const keypoints = pose.keypoints
         const namespace = "http://www.w3.org/2000/svg"
 

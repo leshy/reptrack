@@ -2,28 +2,26 @@ import "npm:@tensorflow/tfjs-backend-webgl"
 import * as poseDetection from "npm:@tensorflow-models/pose-detection"
 import { EventEmitter } from "npm:eventemitter3"
 import * as tf from "npm:@tensorflow/tfjs-core"
+import Stats from "npm:stats.js"
 import { Video } from "./source.ts"
-import { insertElement } from "./wm.ts"
 
-import { Keypoint, Pose, PoseEvent } from "./types.ts"
+import { Keypoint, Pose, PoseEvent, STATE } from "./types.ts"
 import { SkeletonOverlay } from "./skeleton.ts"
+import * as wm from "./wm.ts"
 
 class PoseEstimator extends EventEmitter<PoseEvent> {
     private detector?: poseDetection.PoseDetector
+    private stats = Stats
     constructor(private video: Video) {
         super()
+        this.stats = new Stats()
     }
 
     async init() {
         console.log(this.constructor.name, "initializing")
-        tf.env().setFlags({
-            "WEBGL_VERSION": 2,
-            "WEBGL_CPU_FORWARD": true,
-            "WEBGL_PACK": true,
-            "WEBGL_FORCE_F16_TEXTURES": false,
-            "WEBGL_RENDER_FLOAT32_CAPABLE": true,
-            "WEBGL_FLUSH_THRESHOLD": -1,
-        })
+        document.body.appendChild(this.stats.dom)
+        this.stats.showPanel(0)
+        tf.env().setFlags(STATE.flags)
         await tf.setBackend("webgl")
         await tf.ready()
 
@@ -48,10 +46,11 @@ class PoseEstimator extends EventEmitter<PoseEvent> {
     loop = () => {
         if (this.video.el.paused) return
         if (!this.detector) throw new Error("not initialized")
-
+        this.stats.begin()
         this.detector.estimatePoses(this.video.el, {}, performance.now()).then(
             (poses: poseDetection.Pose[]) => {
                 if (poses.length) this.emit("pose", poses[0])
+                this.stats.end()
                 requestAnimationFrame(this.loop)
             },
         )
@@ -110,7 +109,7 @@ class PoseCenter extends EventEmitter<PoseEvent> {
         }
     }
 
-    calculateRelativeKeypoints(keypoints: Keypoints[]) {
+    calculateRelativeKeypoints(keypoints: Keypoint[]) {
         // First, calculate the body center
         const bodyCenter = this.calculateBodyCenter(keypoints)
 
@@ -164,7 +163,7 @@ async function init() {
     const video = new Video("./video.mp4")
     const poseEstimator = new PoseEstimator(video)
     const poseCenter = new PoseCenter(poseEstimator)
-    new SkeletonOverlay(poseCenter, video)
+    new SkeletonOverlay(poseCenter, wm.createSvgWindow())
     await poseEstimator.init()
     await video.el.play()
 }

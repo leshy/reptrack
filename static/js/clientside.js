@@ -4073,6 +4073,81 @@ var require_eventemitter3 = __commonJS({
   }
 });
 
+// node_modules/.deno/stats.js@0.17.0/node_modules/stats.js/build/stats.min.js
+var require_stats_min = __commonJS({
+  "node_modules/.deno/stats.js@0.17.0/node_modules/stats.js/build/stats.min.js"(exports, module) {
+    (function(f, e) {
+      "object" === typeof exports && "undefined" !== typeof module ? module.exports = e() : "function" === typeof define && define.amd ? define(e) : f.Stats = e();
+    })(exports, function() {
+      var f = function() {
+        function e(a2) {
+          c.appendChild(a2.dom);
+          return a2;
+        }
+        function u(a2) {
+          for (var d = 0; d < c.children.length; d++) c.children[d].style.display = d === a2 ? "block" : "none";
+          l = a2;
+        }
+        var l = 0, c = document.createElement("div");
+        c.style.cssText = "position:fixed;top:0;left:0;cursor:pointer;opacity:0.9;z-index:10000";
+        c.addEventListener("click", function(a2) {
+          a2.preventDefault();
+          u(++l % c.children.length);
+        }, false);
+        var k = (performance || Date).now(), g = k, a = 0, r = e(new f.Panel("FPS", "#0ff", "#002")), h = e(new f.Panel("MS", "#0f0", "#020"));
+        if (self.performance && self.performance.memory) var t2 = e(new f.Panel("MB", "#f08", "#201"));
+        u(0);
+        return { REVISION: 16, dom: c, addPanel: e, showPanel: u, begin: function() {
+          k = (performance || Date).now();
+        }, end: function() {
+          a++;
+          var c2 = (performance || Date).now();
+          h.update(c2 - k, 200);
+          if (c2 > g + 1e3 && (r.update(1e3 * a / (c2 - g), 100), g = c2, a = 0, t2)) {
+            var d = performance.memory;
+            t2.update(d.usedJSHeapSize / 1048576, d.jsHeapSizeLimit / 1048576);
+          }
+          return c2;
+        }, update: function() {
+          k = this.end();
+        }, domElement: c, setMode: u };
+      };
+      f.Panel = function(e, f2, l) {
+        var c = Infinity, k = 0, g = Math.round, a = g(window.devicePixelRatio || 1), r = 80 * a, h = 48 * a, t2 = 3 * a, v = 2 * a, d = 3 * a, m = 15 * a, n = 74 * a, p = 30 * a, q2 = document.createElement("canvas");
+        q2.width = r;
+        q2.height = h;
+        q2.style.cssText = "width:80px;height:48px";
+        var b = q2.getContext("2d");
+        b.font = "bold " + 9 * a + "px Helvetica,Arial,sans-serif";
+        b.textBaseline = "top";
+        b.fillStyle = l;
+        b.fillRect(0, 0, r, h);
+        b.fillStyle = f2;
+        b.fillText(e, t2, v);
+        b.fillRect(d, m, n, p);
+        b.fillStyle = l;
+        b.globalAlpha = 0.9;
+        b.fillRect(d, m, n, p);
+        return { dom: q2, update: function(h2, w) {
+          c = Math.min(c, h2);
+          k = Math.max(k, h2);
+          b.fillStyle = l;
+          b.globalAlpha = 1;
+          b.fillRect(0, 0, r, m);
+          b.fillStyle = f2;
+          b.fillText(g(h2) + " " + e + " (" + g(c) + "-" + g(k) + ")", t2, v);
+          b.drawImage(q2, d + a, m, n - a, p, d, m, n - a, p);
+          b.fillRect(d + n - a, m, a, p);
+          b.fillStyle = l;
+          b.globalAlpha = 0.9;
+          b.fillRect(d + n - a, m, a, g((1 - h2 / w) * p));
+        } };
+      };
+      return f;
+    });
+  }
+});
+
 // node_modules/.deno/@tensorflow+tfjs-core@4.22.0/node_modules/@tensorflow/tfjs-core/dist/backends/backend.js
 var EPSILON_FLOAT32 = 1e-7;
 var EPSILON_FLOAT16 = 1e-4;
@@ -6067,18 +6142,18 @@ function getTensorsInContainer(result) {
   walkTensorContainer(result, list, seen);
   return list;
 }
-function walkTensorContainer(container, list, seen) {
-  if (container == null) {
+function walkTensorContainer(container2, list, seen) {
+  if (container2 == null) {
     return;
   }
-  if (container instanceof Tensor) {
-    list.push(container);
+  if (container2 instanceof Tensor) {
+    list.push(container2);
     return;
   }
-  if (!isIterable(container)) {
+  if (!isIterable(container2)) {
     return;
   }
-  const iterable = container;
+  const iterable = container2;
   for (const k in iterable) {
     const val = iterable[k];
     if (!seen.has(val)) {
@@ -7320,8 +7395,8 @@ function engine() {
 function tidy(nameOrFn, fn2) {
   return ENGINE.tidy(nameOrFn, fn2);
 }
-function dispose(container) {
-  const tensors = getTensorsInContainer(container);
+function dispose(container2) {
+  const tensors = getTensorsInContainer(container2);
   tensors.forEach((tensor2) => tensor2.dispose());
 }
 function keep(result) {
@@ -58162,18 +58237,39 @@ var yn = { modelType: { SINGLEPOSE_LIGHTNING: "SinglePose.Lightning", SINGLEPOSE
 // node_modules/.deno/eventemitter3@5.0.1/node_modules/eventemitter3/index.mjs
 var import_index = __toESM(require_eventemitter3(), 1);
 
+// clientside/clientside.ts
+var import_npm_stats = __toESM(require_stats_min());
+
 // clientside/wm.ts
-function insertElement(child, width = "auto") {
-  const parent = document.createElement("div");
-  parent.className = "container";
+var container = document.getElementById("window-container");
+if (!container) {
+  throw new Error(
+    "No WM container found. create an element with window-container id"
+  );
+}
+function createWindow(child, width = "auto") {
+  const parent = document.createElement("span");
+  parent.className = "window";
   parent.style.width = String(width);
   if (Array.isArray(child)) {
     child.forEach((el) => parent.appendChild(el));
   } else {
     parent.appendChild(child);
   }
-  document.body.appendChild(parent);
+  container.appendChild(parent);
   return parent;
+}
+function createSvgWindow(viewbox = "-1 -1 2 2") {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.style.width = "100%";
+  svg.style.height = "100%";
+  svg.style.position = "absolute";
+  svg.style.top = "0";
+  svg.style.left = "0";
+  svg.style.pointerEvents = "none";
+  svg.setAttribute("viewBox", viewbox);
+  createWindow(svg);
+  return svg;
 }
 
 // clientside/source.ts
@@ -58207,7 +58303,7 @@ var Video = class extends import_index.default {
     svgOverlay.style.height = "100%";
     svgOverlay.style.pointerEvents = "none";
     svgOverlay.setAttribute("viewBox", `-1 -1 2 2`);
-    insertElement([video, svgOverlay]);
+    createWindow([video, svgOverlay]);
     this.overlay = svgOverlay;
     this.el = video;
     this.width = video.videoWidth;
@@ -58241,11 +58337,10 @@ var STATE = {
 
 // clientside/skeleton.ts
 var SkeletonOverlay = class {
-  constructor(poseEmitter, video) {
+  constructor(poseEmitter, svg) {
     this.poseEmitter = poseEmitter;
-    __publicField(this, "svg");
+    this.svg = svg;
     __publicField(this, "drawSkeletonSVG", (pose) => {
-      console.log(pose);
       const keypoints = pose.keypoints;
       const namespace = "http://www.w3.org/2000/svg";
       const pairs = pe.getAdjacentPairs(
@@ -58296,7 +58391,6 @@ var SkeletonOverlay = class {
       });
     });
     this.poseEmitter.on("pose", this.drawSkeletonSVG);
-    this.svg = video.overlay;
   }
 };
 
@@ -58306,27 +58400,26 @@ var PoseEstimator = class extends import_index.default {
     super();
     this.video = video;
     __publicField(this, "detector");
+    __publicField(this, "stats", import_npm_stats.default);
     __publicField(this, "loop", () => {
       if (this.video.el.paused) return;
       if (!this.detector) throw new Error("not initialized");
+      this.stats.begin();
       this.detector.estimatePoses(this.video.el, {}, performance.now()).then(
         (poses) => {
           if (poses.length) this.emit("pose", poses[0]);
+          this.stats.end();
           requestAnimationFrame(this.loop);
         }
       );
     });
+    this.stats = new import_npm_stats.default();
   }
   async init() {
     console.log(this.constructor.name, "initializing");
-    env().setFlags({
-      "WEBGL_VERSION": 2,
-      "WEBGL_CPU_FORWARD": true,
-      "WEBGL_PACK": true,
-      "WEBGL_FORCE_F16_TEXTURES": false,
-      "WEBGL_RENDER_FLOAT32_CAPABLE": true,
-      "WEBGL_FLUSH_THRESHOLD": -1
-    });
+    document.body.appendChild(this.stats.dom);
+    this.stats.showPanel(0);
+    env().setFlags(STATE.flags);
     await setBackend("webgl");
     await ready();
     const detectorConfig = {
@@ -58424,7 +58517,7 @@ async function init() {
   const video = new Video("./video.mp4");
   const poseEstimator = new PoseEstimator(video);
   const poseCenter = new PoseCenter(poseEstimator);
-  new SkeletonOverlay(poseCenter, video);
+  new SkeletonOverlay(poseCenter, createSvgWindow());
   await poseEstimator.init();
   await video.el.play();
 }

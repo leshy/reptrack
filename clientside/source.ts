@@ -1,5 +1,5 @@
 import { EventEmitter } from "npm:eventemitter3"
-import { insertElement } from "./wm.ts"
+import { createWindow } from "./wm.ts"
 
 interface VideoEvents {
     resized: { width: number; height: number }
@@ -42,7 +42,7 @@ export class Video extends EventEmitter<VideoEvents> {
         // set svgOverlay viewbox
         svgOverlay.setAttribute("viewBox", `-1 -1 2 2`)
 
-        insertElement([video, svgOverlay])
+        createWindow([video, svgOverlay])
 
         this.overlay = svgOverlay
         this.el = video
