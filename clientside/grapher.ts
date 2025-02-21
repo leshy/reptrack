@@ -78,7 +78,6 @@ export class Grapher {
 
         for (let i = 1; i < values.length; i++) {
             const x = padding + i * xStep
-            console.log(x)
             const y = this.getY(values[i])
             pathData += ` L ${x} ${y}`
         }

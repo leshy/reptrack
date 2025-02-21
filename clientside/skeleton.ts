@@ -101,7 +101,7 @@ export class SkeletonDraw {
             if (!circle) {
                 circle = document.createElementNS(namespace, "circle")
                 circle.setAttribute("data-name", keypoint.name)
-                circle.setAttribute("r", "0.01")
+                circle.setAttribute("r", "0.02")
                 circle.setAttribute("fill", "#00FF00")
                 this.skeletonGroup.appendChild(circle)
                 this.keypointMap.set(keypoint.name, circle)

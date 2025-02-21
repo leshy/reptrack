@@ -14,7 +14,7 @@ type SmootherSettings = {
 }
 
 const defaultSmootherSettings: SmootherSettings = {
-    windowSize: 10,
+    windowSize: 5,
     targetKeypoints: defaultTarget,
 }
 
@@ -64,6 +64,10 @@ export class Smoother extends EventEmitter<PoseEvent> {
         return [sum[0] / history.length, sum[1] / history.length]
     }
 
+    private round(num: number): number {
+        return Math.round(num * 100) / 100
+    }
+
     private smoothPose = (pose: Pose) => {
         const smoothedPose: Pose = { ...pose, keypoints: [] }
 
@@ -80,8 +84,8 @@ export class Smoother extends EventEmitter<PoseEvent> {
 
                     smoothedPose.keypoints.push({
                         ...keypoint,
-                        x: smoothedPoint[0],
-                        y: smoothedPoint[1],
+                        x: this.round(smoothedPoint[0]),
+                        y: this.round(smoothedPoint[1]),
                     })
                 } else {
                     smoothedPose.keypoints.push(keypoint)

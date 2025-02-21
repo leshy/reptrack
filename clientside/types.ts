@@ -74,6 +74,27 @@ export const defaultTarget = {
     [KeypointName.right_shoulder]: true,
 }
 
+export const allTargets = {
+    [KeypointName.nose]: true,
+    [KeypointName.left_eye]: true,
+    [KeypointName.right_eye]: true,
+    [KeypointName.left_ear]: true,
+    [KeypointName.right_ear]: true,
+    [KeypointName.left_shoulder]: true,
+    [KeypointName.right_shoulder]: true,
+    [KeypointName.left_elbow]: true,
+    [KeypointName.right_elbow]: true,
+    [KeypointName.left_wrist]: true,
+    [KeypointName.right_wrist]: true,
+    [KeypointName.left_hip]: true,
+    [KeypointName.right_hip]: true,
+    [KeypointName.left_knee]: true,
+    [KeypointName.right_knee]: true,
+    [KeypointName.left_ankle]: true,
+    [KeypointName.right_ankle]: true,
+    [KeypointName.body_center]: true,
+}
+
 export interface ValueEvent {
     values: number[]
 }
