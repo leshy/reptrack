@@ -1,7 +1,7 @@
 body {
 	line-height: 1;
   background-color: #000000;
-  overflow: hidden;
+  overflow-x: hidden;
   margin: 0;
   padding: 0;
 }
@@ -44,7 +44,7 @@ canvas {
     border: 1px solid #ccc;
     margin: 2px;
     padding: 10px;
-    min-height: 49vh;;
+    min-height: 48vh;;
     box-sizing: border-box;
     position: relative;
 }
