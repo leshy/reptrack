@@ -6,6 +6,7 @@ import Stats from "npm:stats.js"
 import { Keypoint, Pose, PoseEvent, STATE } from "./types.ts"
 import { SkeletonDraw } from "./skeleton.ts"
 import { Tracer } from "./tracer.ts"
+import { Smoother } from "./smoother.ts"
 import { TracerDraw } from "./tracerDraw.ts"
 import * as wm from "./wm.ts"
 import { Video } from "./source.ts"
@@ -21,7 +22,6 @@ class PoseEstimator extends EventEmitter<PoseEvent> {
     }
 
     async init() {
-        console.log(this.constructor.name, "initializing")
         document.body.appendChild(this.stats.dom)
         this.stats.showPanel(0)
         tf.env().setFlags(STATE.flags)
@@ -41,7 +41,6 @@ class PoseEstimator extends EventEmitter<PoseEvent> {
         )
         this.detector = detector
 
-        console.log(this.constructor.name, "OK")
         this.video.el.onplay = this.loop
         this.loop()
     }
@@ -167,11 +166,11 @@ async function init() {
     const poseEstimator = new PoseEstimator(video)
     const poseCenter = new PoseCenter(poseEstimator)
     const svg = wm.createSvgWindow()
-    new SkeletonDraw(poseCenter, svg)
+    //new SkeletonDraw(poseCenter, svg)
     //new FFTDetector(poseCenter)
-    const tracer = new Tracer(poseCenter, svg)
+    const smoother = new Smoother(poseCenter)
+    const tracer = new Tracer(smoother)
     new TracerDraw(tracer, svg)
-    window.tracer = tracer
 
     await poseEstimator.init()
     await video.el.play()

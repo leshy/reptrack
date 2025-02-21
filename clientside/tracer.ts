@@ -1,5 +1,6 @@
 import { EventEmitter } from "npm:eventemitter3"
 import {
+    defaultTarget,
     KeypointName,
     Point,
     Pose,
@@ -11,22 +12,13 @@ import {
 type TracerSettings = {
     logLen: number
     minDist: number
-    traceKeypoints: Partial<Record<KeypointName, boolean>>
-}
-
-export const defaultTraces = {
-    [KeypointName.nose]: true,
-    [KeypointName.left_wrist]: true,
-    [KeypointName.right_wrist]: true,
-    [KeypointName.left_ankle]: true,
-    [KeypointName.right_ankle]: true,
-    [KeypointName.body_center]: true,
+    targetKeypoints: Partial<Record<KeypointName, boolean>>
 }
 
 const defaultSettings: TracerSettings = {
-    minDist: 0.025,
-    logLen: 25,
-    traceKeypoints: defaultTraces,
+    minDist: 0.05,
+    logLen: 50,
+    targetKeypoints: defaultTarget,
 }
 
 export class Tracer extends EventEmitter<TraceEvent> {
@@ -42,9 +34,9 @@ export class Tracer extends EventEmitter<TraceEvent> {
         this.settings = {
             ...defaultSettings,
             ...settings,
-            traceKeypoints: {
-                ...defaultSettings.traceKeypoints,
-                ...settings.traceKeypoints,
+            targetKeypoints: {
+                ...defaultSettings.targetKeypoints,
+                ...settings.targetKeypoints,
             },
         }
         this.log = new Map()
@@ -60,6 +52,7 @@ export class Tracer extends EventEmitter<TraceEvent> {
         return newLog
     }
 
+    // TODO we should not be checking the dist from last point, but maybe change the last point to avg of the two?
     dist(a: Point, b: Point): number {
         return Math.sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2)
     }
@@ -70,7 +63,13 @@ export class Tracer extends EventEmitter<TraceEvent> {
             ? log[log.length - 1]
             : [0, 0]
 
-        if (this.dist(latestElement, entry) < this.settings.minDist) return
+        if (this.dist(latestElement, entry) < this.settings.minDist) {
+            // store avg
+            log[log.length - 1] = [
+                (latestElement[0] + entry[0]) / 2,
+                (latestElement[1] + entry[1]) / 2,
+            ]
+        }
 
         log.push(entry)
         if (log.length > this.logLen) {
@@ -83,7 +82,7 @@ export class Tracer extends EventEmitter<TraceEvent> {
             if (keypoint.name) {
                 const keypointEnum =
                     KeypointName[keypoint.name as keyof typeof KeypointName]
-                if (this.settings.traceKeypoints[keypointEnum]) {
+                if (this.settings.targetKeypoints[keypointEnum]) {
                     this.pushLog(keypointEnum, [keypoint.x, keypoint.y])
                 }
             }

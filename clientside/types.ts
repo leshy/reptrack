@@ -61,3 +61,12 @@ export enum KeypointName {
     "right_ankle",
     "body_center",
 }
+
+export const defaultTarget = {
+    [KeypointName.nose]: true,
+    [KeypointName.left_wrist]: true,
+    [KeypointName.right_wrist]: true,
+    [KeypointName.left_ankle]: true,
+    [KeypointName.right_ankle]: true,
+    [KeypointName.body_center]: true,
+}
