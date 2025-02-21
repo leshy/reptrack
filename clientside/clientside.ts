@@ -161,7 +161,7 @@ class PoseCenter extends EventEmitter<PoseEvent> {
 }
 
 async function init() {
-    const video = new Video("./walking.webm")
+    const video = new Video("./video.mp4")
     const poseEstimator = new PoseEstimator(video)
     const poseCenter = new PoseCenter(poseEstimator)
     new SkeletonDraw(poseCenter, wm.createSvgWindow())

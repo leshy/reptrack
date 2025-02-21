@@ -170,11 +170,11 @@ export class FFTDetector {
             }
         }
         const layout: Partial<Plotly.Layout> = {
-            title: {
-                text:
-                    `FFT Magnitudes for Keypoints (${this.minFrequency}-${this.maxFrequency} Hz)`,
-                font: { color: "#ffffff" },
-            },
+            // title: {
+            //     text:
+            //         `FFT Magnitudes for Keypoints (${this.minFrequency}-${this.maxFrequency} Hz)`,
+            //     font: { color: "#ffffff" },
+            // },
             xaxis: {
                 title: "Frequency (Hz)",
                 range: [this.minFrequency, this.maxFrequency],
@@ -190,12 +190,12 @@ export class FFTDetector {
             plot_bgcolor: "#000000",
             margin: { t: 50, r: 20, l: 50, b: 50 },
             autosize: true,
-            height: 400, // Adjust as needed
-            width: 600, // Adjust as needed
+            //height: 400, // Adjust as needed
+            //width: 600, // Adjust as needed
             font: {
                 color: "#ffffff",
             },
-            showlegend: false,
+            showlegend: true,
             legend: {
                 font: { color: "#ffffff" },
                 bgcolor: "rgba(0,0,0,0)",
