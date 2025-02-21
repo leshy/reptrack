@@ -5,19 +5,13 @@ body {
 }
 
 video {
-    width: 100%;
     height: auto;
-    border: 1px solid white;
 }
 
 canvas {
     background-color: rgba(0,0,0,1);
     width: 100%;
     height: auto;
-}
-
-.container {
-  display: flex;
 }
 
 .left-section {
@@ -30,8 +24,13 @@ canvas {
 
 
 .skelesvg {
-background-color: #000000;
-width: 100%;
-height: auto;
-border: 1px solid white;
+  background-color: #000000;
+  width: 100%;
+  height: auto;
+  border: 1px solid white;
+}
+
+
+.container {
+  border: 1px solid red;
 }

@@ -4,6 +4,7 @@ var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require : typeof Proxy !== "undefined" ? new Proxy(x, {
   get: (a, b) => (typeof require !== "undefined" ? require : a)[b]
 }) : x)(function(x) {
@@ -33,6 +34,7 @@ var __toESM = (mod4, isNodeMode, target) => (target = mod4 != null ? __create(__
   isNodeMode || !mod4 || !mod4.__esModule ? __defProp(target, "default", { value: mod4, enumerable: true }) : target,
   mod4
 ));
+var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
 
 // node_modules/.deno/long@4.0.0/node_modules/long/src/long.js
 var require_long = __commonJS({
@@ -3906,6 +3908,168 @@ var require_pose = __commonJS({
       G2("POSE_LANDMARKS_NEUTRAL", { NOSE: 0 });
       G2("VERSION", "0.5.1675469404");
     }).call(exports);
+  }
+});
+
+// node_modules/.deno/eventemitter3@5.0.1/node_modules/eventemitter3/index.js
+var require_eventemitter3 = __commonJS({
+  "node_modules/.deno/eventemitter3@5.0.1/node_modules/eventemitter3/index.js"(exports, module) {
+    "use strict";
+    var has = Object.prototype.hasOwnProperty;
+    var prefix = "~";
+    function Events() {
+    }
+    if (Object.create) {
+      Events.prototype = /* @__PURE__ */ Object.create(null);
+      if (!new Events().__proto__) prefix = false;
+    }
+    function EE(fn2, context, once) {
+      this.fn = fn2;
+      this.context = context;
+      this.once = once || false;
+    }
+    function addListener(emitter, event, fn2, context, once) {
+      if (typeof fn2 !== "function") {
+        throw new TypeError("The listener must be a function");
+      }
+      var listener = new EE(fn2, context || emitter, once), evt = prefix ? prefix + event : event;
+      if (!emitter._events[evt]) emitter._events[evt] = listener, emitter._eventsCount++;
+      else if (!emitter._events[evt].fn) emitter._events[evt].push(listener);
+      else emitter._events[evt] = [emitter._events[evt], listener];
+      return emitter;
+    }
+    function clearEvent(emitter, evt) {
+      if (--emitter._eventsCount === 0) emitter._events = new Events();
+      else delete emitter._events[evt];
+    }
+    function EventEmitter2() {
+      this._events = new Events();
+      this._eventsCount = 0;
+    }
+    EventEmitter2.prototype.eventNames = function eventNames() {
+      var names = [], events, name;
+      if (this._eventsCount === 0) return names;
+      for (name in events = this._events) {
+        if (has.call(events, name)) names.push(prefix ? name.slice(1) : name);
+      }
+      if (Object.getOwnPropertySymbols) {
+        return names.concat(Object.getOwnPropertySymbols(events));
+      }
+      return names;
+    };
+    EventEmitter2.prototype.listeners = function listeners(event) {
+      var evt = prefix ? prefix + event : event, handlers = this._events[evt];
+      if (!handlers) return [];
+      if (handlers.fn) return [handlers.fn];
+      for (var i = 0, l = handlers.length, ee2 = new Array(l); i < l; i++) {
+        ee2[i] = handlers[i].fn;
+      }
+      return ee2;
+    };
+    EventEmitter2.prototype.listenerCount = function listenerCount(event) {
+      var evt = prefix ? prefix + event : event, listeners = this._events[evt];
+      if (!listeners) return 0;
+      if (listeners.fn) return 1;
+      return listeners.length;
+    };
+    EventEmitter2.prototype.emit = function emit(event, a1, a2, a3, a4, a5) {
+      var evt = prefix ? prefix + event : event;
+      if (!this._events[evt]) return false;
+      var listeners = this._events[evt], len = arguments.length, args, i;
+      if (listeners.fn) {
+        if (listeners.once) this.removeListener(event, listeners.fn, void 0, true);
+        switch (len) {
+          case 1:
+            return listeners.fn.call(listeners.context), true;
+          case 2:
+            return listeners.fn.call(listeners.context, a1), true;
+          case 3:
+            return listeners.fn.call(listeners.context, a1, a2), true;
+          case 4:
+            return listeners.fn.call(listeners.context, a1, a2, a3), true;
+          case 5:
+            return listeners.fn.call(listeners.context, a1, a2, a3, a4), true;
+          case 6:
+            return listeners.fn.call(listeners.context, a1, a2, a3, a4, a5), true;
+        }
+        for (i = 1, args = new Array(len - 1); i < len; i++) {
+          args[i - 1] = arguments[i];
+        }
+        listeners.fn.apply(listeners.context, args);
+      } else {
+        var length = listeners.length, j2;
+        for (i = 0; i < length; i++) {
+          if (listeners[i].once) this.removeListener(event, listeners[i].fn, void 0, true);
+          switch (len) {
+            case 1:
+              listeners[i].fn.call(listeners[i].context);
+              break;
+            case 2:
+              listeners[i].fn.call(listeners[i].context, a1);
+              break;
+            case 3:
+              listeners[i].fn.call(listeners[i].context, a1, a2);
+              break;
+            case 4:
+              listeners[i].fn.call(listeners[i].context, a1, a2, a3);
+              break;
+            default:
+              if (!args) for (j2 = 1, args = new Array(len - 1); j2 < len; j2++) {
+                args[j2 - 1] = arguments[j2];
+              }
+              listeners[i].fn.apply(listeners[i].context, args);
+          }
+        }
+      }
+      return true;
+    };
+    EventEmitter2.prototype.on = function on2(event, fn2, context) {
+      return addListener(this, event, fn2, context, false);
+    };
+    EventEmitter2.prototype.once = function once(event, fn2, context) {
+      return addListener(this, event, fn2, context, true);
+    };
+    EventEmitter2.prototype.removeListener = function removeListener(event, fn2, context, once) {
+      var evt = prefix ? prefix + event : event;
+      if (!this._events[evt]) return this;
+      if (!fn2) {
+        clearEvent(this, evt);
+        return this;
+      }
+      var listeners = this._events[evt];
+      if (listeners.fn) {
+        if (listeners.fn === fn2 && (!once || listeners.once) && (!context || listeners.context === context)) {
+          clearEvent(this, evt);
+        }
+      } else {
+        for (var i = 0, events = [], length = listeners.length; i < length; i++) {
+          if (listeners[i].fn !== fn2 || once && !listeners[i].once || context && listeners[i].context !== context) {
+            events.push(listeners[i]);
+          }
+        }
+        if (events.length) this._events[evt] = events.length === 1 ? events[0] : events;
+        else clearEvent(this, evt);
+      }
+      return this;
+    };
+    EventEmitter2.prototype.removeAllListeners = function removeAllListeners(event) {
+      var evt;
+      if (event) {
+        evt = prefix ? prefix + event : event;
+        if (this._events[evt]) clearEvent(this, evt);
+      } else {
+        this._events = new Events();
+        this._eventsCount = 0;
+      }
+      return this;
+    };
+    EventEmitter2.prototype.off = EventEmitter2.prototype.removeListener;
+    EventEmitter2.prototype.addListener = EventEmitter2.prototype.on;
+    EventEmitter2.prefixed = prefix;
+    EventEmitter2.EventEmitter = EventEmitter2;
+    if ("undefined" !== typeof module) {
+      module.exports = EventEmitter2;
+    }
   }
 });
 
@@ -14967,7 +15131,7 @@ function validateImageOptions(imageOptions) {
     throw new Error(`Alpha value ${alpha} is suppoed to be in range [0 - 1].`);
   }
 }
-async function toPixels(img, canvas2) {
+async function toPixels(img, canvas) {
   let $img = convertToTensor(img, "img", "toPixels");
   if (!(img instanceof Tensor)) {
     const originalImgTensor = $img;
@@ -15007,7 +15171,7 @@ async function toPixels(img, canvas2) {
     bytes[j2 + 2] = Math.round(rgba[2]);
     bytes[j2 + 3] = Math.round(rgba[3]);
   }
-  if (canvas2 != null) {
+  if (canvas != null) {
     if (!hasToPixelsWarned) {
       const kernel = getKernel(Draw, ENGINE.backendName);
       if (kernel != null) {
@@ -15015,18 +15179,18 @@ async function toPixels(img, canvas2) {
         hasToPixelsWarned = true;
       }
     }
-    canvas2.width = width;
-    canvas2.height = height;
-    const ctx2 = canvas2.getContext("2d");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
     const imageData = new ImageData(bytes, width, height);
-    ctx2.putImageData(imageData, 0, 0);
+    ctx.putImageData(imageData, 0, 0);
   }
   if ($img !== img) {
     $img.dispose();
   }
   return bytes;
 }
-function draw(image2, canvas2, options) {
+function draw(image2, canvas, options) {
   let $img = convertToTensor(image2, "img", "draw");
   if (!(image2 instanceof Tensor)) {
     const originalImgTensor = $img;
@@ -15036,7 +15200,7 @@ function draw(image2, canvas2, options) {
   validateImgTensor($img);
   validateImageOptions(options === null || options === void 0 ? void 0 : options.imageOptions);
   const inputs = { image: $img };
-  const attrs = { canvas: canvas2, options };
+  const attrs = { canvas, options };
   ENGINE.runKernel(Draw, inputs, attrs);
 }
 var fromPixels = /* @__PURE__ */ op({ fromPixels_ });
@@ -16276,8 +16440,8 @@ function getWebGLRenderingContext(webGLVersion, customCanvas) {
   if (webGLVersion !== 1 && webGLVersion !== 2) {
     throw new Error("Cannot get WebGL rendering context, WebGL is disabled.");
   }
-  const canvas2 = customCanvas == null ? createCanvas(webGLVersion) : customCanvas;
-  canvas2.addEventListener("webglcontextlost", (ev) => {
+  const canvas = customCanvas == null ? createCanvas(webGLVersion) : customCanvas;
+  canvas.addEventListener("webglcontextlost", (ev) => {
     ev.preventDefault();
     delete contexts[webGLVersion];
   }, false);
@@ -16287,10 +16451,10 @@ function getWebGLRenderingContext(webGLVersion, customCanvas) {
   if (webGLVersion === 1) {
     return (
       // tslint:disable-next-line
-      canvas2.getContext("webgl", WEBGL_ATTRIBUTES) || canvas2.getContext("experimental-webgl", WEBGL_ATTRIBUTES)
+      canvas.getContext("webgl", WEBGL_ATTRIBUTES) || canvas.getContext("experimental-webgl", WEBGL_ATTRIBUTES)
     );
   }
-  return canvas2.getContext("webgl2", WEBGL_ATTRIBUTES);
+  return canvas.getContext("webgl2", WEBGL_ATTRIBUTES);
 }
 
 // node_modules/.deno/@tensorflow+tfjs-backend-webgl@4.22.0/node_modules/@tensorflow/tfjs-backend-webgl/dist/tex_util.js
@@ -51853,17 +52017,17 @@ var DrawProgram = class {
 function draw2(args) {
   const { inputs, backend: backend2, attrs } = args;
   const { image: image2 } = inputs;
-  const { canvas: canvas2, options } = attrs;
+  const { canvas, options } = attrs;
   const [height, width] = image2.shape.slice(0, 2);
   const { imageOptions } = options || {};
   const alpha = (imageOptions === null || imageOptions === void 0 ? void 0 : imageOptions.alpha) || 1;
   const format = backend2.device.features.has("bgra8unorm-storage") ? "bgra8unorm" : "rgba8unorm";
   const outShape = [height, width];
   const program = new DrawProgram(outShape, image2.dtype, format);
-  canvas2.width = width;
-  canvas2.height = height;
+  canvas.width = width;
+  canvas.height = height;
   const backendName = "webgpu";
-  let gpuContext = canvas2.getContext(backendName);
+  let gpuContext = canvas.getContext(backendName);
   let canvasWebGPU;
   if (!gpuContext) {
     canvasWebGPU = new OffscreenCanvas(width, height);
@@ -51884,7 +52048,7 @@ function draw2(args) {
   const uniformData = [{ type: "uint32", data: [numChannels] }, { type: "float32", data: [alpha] }];
   backend2.runWebGPUProgram(program, [image2], outputDtype, uniformData, output);
   if (canvasWebGPU) {
-    const canvas2dContext = canvas2.getContext("2d");
+    const canvas2dContext = canvas.getContext("2d");
     if (!canvas2dContext) {
       throw new Error(`Please make sure this canvas has only been used for 2d or webgpu context!`);
     }
@@ -57995,7 +58159,63 @@ function mn(t2, e) {
 }
 var yn = { modelType: { SINGLEPOSE_LIGHTNING: "SinglePose.Lightning", SINGLEPOSE_THUNDER: "SinglePose.Thunder", MULTIPOSE_LIGHTNING: "MultiPose.Lightning" } };
 
-// clientside/clientside.ts
+// node_modules/.deno/eventemitter3@5.0.1/node_modules/eventemitter3/index.mjs
+var import_index = __toESM(require_eventemitter3(), 1);
+
+// clientside/wm.ts
+function insertElement(child, width = "auto") {
+  const parent = document.createElement("div");
+  parent.className = "container";
+  parent.style.width = String(width);
+  if (Array.isArray(child)) {
+    child.forEach((el) => parent.appendChild(el));
+  } else {
+    parent.appendChild(child);
+  }
+  document.body.appendChild(parent);
+  return parent;
+}
+
+// clientside/source.ts
+var Video = class extends import_index.default {
+  constructor(src) {
+    super();
+    this.src = src;
+    __publicField(this, "width");
+    __publicField(this, "height");
+    __publicField(this, "el");
+    __publicField(this, "overlay");
+    const video = document.createElement("video");
+    video.src = this.src;
+    video.autoplay = true;
+    video.controls = true;
+    const resized = () => {
+      this.width = video.videoWidth;
+      this.height = video.videoHeight;
+      this.emit("resized", { width: this.width, height: this.height });
+    };
+    video.addEventListener("loadedmetadata", resized);
+    video.addEventListener("resize", resized);
+    const svgOverlay = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "svg"
+    );
+    svgOverlay.style.position = "absolute";
+    svgOverlay.style.top = "0";
+    svgOverlay.style.left = "0";
+    svgOverlay.style.width = "100%";
+    svgOverlay.style.height = "100%";
+    svgOverlay.style.pointerEvents = "none";
+    svgOverlay.setAttribute("viewBox", `-1 -1 2 2`);
+    insertElement([video, svgOverlay]);
+    this.overlay = svgOverlay;
+    this.el = video;
+    this.width = video.videoWidth;
+    this.height = video.videoHeight;
+  }
+};
+
+// clientside/types.ts
 var STATE = {
   "runtime": "tfjs",
   "backend": "webgl",
@@ -58010,7 +58230,7 @@ var STATE = {
   "modelConfig": {
     "maxPoses": 1,
     "type": yn.modelType.SINGLEPOSE_LIGHTNING,
-    "scoreThreshold": 0.1
+    "scoreThreshold": 0.2
   },
   "model": "MoveNet",
   "lastTFJSBackend": "tfjs-webgl",
@@ -58018,140 +58238,197 @@ var STATE = {
   "isFlagChanged": false,
   "isBackendChanged": false
 };
-async function initDetector() {
-  const detectorConfig = {
-    modelType: yn.modelType.SINGLEPOSE_THUNDER,
-    enableSmoothing: true,
-    minPoseScore: 0.1,
-    modelUrl: "/model/saved_model.pb"
-  };
-  const detector = await mn(
-    se.MoveNet,
-    detectorConfig
-  );
-  return detector;
-}
-var video = document.getElementById("video");
-async function init() {
-  console.log("initializing");
-  env().setFlags(STATE.flags);
-  await setBackend("webgl");
-  await ready();
-  const detector = await initDetector();
-  const warmUpTensor = fill(
-    [video.height, video.width, 3],
-    0,
-    "float32"
-  );
-  await detector.estimatePoses(
-    warmUpTensor,
-    { maxPoses: STATE.modelConfig.maxPoses, flipHorizontal: false }
-  );
-  warmUpTensor.dispose();
-  console.log("initialized");
-  return detector;
-}
-async function detect(detector) {
-  return (await detector.estimatePoses(
-    video,
-    { maxPoses: STATE.modelConfig.maxPoses, flipHorizontal: false },
-    performance.now()
-  ))[0];
-}
-function clearCanvas() {
-  ctx.clearRect(0, 0, this.video.videoWidth, this.video.videoHeight);
-}
-function drawResult(pose) {
-  clearCanvas();
-  if (pose.keypoints != null) {
-    drawKeypoints(pose.keypoints);
-    drawSkeleton(pose.keypoints);
-  }
-}
-function drawSkeleton(keypoints) {
-  ctx.fillStyle = "White";
-  ctx.strokeStyle = "White";
-  ctx.lineWidth = 2;
-  pe.getAdjacentPairs(STATE.model).forEach(([
-    i,
-    j2
-  ]) => {
-    const kp1 = keypoints[i];
-    const kp2 = keypoints[j2];
-    const score1 = kp1.score != null ? kp1.score : 1;
-    const score2 = kp2.score != null ? kp2.score : 1;
-    const scoreThreshold = STATE.modelConfig.scoreThreshold || 0;
-    if (score1 >= scoreThreshold && score2 >= scoreThreshold) {
-      ctx.beginPath();
-      ctx.moveTo(kp1.x, kp1.y);
-      ctx.lineTo(kp2.x, kp2.y);
-      ctx.stroke();
-    }
-  });
-}
-function drawKeypoint(keypoint) {
-  const score = keypoint.score != null ? keypoint.score : 1;
-  const scoreThreshold = STATE.modelConfig.scoreThreshold || 0;
-  if (score >= scoreThreshold) {
-    const circle = new Path2D();
-    circle.arc(keypoint.x, keypoint.y, 2, 0, 2 * Math.PI);
-    ctx.fill(circle);
-    ctx.stroke(circle);
-  }
-}
-function drawKeypoints(keypoints) {
-  ctx.fillStyle = "White";
-  ctx.strokeStyle = "White";
-  ctx.lineWidth = 1;
-  const keypointInd = pe.getKeypointIndexBySide(STATE.model);
-  for (const i of keypointInd.middle) {
-    drawKeypoint(keypoints[i]);
-  }
-  ctx.fillStyle = "Green";
-  for (const i of keypointInd.left) {
-    drawKeypoint(keypoints[i]);
-  }
-  ctx.fillStyle = "Orange";
-  for (const i of keypointInd.right) {
-    drawKeypoint(keypoints[i]);
-  }
-}
-async function run() {
-  console.log("hi", STATE);
-  const detector = await init();
-  function loop() {
-    if (video.paused) {
-      console.log("paused");
-      video.onplay = loop;
-      return;
-    }
-    detect(detector).then((pose) => {
-      if (pose && pose.keypoints) {
-        drawResult(pose);
+
+// clientside/skeleton.ts
+var SkeletonOverlay = class {
+  constructor(poseEmitter, video) {
+    this.poseEmitter = poseEmitter;
+    __publicField(this, "svg");
+    __publicField(this, "drawSkeletonSVG", (pose) => {
+      console.log(pose);
+      const keypoints = pose.keypoints;
+      const namespace = "http://www.w3.org/2000/svg";
+      const pairs = pe.getAdjacentPairs(
+        se.MoveNet
+      );
+      while (this.svg.children.length < pairs.length) {
+        const line = document.createElementNS(namespace, "line");
+        line.setAttribute("stroke", "white");
+        line.setAttribute("stroke-width", "0.01");
+        this.svg.appendChild(line);
       }
-      requestAnimationFrame(loop);
+      while (this.svg.children.length > pairs.length) {
+        this.svg.removeChild(this.svg.lastChild);
+      }
+      pairs.forEach(([i, j2], index) => {
+        const kp1 = keypoints[i];
+        const kp2 = keypoints[j2];
+        const score1 = kp1.score != null ? kp1.score : 1;
+        const score2 = kp2.score != null ? kp2.score : 1;
+        const scoreThreshold = STATE.modelConfig.scoreThreshold || 0;
+        const line = this.svg.children[index];
+        if (score1 >= scoreThreshold && score2 >= scoreThreshold) {
+          line.setAttribute("x1", String(kp1.x));
+          line.setAttribute("y1", String(kp1.y));
+          line.setAttribute("x2", String(kp2.x));
+          line.setAttribute("y2", String(kp2.y));
+          line.setAttribute("visibility", "visible");
+        } else {
+          line.setAttribute("visibility", "hidden");
+        }
+      });
+      keypoints.forEach((keypoint, index) => {
+        if (keypoint.name === "body_center") return;
+        let keypointElement = this.svg.querySelector(`#keypoint-${index}`);
+        if (!keypointElement) {
+          keypointElement = document.createElementNS(namespace, "circle");
+          keypointElement.setAttribute("id", `keypoint-${index}`);
+          keypointElement.setAttribute("r", "0.01");
+          keypointElement.setAttribute("fill", "#00FF00");
+          this.svg.appendChild(keypointElement);
+        }
+        keypointElement.setAttribute("cx", String(keypoint.x));
+        keypointElement.setAttribute("cy", String(keypoint.y));
+        keypointElement.setAttribute(
+          "visibility",
+          keypoint.score >= (STATE.modelConfig.scoreThreshold || 0) ? "visible" : "hidden"
+        );
+      });
+    });
+    this.poseEmitter.on("pose", this.drawSkeletonSVG);
+    this.svg = video.overlay;
+  }
+};
+
+// clientside/clientside.ts
+var PoseEstimator = class extends import_index.default {
+  constructor(video) {
+    super();
+    this.video = video;
+    __publicField(this, "detector");
+    __publicField(this, "loop", () => {
+      if (this.video.el.paused) return;
+      if (!this.detector) throw new Error("not initialized");
+      this.detector.estimatePoses(this.video.el, {}, performance.now()).then(
+        (poses) => {
+          if (poses.length) this.emit("pose", poses[0]);
+          requestAnimationFrame(this.loop);
+        }
+      );
     });
   }
-  loop();
+  async init() {
+    console.log(this.constructor.name, "initializing");
+    env().setFlags({
+      "WEBGL_VERSION": 2,
+      "WEBGL_CPU_FORWARD": true,
+      "WEBGL_PACK": true,
+      "WEBGL_FORCE_F16_TEXTURES": false,
+      "WEBGL_RENDER_FLOAT32_CAPABLE": true,
+      "WEBGL_FLUSH_THRESHOLD": -1
+    });
+    await setBackend("webgl");
+    await ready();
+    const detectorConfig = {
+      modelType: yn.modelType.SINGLEPOSE_THUNDER,
+      enableSmoothing: true,
+      minPoseScore: 0.1
+      //modelUrl: "/model/saved_model.pb",
+    };
+    const detector = await mn(
+      se.MoveNet,
+      detectorConfig
+    );
+    this.detector = detector;
+    console.log(this.constructor.name, "OK");
+    this.video.el.onplay = this.loop;
+    this.loop();
+  }
+};
+var PoseCenter = class extends import_index.default {
+  constructor(poseEmitter) {
+    super();
+    this.poseEmitter = poseEmitter;
+    __publicField(this, "pose", (pose) => {
+      this.emit("pose", {
+        ...pose,
+        keypoints: this.calculateRelativeKeypoints(pose.keypoints)
+      });
+    });
+    this.poseEmitter.on("pose", this.pose);
+  }
+  calculateBodyCenter(keypoints) {
+    const leftShoulder = keypoints.find((kp) => kp.name === "left_shoulder");
+    const rightShoulder = keypoints.find(
+      (kp) => kp.name === "right_shoulder"
+    );
+    const leftHip = keypoints.find((kp) => kp.name === "left_hip");
+    const rightHip = keypoints.find((kp) => kp.name === "right_hip");
+    if (!leftShoulder || !rightShoulder || !leftHip || !rightHip) {
+      console.warn(
+        "Not all required keypoints detected for body center calculation"
+      );
+      return null;
+    }
+    const centerX = (leftShoulder.x + rightShoulder.x + leftHip.x + rightHip.x) / 4;
+    const centerY = (leftShoulder.y + rightShoulder.y + leftHip.y + rightHip.y) / 4;
+    const averageScore = (
+      // @ts-ignore
+      (leftShoulder.score + rightShoulder.score + leftHip.score + // @ts-ignore
+      rightHip.score) / 4
+    );
+    return {
+      x: centerX,
+      y: centerY,
+      score: averageScore
+    };
+  }
+  calculateRelativeKeypoints(keypoints) {
+    const bodyCenter = this.calculateBodyCenter(keypoints);
+    if (!bodyCenter) {
+      console.warn(
+        "Couldn't calculate body center. Returning original keypoints."
+      );
+      return keypoints;
+    }
+    let maxDistance = 0;
+    keypoints.forEach((keypoint) => {
+      const distanceX = Math.abs(keypoint.x - bodyCenter.x);
+      const distanceY = Math.abs(keypoint.y - bodyCenter.y);
+      const distance = Math.sqrt(
+        distanceX * distanceX + distanceY * distanceY
+      );
+      if (distance > maxDistance) {
+        maxDistance = distance;
+      }
+    });
+    const relativeKeypoints = keypoints.map((keypoint) => {
+      const relativeX = (keypoint.x - bodyCenter.x) / maxDistance;
+      const relativeY = (keypoint.y - bodyCenter.y) / maxDistance;
+      return {
+        ...keypoint,
+        x: relativeX,
+        y: relativeY
+      };
+    });
+    relativeKeypoints.push({
+      name: "body_center",
+      x: 0,
+      y: 0,
+      score: bodyCenter.score
+    });
+    return relativeKeypoints;
+  }
+};
+async function init() {
+  const video = new Video("./video.mp4");
+  const poseEstimator = new PoseEstimator(video);
+  const poseCenter = new PoseCenter(poseEstimator);
+  new SkeletonOverlay(poseCenter, video);
+  await poseEstimator.init();
+  await video.el.play();
 }
-var canvas = document.getElementById("overlay");
-var ctx = canvas.getContext("2d");
-function resizeCanvas() {
-  canvas.width = video.clientWidth;
-  canvas.height = video.clientHeight;
-}
-video.addEventListener("loadedmetadata", resizeCanvas);
-window.addEventListener("resize", resizeCanvas);
-resizeCanvas();
-ctx.fillStyle = "Red";
-ctx.strokeStyle = "Red";
-ctx.lineWidth = 1;
-ctx.beginPath();
-ctx.arc(canvas.width / 2, canvas.height / 2, 10, 0, 2 * Math.PI);
-ctx.fill();
-ctx.stroke();
-ctx.closePath();
-run();
+init();
 /*! Bundled license information:
 
 @tensorflow/tfjs-core/dist/backends/backend.js:

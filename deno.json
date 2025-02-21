@@ -4,7 +4,6 @@
     "server": "deno run --allow-net --allow-read --allow-sys https://deno.land/std/http/file_server.ts static",
     "checkall": "deno task fmt --check && deno task lint",
     "build": "deno run -A build.ts"
-
   },
   "imports": {
     "@std/assert": "jsr:@std/assert@1",
@@ -12,5 +11,19 @@
     "fft-js": "npm:fft-js@^0.0.12",
     "plotly": "npm:plotly@^1.0.6",
     "prettier": "npm:prettier@^3.5.1"
+  },
+  "lint": {
+    "rules": {
+      "exclude": ["require-await", "ban-ts-comment"]
+    }
+  },
+  "fmt": {
+    "indentWidth": 4,
+    "useTabs": false,
+    "semiColons": false
+  },
+
+  "compilerOptions": {
+    "lib": ["dom", "deno.ns", "node"]
   }
 }
