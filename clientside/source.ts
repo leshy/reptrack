@@ -39,7 +39,6 @@ export class Video extends EventEmitter<VideoEvents> {
         svgOverlay.style.height = "100%"
         svgOverlay.style.pointerEvents = "none"
 
-        // set svgOverlay viewbox
         svgOverlay.setAttribute("viewBox", `-1 -1 2 2`)
 
         createWindow([video, svgOverlay])

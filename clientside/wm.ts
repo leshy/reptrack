@@ -8,16 +8,16 @@ if (!container) {
 }
 
 export function createWindow(
-    child: EL | EL[],
+    child: EL | EL[] | null = null,
     width: string | number = "auto",
 ) {
-    const parent = document.createElement("span")
+    const parent = document.createElement("div")
     parent.className = "window"
     parent.style.width = String(width)
 
     if (Array.isArray(child)) {
         child.forEach((el) => parent.appendChild(el))
-    } else {
+    } else if (child) {
         parent.appendChild(child)
     }
     // @ts-ignore

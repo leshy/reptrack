@@ -3,11 +3,12 @@ import * as poseDetection from "npm:@tensorflow-models/pose-detection"
 import { EventEmitter } from "npm:eventemitter3"
 import * as tf from "npm:@tensorflow/tfjs-core"
 import Stats from "npm:stats.js"
+import { Keypoint, Pose, PoseEvent, STATE } from "./types.ts"
+import { SkeletonDraw } from "./skeleton.ts"
+import * as wm from "./wm.ts"
 import { Video } from "./source.ts"
 
-import { Keypoint, Pose, PoseEvent, STATE } from "./types.ts"
-import { SkeletonOverlay } from "./skeleton.ts"
-import * as wm from "./wm.ts"
+import { FFTDetector } from "./fft.ts"
 
 class PoseEstimator extends EventEmitter<PoseEvent> {
     private detector?: poseDetection.PoseDetector
@@ -160,10 +161,11 @@ class PoseCenter extends EventEmitter<PoseEvent> {
 }
 
 async function init() {
-    const video = new Video("./video.mp4")
+    const video = new Video("./walking.webm")
     const poseEstimator = new PoseEstimator(video)
     const poseCenter = new PoseCenter(poseEstimator)
-    new SkeletonOverlay(poseCenter, wm.createSvgWindow())
+    new SkeletonDraw(poseCenter, wm.createSvgWindow())
+    new FFTDetector(poseCenter)
     await poseEstimator.init()
     await video.el.play()
 }

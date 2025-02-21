@@ -1,8 +1,22 @@
 import * as poseDetection from "npm:@tensorflow-models/pose-detection"
 import { Pose, PoseEmitter, STATE } from "./types.ts"
 
-export class SkeletonOverlay {
-    constructor(private poseEmitter: PoseEmitter, private svg: SVGSVGElement) {
+type SkeletonDrawSettings = {
+    stats: boolean
+}
+
+const defaultSettings: SkeletonDrawSettings = {
+    stats: true,
+}
+
+export class SkeletonDraw {
+    settings: SkeletonDrawSettings
+    constructor(
+        private poseEmitter: PoseEmitter,
+        private svg: SVGSVGElement,
+        settings: Partial<SkeletonDrawSettings> = {},
+    ) {
+        this.settings = { ...defaultSettings, ...settings }
         this.poseEmitter.on("pose", this.drawSkeletonSVG)
     }
 
