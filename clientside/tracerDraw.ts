@@ -6,7 +6,7 @@ type TracerDrawSettings = {
 }
 
 const defaultSettings: TracerDrawSettings = {
-    traceColor: "#888888",
+    traceColor: "#AAAAAA",
     traceWidth: 0.005,
 }
 

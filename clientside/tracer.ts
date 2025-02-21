@@ -10,6 +10,7 @@ import {
 
 type TracerSettings = {
     logLen: number
+    minDist: number
     traceKeypoints: Partial<Record<KeypointName, boolean>>
 }
 
@@ -23,7 +24,8 @@ export const defaultTraces = {
 }
 
 const defaultSettings: TracerSettings = {
-    logLen: 50,
+    minDist: 0.025,
+    logLen: 25,
     traceKeypoints: defaultTraces,
 }
 
@@ -58,8 +60,18 @@ export class Tracer extends EventEmitter<TraceEvent> {
         return newLog
     }
 
+    dist(a: Point, b: Point): number {
+        return Math.sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2)
+    }
+
     pushLog(name: KeypointName, entry: Point) {
         const log = this.getLog(name)
+        const latestElement: Point = log.length > 0
+            ? log[log.length - 1]
+            : [0, 0]
+
+        if (this.dist(latestElement, entry) < this.settings.minDist) return
+
         log.push(entry)
         if (log.length > this.logLen) {
             log.shift()

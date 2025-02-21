@@ -163,7 +163,7 @@ class PoseCenter extends EventEmitter<PoseEvent> {
 }
 
 async function init() {
-    const video = new Video("./sword.webm")
+    const video = new Video("./video.mp4")
     const poseEstimator = new PoseEstimator(video)
     const poseCenter = new PoseCenter(poseEstimator)
     const svg = wm.createSvgWindow()
