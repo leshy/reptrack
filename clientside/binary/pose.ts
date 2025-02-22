@@ -1,6 +1,8 @@
-import { KeypointName, PoseEvent } from "../types.ts"
+import { KeypointName, Point, PoseEvent } from "../types2.ts"
 
-export type Point = [number, number, number]
+function isString(value: unknown): value is string {
+    return typeof value === "string"
+}
 
 export class Pose {
     // 4 bytes for timestamp (ms) + 1 for overall score + 18 * 3 for keypoints = 59 bytes.
@@ -13,7 +15,7 @@ export class Pose {
         this.view = new DataView(this.buffer)
     }
 
-    // Timestamp stored as Uint32 (ms). We round to eliminate sub-ms precision.
+    // Timestamp stored as Uint32 (ms) after rounding.
     get timestamp(): number {
         return this.view.getUint32(0, true)
     }
@@ -56,15 +58,33 @@ export class Pose {
     static fromEvent(event: PoseEvent): Pose {
         const pose = new Pose()
         pose.timestamp = event.timestamp // Rounds to ms.
-        pose.score = event.score
+        pose.score = Number(event.score)
         for (const kp of event.keypoints) {
-            pose.setKeypoint(kp.name, [kp.x, kp.y, kp.score])
+            pose.setKeypoint(
+                (kp.name as unknown) as keyof typeof KeypointName,
+                [kp.x, kp.y, kp.score as number],
+            )
         }
         return pose
     }
 
-    // Expose the underlying buffer.
+    // Expose the underlying buffer if needed.
     getBuffer(): ArrayBuffer {
         return this.buffer
     }
+}
+
+// Dynamically define getters and setters for each keypoint
+// so you can do: pose.nose, pose.left_eye, etc.
+for (const key of Object.keys(KeypointName).filter((k) => isNaN(Number(k)))) {
+    Object.defineProperty(Pose.prototype, key, {
+        get: function (this: Pose) {
+            return this.getKeypoint(key as keyof typeof KeypointName)
+        },
+        set: function (this: Pose, point: Point) {
+            this.setKeypoint(key as keyof typeof KeypointName, point)
+        },
+        enumerable: true,
+        configurable: true,
+    })
 }
