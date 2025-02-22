@@ -1,14 +1,10 @@
 import { KeypointName, Point, PoseEvent } from "../types2.ts"
 
-function isString(value: unknown): value is string {
-    return typeof value === "string"
-}
-
 export class Pose {
     // 4 bytes for timestamp (ms) + 1 for overall score + 18 * 3 for keypoints = 59 bytes.
     static RECORD_SIZE = 4 + 1 + 3 * 18
-    private buffer: ArrayBuffer
-    private view: DataView
+    public buffer: ArrayBuffer
+    public view: DataView
 
     constructor(buffer?: ArrayBuffer) {
         this.buffer = buffer || new ArrayBuffer(Pose.RECORD_SIZE)

@@ -12,6 +12,7 @@ import * as wm from "./wm.ts"
 import { Camera, Video } from "./source.ts"
 import { FFTDetector } from "./fft.ts"
 import { Env } from "./env.ts"
+import * as binary from "./binary/mod.ts"
 
 class PoseEstimator extends EventEmitter<PoseEvent> {
     private detector?: poseDetection.PoseDetector
@@ -20,6 +21,7 @@ class PoseEstimator extends EventEmitter<PoseEvent> {
     }
 
     async init() {
+        console.log("initializing estimator")
         tf.env().setFlags(STATE.flags)
         await tf.setBackend("webgl")
         await tf.ready()
@@ -28,7 +30,6 @@ class PoseEstimator extends EventEmitter<PoseEvent> {
             modelType: poseDetection.movenet.modelType.SINGLEPOSE_THUNDER,
             enableSmoothing: true,
             minPoseScore: 0.1,
-            //modelUrl: "/model/saved_model.pb",
         }
 
         const detector = await poseDetection.createDetector(
@@ -38,6 +39,7 @@ class PoseEstimator extends EventEmitter<PoseEvent> {
         this.detector = detector
 
         this.video.el.onplay = this.loop
+        console.log("ready")
         this.loop()
     }
 
@@ -49,9 +51,10 @@ class PoseEstimator extends EventEmitter<PoseEvent> {
         this.detector.estimatePoses(this.video.el, {}, timestamp).then(
             (poses: poseDetection.Pose[]) => {
                 if (poses.length) {
-                    const pose = { timestamp, ...poses[0] }
-                    console.log(pose)
-                    this.emit("pose", pose)
+                    this.emit(
+                        "pose",
+                        binary.Pose.fromEvent({ timestamp, ...poses[0] }),
+                    )
                 }
                 this.env.fpsEnd()
                 requestAnimationFrame(this.loop)
@@ -165,24 +168,24 @@ async function init() {
     const env = new Env(document)
 
     const video = new Video("sample.mp4")
-    window.video = video
     const poseEstimator = new PoseEstimator(env, video)
+
+    poseEstimator.on("pose", console.log)
     new SkeletonDraw(poseEstimator, video.overlay, { relative: false })
 
-    const poseCenter = new PoseCenter(poseEstimator)
-    const svg = wm.createSvgWindow()
+    // const poseCenter = new PoseCenter(poseEstimator)
+    // const svg = wm.createSvgWindow()
 
-    const smoother = new Smoother(poseCenter, { targetKeypoints: allTargets })
-    new SkeletonDraw(smoother, svg)
+    // const smoother = new Smoother(poseCenter, { targetKeypoints: allTargets })
+    // new SkeletonDraw(smoother, svg)
 
-    const tracer = new Tracer(env, smoother)
-    window.tracer = tracer
-    const tracerSvg = wm.createSvgWindow()
+    // const tracer = new Tracer(env, smoother)
+    // window.tracer = tracer
+    // const tracerSvg = wm.createSvgWindow()
 
-    new TracerDraw(env, tracer, svg)
-    const graph = wm.createSvgWindow("0 0 100 100", false)
-
-    new Grapher(tracer, graph)
+    // new TracerDraw(env, tracer, svg)
+    // const graph = wm.createSvgWindow("0 0 100 100", false)
+    // new Grapher(tracer, graph)
 
     await poseEstimator.init()
     await video.el.play()

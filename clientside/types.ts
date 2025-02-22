@@ -24,10 +24,6 @@ export const STATE = {
     "isBackendChanged": false,
 }
 
-export type Env = {
-    stats: Stats
-}
-
 export type Pose = poseDetection.Pose & { timestmap: number }
 export type Keypoint = poseDetection.Keypoint
 

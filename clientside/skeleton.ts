@@ -1,5 +1,5 @@
 import * as poseDetection from "npm:@tensorflow-models/pose-detection"
-import { Pose, PoseEmitter } from "./types.ts"
+import { BinaryPoseEmitter, KeypointName, Pose } from "./types2.ts"
 
 type SkeletonDrawSettings = {
     stats: boolean
@@ -25,7 +25,7 @@ export class SkeletonDraw {
     private centerPoint: SVGCircleElement | null = null
 
     constructor(
-        private poseEmitter: PoseEmitter,
+        private poseEmitter: BinaryPoseEmitter,
         private svg: SVGSVGElement,
         settings: Partial<SkeletonDrawSettings> = {},
     ) {
@@ -53,7 +53,6 @@ export class SkeletonDraw {
     }
 
     private drawSkeleton = (pose: Pose) => {
-        const keypoints = pose.keypoints
         const namespace = "http://www.w3.org/2000/svg"
 
         const pairs = poseDetection.util.getAdjacentPairs(
@@ -63,10 +62,15 @@ export class SkeletonDraw {
         const currentLines = new Set<string>()
 
         pairs.forEach(([i, j]) => {
-            const kp1 = keypoints[i]
-            const kp2 = keypoints[j]
+            //const kp1 = keypoints[i]
+            //const kp2 = keypoints[j]
+            const kp1name = KeypointName[i]
+            const kp2name = KeypointName[j]
 
-            const lineName = `${kp1.name}_${kp2.name}`
+            const kp1 = pose.getKeypoint(kp1name)
+            const kp2 = pose.getKeypoint(kp2name)
+
+            const lineName = `${i}_${j}`
             currentLines.add(lineName)
 
             let line = this.lineMap.get(lineName)
