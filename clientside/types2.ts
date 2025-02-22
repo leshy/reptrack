@@ -28,4 +28,5 @@ export enum KeypointName {
     "body_center",
 }
 
-export type BinaryPoseEmitter = EventEmitter<{ pose: Pose }>
+export type BinaryPoseEvent = { pose: Pose }
+export type BinaryPoseEmitter = EventEmitter<BinaryPoseEvent>

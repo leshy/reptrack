@@ -23,7 +23,6 @@ export class Video {
         svgOverlay.style.pointerEvents = "none"
 
         const resize = () => {
-            console.log("RESIZED")
             svgOverlay.setAttribute(
                 "viewBox",
                 `0 0 ${video.videoWidth} ${video.videoHeight}`,

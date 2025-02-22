@@ -98,7 +98,6 @@ export class SkeletonDraw {
         const namespace = "http://www.w3.org/2000/svg"
         const currentIndices = new Set<number>()
 
-        // Iterate only over keypoints that are set (non-[0,0,0])
         for (const [i, kp] of pose.iterKeypoints()) {
             currentIndices.add(i)
             let circle = this.keypointMap.get(i)

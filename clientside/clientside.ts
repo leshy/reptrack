@@ -12,9 +12,11 @@ import * as wm from "./wm.ts"
 import { Camera, Video } from "./source.ts"
 import { FFTDetector } from "./fft.ts"
 import { Env } from "./env.ts"
-import * as binary from "./binary/mod.ts"
 
-class PoseEstimator extends EventEmitter<PoseEvent> {
+import * as binary from "./binary/mod.ts"
+import { BinaryPoseEvent } from "./types2.ts"
+
+class PoseEstimator extends EventEmitter<BinaryPoseEvent> {
     private detector?: poseDetection.PoseDetector
     constructor(private env: Env, private video: Video) {
         super()
@@ -168,10 +170,17 @@ async function init() {
     const env = new Env(document)
 
     const video = new Video("sample.mp4")
-    const poseEstimator = new PoseEstimator(env, video)
+    //const poseEstimator = new PoseEstimator(env, video)
 
+    //const history = new binary.History()
+    const history = await binary.History.load("recording.bin")
+    //history.record(poseEstimator)
+
+    window.hist = history
+
+    new SkeletonDraw(history, video.overlay, { relative: false })
+    history.play()
     //    poseEstimator.on("pose", console.log)
-    new SkeletonDraw(poseEstimator, video.overlay, { relative: false })
 
     // const poseCenter = new PoseCenter(poseEstimator)
     // const svg = wm.createSvgWindow()

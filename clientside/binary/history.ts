@@ -1,15 +1,22 @@
+import { EventEmitter } from "npm:eventemitter3"
+import { BinaryPoseEmitter, BinaryPoseEvent } from "../types2.ts"
 import { Pose } from "./pose.ts"
 
-export class History {
+export class History extends EventEmitter<BinaryPoseEvent> {
     private buffer: ArrayBuffer
     private capacity: number
     private recordSize = Pose.RECORD_SIZE
     private writeIndex = 0
     private count = 0
 
-    constructor(capacity: number) {
+    constructor(capacity: number = 3000) {
+        super()
         this.capacity = capacity
         this.buffer = new ArrayBuffer(capacity * this.recordSize)
+    }
+
+    record(poseEmitter: BinaryPoseEmitter): void {
+        poseEmitter.on("pose", (pose: Pose) => this.push(pose))
     }
 
     push(pose: Pose): void {
@@ -43,6 +50,41 @@ export class History {
             yield pose
             prevTimestamp = pose.timestamp
         }
+    }
+
+    async play() {
+        for await (const pose of this.replay()) {
+            this.emit("pose", pose)
+        }
+    }
+
+    download(fileName: string): void {
+        const blob = new Blob([this.buffer], {
+            type: "application/octet-stream",
+        })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement("a")
+        a.href = url
+        a.download = fileName
+        document.body.appendChild(a)
+        a.click()
+        a.remove()
+        URL.revokeObjectURL(url)
+    }
+
+    static async load(url: string): Promise<History> {
+        const response = await fetch(url)
+        const arrayBuffer = await response.arrayBuffer()
+        const recordSize = Pose.RECORD_SIZE
+        if (arrayBuffer.byteLength % recordSize !== 0) {
+            throw new Error("Invalid file size")
+        }
+        const capacity = arrayBuffer.byteLength / recordSize
+        const history = new History(capacity)
+        history.buffer = arrayBuffer
+        history.count = capacity
+        history.writeIndex = 0
+        return history
     }
 }
 

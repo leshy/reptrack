@@ -22,7 +22,6 @@ export enum KeypointName {
     "right_knee",
     "left_ankle",
     "right_ankle",
-    "body_center",
 }
 
 export function isEmpty(keypoint: [number, number, number]): boolean {
