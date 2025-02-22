@@ -2,7 +2,6 @@ import "npm:@tensorflow/tfjs-backend-webgl"
 import * as poseDetection from "npm:@tensorflow-models/pose-detection"
 import { EventEmitter } from "npm:eventemitter3"
 import * as tf from "npm:@tensorflow/tfjs-core"
-import Stats from "npm:stats.js"
 import { allTargets, Keypoint, Pose, PoseEvent, STATE } from "./types.ts"
 import { SkeletonDraw } from "./skeleton.ts"
 import { Tracer } from "./tracer.ts"
@@ -11,20 +10,16 @@ import { Smoother } from "./smoother.ts"
 import { TracerDraw } from "./tracerDraw.ts"
 import * as wm from "./wm.ts"
 import { Camera, Video } from "./source.ts"
-
 import { FFTDetector } from "./fft.ts"
+import { Env } from "./env.ts"
 
 class PoseEstimator extends EventEmitter<PoseEvent> {
     private detector?: poseDetection.PoseDetector
-    private stats = Stats
-    constructor(private video: Video) {
+    constructor(private env: Env, private video: Video) {
         super()
-        this.stats = new Stats()
     }
 
     async init() {
-        document.body.appendChild(this.stats.dom)
-        this.stats.showPanel(0)
         tf.env().setFlags(STATE.flags)
         await tf.setBackend("webgl")
         await tf.ready()
@@ -49,11 +44,16 @@ class PoseEstimator extends EventEmitter<PoseEvent> {
     loop = () => {
         if (this.video.el.paused) return
         if (!this.detector) throw new Error("not initialized")
-        this.stats.begin()
-        this.detector.estimatePoses(this.video.el, {}, performance.now()).then(
+        this.env.fpsBegin()
+        const timestamp = performance.now()
+        this.detector.estimatePoses(this.video.el, {}, timestamp).then(
             (poses: poseDetection.Pose[]) => {
-                if (poses.length) this.emit("pose", poses[0])
-                this.stats.end()
+                if (poses.length) {
+                    const pose = { timestamp, ...poses[0] }
+                    console.log(pose)
+                    this.emit("pose", pose)
+                }
+                this.env.fpsEnd()
                 requestAnimationFrame(this.loop)
             },
         )
@@ -162,8 +162,11 @@ class PoseCenter extends EventEmitter<PoseEvent> {
 }
 
 async function init() {
+    const env = new Env(document)
+
     const video = new Video("sample.mp4")
-    const poseEstimator = new PoseEstimator(video)
+    window.video = video
+    const poseEstimator = new PoseEstimator(env, video)
     new SkeletonDraw(poseEstimator, video.overlay, { relative: false })
 
     const poseCenter = new PoseCenter(poseEstimator)
@@ -172,10 +175,11 @@ async function init() {
     const smoother = new Smoother(poseCenter, { targetKeypoints: allTargets })
     new SkeletonDraw(smoother, svg)
 
-    const tracer = new Tracer(smoother)
+    const tracer = new Tracer(env, smoother)
+    window.tracer = tracer
     const tracerSvg = wm.createSvgWindow()
 
-    new TracerDraw(tracer, svg)
+    new TracerDraw(env, tracer, svg)
     const graph = wm.createSvgWindow("0 0 100 100", false)
 
     new Grapher(tracer, graph)

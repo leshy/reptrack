@@ -1,23 +1,6 @@
 import * as poseDetection from "npm:@tensorflow-models/pose-detection"
 import { EventEmitter } from "npm:eventemitter3"
 
-export type Pose = poseDetection.Pose
-export type Keypoint = poseDetection.Keypoint
-
-export interface PoseEvent {
-    pose: Pose
-}
-
-export type Point = [number, number]
-export type TraceMap = Map<string, Point[]>
-export interface TraceEvent {
-    trace: TraceMap
-}
-
-export type TraceEmitter = EventEmitter<TraceEvent>
-
-export type PoseEmitter = EventEmitter<PoseEvent>
-
 export const STATE = {
     "runtime": "tfjs",
     "backend": "webgl",
@@ -40,6 +23,28 @@ export const STATE = {
     "isFlagChanged": false,
     "isBackendChanged": false,
 }
+
+export type Env = {
+    stats: Stats
+}
+
+export type Pose = poseDetection.Pose & { timestmap: number }
+export type Keypoint = poseDetection.Keypoint
+
+export interface PoseEvent {
+    pose: Pose
+}
+
+export type Point = [number, number]
+export type TraceMap = Map<string, Point[]>
+
+export interface TraceEvent {
+    trace: TraceMap
+}
+
+export type TraceEmitter = EventEmitter<TraceEvent>
+
+export type PoseEmitter = EventEmitter<PoseEvent>
 
 export enum KeypointName {
     "nose",

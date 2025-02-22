@@ -1,13 +1,16 @@
+import { Env } from "./env.ts"
 import { Point, TraceEmitter, TraceMap } from "./types.ts"
 
 type TracerDrawSettings = {
     traceColor: string
     traceWidth: number
+    measure: boolean
 }
 
 const defaultSettings: TracerDrawSettings = {
     traceColor: "rgba(255,255,255,0.3)",
     traceWidth: 0.01,
+    measure: true,
 }
 
 export class TracerDraw {
@@ -16,6 +19,7 @@ export class TracerDraw {
     private pathMap: Map<string, SVGPathElement> = new Map()
 
     constructor(
+        private env: Env,
         private traceEmitter: TraceEmitter,
         private svg: SVGSVGElement,
         settings: Partial<TracerDrawSettings> = {},
@@ -32,6 +36,7 @@ export class TracerDraw {
     }
 
     drawTrace = (traceMap: TraceMap) => {
+        if (this.settings.measure) this.env.measureStart("tdraw")
         const currentTraces = new Set<string>()
 
         traceMap.forEach((points, name) => {
@@ -46,6 +51,7 @@ export class TracerDraw {
                 this.pathMap.delete(name)
             }
         })
+        if (this.settings.measure) this.env.measureEnd("tdraw")
     }
 
     private drawPath(name: string, points: Point[]) {

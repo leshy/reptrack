@@ -1,3 +1,4 @@
+import { Env } from "./env.ts"
 import { EventEmitter } from "npm:eventemitter3"
 import {
     defaultTarget,
@@ -12,22 +13,22 @@ import {
 
 type TracerSettings = {
     logLen: number
-    minDist: number
     targetKeypoints: Partial<Record<KeypointName, boolean>>
+    measure: boolean
 }
 
 const defaultSettings: TracerSettings = {
-    minDist: 1,
     logLen: 300,
     targetKeypoints: defaultTarget,
+    measure: false,
 }
 
 export class Tracer extends EventEmitter<TraceEvent & MultiValueEvent> {
     settings: TracerSettings
     private log: TraceMap = new Map()
     private logLen: number
-
     constructor(
+        private env: Env,
         private poseEmitter: PoseEmitter,
         settings: Partial<TracerSettings> = {},
     ) {
@@ -53,27 +54,8 @@ export class Tracer extends EventEmitter<TraceEvent & MultiValueEvent> {
         return newLog
     }
 
-    dist(a: Point, b: Point): number {
-        return Math.sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2)
-    }
-
     pushLog(name: KeypointName, entry: Point) {
-        //        entry = [this.round(entry[0]), this.round(entry[1])]
         const log = this.getLog(name)
-        const latestElement: Point = log.length > 0
-            ? log[log.length - 1]
-            : [0, 0]
-
-        //        const dist = this.dist(latestElement, entry)
-        //if (dist > this.settings.minDist) {
-        if (latestElement[0] !== entry[0] && latestElement[1] !== entry[1]) {
-            // store avg
-            log[log.length - 1] = [
-                (latestElement[0] + entry[0]) / 2,
-                (latestElement[1] + entry[1]) / 2,
-            ]
-        }
-
         log.push(entry)
         if (log.length > this.logLen) {
             log.shift()
@@ -81,6 +63,7 @@ export class Tracer extends EventEmitter<TraceEvent & MultiValueEvent> {
     }
 
     receivePose = (pose: Pose) => {
+        if (this.settings.measure) this.env.measureStart("tracer")
         pose.keypoints.forEach((keypoint) => {
             if (keypoint.name) {
                 const keypointEnum =
@@ -92,28 +75,16 @@ export class Tracer extends EventEmitter<TraceEvent & MultiValueEvent> {
         })
         this.emit("trace", this.log)
 
-        // this.emit(
-        //     "values",
-        //     Object.fromEntries(
-        //         Array.from(this.log.entries()).map(([key, value]) => [
-        //             key,
-        //             value.map(collapse) || [],
-        //         ]),
-        //     ),
-        // )
-
-        const data = this.log.entries().map(([name, data]) => data).toArray()
-        const totaldata = data[0].map((_, index) =>
-            data.reduce((total: number, subdata: number) => {
-                return total + subdata[index].reduce((x, y) => x + y)
-            }, 0)
-        )
+        const collapse = (point: Point) => point[0] + point[1]
 
         this.emit(
             "values",
-            {
-                "total": totaldata,
-            },
+            Object.fromEntries(
+                Array.from(this.log.entries()).map(([key, value]) => [
+                    key,
+                    value.map(collapse) || [],
+                ]),
+            ),
         )
     }
 }

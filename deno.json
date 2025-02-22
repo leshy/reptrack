@@ -24,6 +24,6 @@
   },
 
   "compilerOptions": {
-    "lib": ["dom", "deno.ns", "node"]
+    "lib": ["dom", "deno.ns"]
   }
 }

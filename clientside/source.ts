@@ -1,18 +1,11 @@
 import { EventEmitter } from "npm:eventemitter3"
 import { createWindow } from "./wm.ts"
 
-interface VideoEvents {
-    resized: { width: number; height: number }
-}
-
-export class Video extends EventEmitter<VideoEvents> {
-    public width: number
-    public height: number
+export class Video {
     public el: HTMLVideoElement
     public overlay: SVGSVGElement
 
     constructor(private src: string) {
-        super()
         const video = document.createElement("video")
         video.src = this.src
         video.autoplay = true
@@ -26,33 +19,28 @@ export class Video extends EventEmitter<VideoEvents> {
         svgOverlay.style.position = "absolute"
         svgOverlay.style.top = "0"
         svgOverlay.style.left = "0"
-        svgOverlay.style.width = "100%"
-        svgOverlay.style.height = "100%"
 
         svgOverlay.style.pointerEvents = "none"
 
-        const resized = () => {
-            this.width = video.videoWidth
-            this.height = video.videoHeight
-            this.emit("resized", { width: this.width, height: this.height })
-
-            // set viewbox
+        const resize = () => {
+            console.log("RESIZED")
             svgOverlay.setAttribute(
                 "viewBox",
-                `0 0 ${this.width} ${this.height}`,
+                `0 0 ${video.videoWidth} ${video.videoHeight}`,
             )
+            svgOverlay.style.width = String(video.clientWidth)
+            svgOverlay.style.height = String(video.clientHeight)
         }
 
-        video.addEventListener("loadedmetadata", resized)
-        video.addEventListener("resize", resized)
+        video.addEventListener("loadedmetadata", resize)
+        video.addEventListener("resize", resize)
+        window.addEventListener("resize", resize)
 
         createWindow([video, svgOverlay])
 
         this.overlay = svgOverlay
         this.el = video
-        this.width = video.videoWidth
-        this.height = video.videoHeight
-        resized()
+        resize()
     }
 }
 
