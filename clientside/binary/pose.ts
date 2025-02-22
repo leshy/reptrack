@@ -1,8 +1,39 @@
-import { KeypointName, Point, PoseEvent } from "../types2.ts"
+import * as poseDetection from "npm:@tensorflow-models/pose-detection"
+
+export type Point = [number, number, number]
+
+export type PoseEvent = poseDetection.Pose & { timestamp: number }
+
+export enum KeypointName {
+    "nose",
+    "left_eye",
+    "right_eye",
+    "left_ear",
+    "right_ear",
+    "left_shoulder",
+    "right_shoulder",
+    "left_elbow",
+    "right_elbow",
+    "left_wrist",
+    "right_wrist",
+    "left_hip",
+    "right_hip",
+    "left_knee",
+    "right_knee",
+    "left_ankle",
+    "right_ankle",
+    "body_center",
+}
+
+export function isEmpty(keypoint: [number, number, number]): boolean {
+    return keypoint[0] === 0 && keypoint[1] === 0 && keypoint[2] === 0
+}
 
 export class Pose {
-    // 4 bytes for timestamp (ms) + 1 for overall score + 18 * 3 for keypoints = 59 bytes.
-    static RECORD_SIZE = 4 + 1 + 3 * 18
+    // 4 bytes for timestamp, 1 byte for overall score, plus 3 bytes per keypoint.
+    static keypointCount = 18
+    static RECORD_SIZE = 4 + 1 + 3 * Pose.keypointCount
+
     public buffer: ArrayBuffer
     public view: DataView
 
@@ -11,7 +42,6 @@ export class Pose {
         this.view = new DataView(this.buffer)
     }
 
-    // Timestamp stored as Uint32 (ms) after rounding.
     get timestamp(): number {
         return this.view.getUint32(0, true)
     }
@@ -19,7 +49,6 @@ export class Pose {
         this.view.setUint32(0, Math.round(val), true)
     }
 
-    // Overall score stored as Uint8 at offset 4; quantized from [0,1] → [0,255].
     get score(): number {
         return this.view.getUint8(4) / 255
     }
@@ -27,13 +56,13 @@ export class Pose {
         this.view.setUint8(4, Math.round(val * 255))
     }
 
-    // Keypoints start at offset 5.
+    // Computes the byte offset for a given keypoint index.
     private getKeypointOffset(index: number): number {
         return 5 + index * 3
     }
 
-    getKeypoint(name: keyof typeof KeypointName): Point {
-        const index = KeypointName[name]
+    // Primary access: get keypoint by index.
+    getKeypoint(index: number): [number, number, number] {
         const offset = this.getKeypointOffset(index)
         const x = this.view.getUint8(offset)
         const y = this.view.getUint8(offset + 1)
@@ -41,8 +70,8 @@ export class Pose {
         return [x, y, score]
     }
 
-    setKeypoint(name: keyof typeof KeypointName, point: Point) {
-        const index = KeypointName[name]
+    // Primary access: set keypoint by index.
+    setKeypoint(index: number, point: [number, number, number]): void {
         const offset = this.getKeypointOffset(index)
         const [x, y, s] = point
         this.view.setUint8(offset, Math.round(x))
@@ -50,37 +79,81 @@ export class Pose {
         this.view.setUint8(offset + 2, Math.round(s * 255))
     }
 
-    // Build a Pose instance from a JSON event.
+    // For backwards compatibility: get or set keypoints by name.
+    getKeypointByName(
+        name: keyof typeof KeypointName,
+    ): [number, number, number] {
+        return this.getKeypoint(KeypointName[name])
+    }
+
+    setKeypointByName(
+        name: keyof typeof KeypointName,
+        point: [number, number, number],
+    ): void {
+        this.setKeypoint(KeypointName[name], point)
+    }
+
+    // Build a Pose instance from a PoseEvent.
     static fromEvent(event: PoseEvent): Pose {
         const pose = new Pose()
-        pose.timestamp = event.timestamp // Rounds to ms.
+        pose.timestamp = event.timestamp
         pose.score = Number(event.score)
         for (const kp of event.keypoints) {
-            pose.setKeypoint(
-                (kp.name as unknown) as keyof typeof KeypointName,
-                [kp.x, kp.y, kp.score as number],
-            )
+            const index = KeypointName[kp.name as keyof typeof KeypointName]
+            pose.setKeypoint(index, [kp.x, kp.y, kp.score as number])
         }
         return pose
     }
 
-    // Expose the underlying buffer if needed.
+    // Expose the underlying ArrayBuffer.
     getBuffer(): ArrayBuffer {
         return this.buffer
     }
+
+    *iterKeypoints(): IterableIterator<[number, [number, number, number]]> {
+        for (let i = 0; i < Pose.keypointCount; i++) {
+            const kp = this.getKeypoint(i)
+            // Skip if keypoint is unset (i.e. default [0, 0, 0])
+            if (isEmpty(kp)) continue
+            yield [i, kp]
+        }
+    }
 }
 
-// Dynamically define getters and setters for each keypoint
-// so you can do: pose.nose, pose.left_eye, etc.
+// Optional: create dynamic getters/setters for keypoint names if needed.
 for (const key of Object.keys(KeypointName).filter((k) => isNaN(Number(k)))) {
     Object.defineProperty(Pose.prototype, key, {
         get: function (this: Pose) {
-            return this.getKeypoint(key as keyof typeof KeypointName)
+            const index = KeypointName[key as keyof typeof KeypointName]
+            return this.getKeypoint(index)
         },
-        set: function (this: Pose, point: Point) {
-            this.setKeypoint(key as keyof typeof KeypointName, point)
+        set: function (this: Pose, point: [number, number, number]) {
+            const index = KeypointName[key as keyof typeof KeypointName]
+            this.setKeypoint(index, point)
         },
         enumerable: true,
         configurable: true,
     })
+}
+
+// Declare the additional keypoint properties.
+export interface Pose {
+    nose: [number, number, number]
+    left_eye: [number, number, number]
+    right_eye: [number, number, number]
+    left_ear: [number, number, number]
+    right_ear: [number, number, number]
+    left_shoulder: [number, number, number]
+    right_shoulder: [number, number, number]
+    left_elbow: [number, number, number]
+    right_elbow: [number, number, number]
+    left_wrist: [number, number, number]
+    right_wrist: [number, number, number]
+    left_hip: [number, number, number]
+    right_hip: [number, number, number]
+    left_knee: [number, number, number]
+    right_knee: [number, number, number]
+    left_ankle: [number, number, number]
+    right_ankle: [number, number, number]
+    body_center: [number, number, number]
 }

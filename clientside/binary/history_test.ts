@@ -9,15 +9,15 @@ Deno.test("History push and iteration order", () => {
     const history = new History(3)
     const pose1 = new Pose()
     pose1.timestamp = 100
-    pose1.setKeypoint("nose", [10, 20, 0.9])
+    pose1.setKeypointByName("nose", [10, 20, 0.9])
 
     const pose2 = new Pose()
     pose2.timestamp = 200
-    pose2.setKeypoint("nose", [30, 40, 0.8])
+    pose2.setKeypointByName("nose", [30, 40, 0.8])
 
     const pose3 = new Pose()
     pose3.timestamp = 300
-    pose3.setKeypoint("nose", [50, 60, 0.7])
+    pose3.setKeypointByName("nose", [50, 60, 0.7])
 
     history.push(pose1)
     history.push(pose2)
@@ -29,7 +29,7 @@ Deno.test("History push and iteration order", () => {
     assertEquals(poses[1].timestamp, 200)
     assertEquals(poses[2].timestamp, 300)
 
-    const nose1 = poses[0].getKeypoint("nose")
+    const nose1 = poses[0].getKeypointByName("nose")
     assertEquals(nose1[0], 10)
     assertEquals(nose1[1], 20)
     assertAlmostEquals(nose1[2], 0.9, 0.01)
@@ -63,14 +63,14 @@ Deno.test("HistoryPose view reflects mutations", () => {
     const history = new History(3)
     const pose = new Pose()
     pose.timestamp = 123
-    pose.setKeypoint("nose", [10, 20, 0.5])
+    pose.setKeypointByName("nose", [10, 20, 0.5])
     history.push(pose)
 
     const [view] = Array.from(history.poses())
-    view.setKeypoint("nose", [99, 88, 0.7])
+    view.setKeypointByName("nose", [99, 88, 0.7])
 
     const [viewAgain] = Array.from(history.poses())
-    const nose = viewAgain.getKeypoint("nose")
+    const nose = viewAgain.getKeypointByName("nose")
     assertEquals(nose[0], 99)
     assertEquals(nose[1], 88)
     assertAlmostEquals(nose[2], 0.7, 0.01)

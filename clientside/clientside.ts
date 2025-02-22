@@ -170,7 +170,7 @@ async function init() {
     const video = new Video("sample.mp4")
     const poseEstimator = new PoseEstimator(env, video)
 
-    poseEstimator.on("pose", console.log)
+    //    poseEstimator.on("pose", console.log)
     new SkeletonDraw(poseEstimator, video.overlay, { relative: false })
 
     // const poseCenter = new PoseCenter(poseEstimator)
