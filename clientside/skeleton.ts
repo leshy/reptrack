@@ -6,9 +6,11 @@ type SkeletonDrawSettings = {
     keypoints: boolean
     skeleton: boolean
     center: boolean
+    relative: boolean
 }
 
 const defaultSettings: SkeletonDrawSettings = {
+    relative: true,
     stats: true,
     keypoints: true,
     skeleton: true,
@@ -73,7 +75,12 @@ export class SkeletonDraw {
                 line = document.createElementNS(namespace, "line")
                 line.setAttribute("data-name", lineName)
                 line.setAttribute("stroke", "white")
-                line.setAttribute("stroke-width", "0.01")
+                if (this.settings.relative) {
+                    line.setAttribute("stroke-width", "0.01")
+                } else {
+                    line.setAttribute("stroke-width", "1")
+                }
+
                 this.skeletonGroup.appendChild(line)
                 this.lineMap.set(lineName, line)
             }

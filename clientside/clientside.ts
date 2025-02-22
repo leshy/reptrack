@@ -10,7 +10,7 @@ import { Grapher } from "./grapher.ts"
 import { Smoother } from "./smoother.ts"
 import { TracerDraw } from "./tracerDraw.ts"
 import * as wm from "./wm.ts"
-import { Video } from "./source.ts"
+import { Camera, Video } from "./source.ts"
 
 import { FFTDetector } from "./fft.ts"
 
@@ -74,7 +74,6 @@ class PoseCenter extends EventEmitter<PoseEvent> {
     }
 
     calculateBodyCenter(keypoints: Keypoint[]) {
-        // TODO this is terribly inefficient
         const leftShoulder = keypoints.find((kp) => kp.name === "left_shoulder")
         const rightShoulder = keypoints.find((kp) =>
             kp.name === "right_shoulder"
@@ -165,13 +164,13 @@ class PoseCenter extends EventEmitter<PoseEvent> {
 async function init() {
     const video = new Video("sample.mp4")
     const poseEstimator = new PoseEstimator(video)
+    new SkeletonDraw(poseEstimator, video.overlay, { relative: false })
+
     const poseCenter = new PoseCenter(poseEstimator)
     const svg = wm.createSvgWindow()
-    //new FFTDetector(poseCenter)
 
     const smoother = new Smoother(poseCenter, { targetKeypoints: allTargets })
     new SkeletonDraw(smoother, svg)
-    //new SkeletonDraw(poseCenter, svg)
 
     const tracer = new Tracer(smoother)
     const tracerSvg = wm.createSvgWindow()
@@ -179,8 +178,8 @@ async function init() {
     new TracerDraw(tracer, svg)
     const graph = wm.createSvgWindow("0 0 100 100", false)
 
-    const grapher = new Grapher(tracer, graph)
-    window.tracer = tracer
+    new Grapher(tracer, graph)
+
     await poseEstimator.init()
     await video.el.play()
 }

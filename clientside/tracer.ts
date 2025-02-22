@@ -57,27 +57,22 @@ export class Tracer extends EventEmitter<TraceEvent & MultiValueEvent> {
         return Math.sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2)
     }
 
-    round(num: number): number {
-        return Math.round(num * 100) / 100
-    }
-
     pushLog(name: KeypointName, entry: Point) {
         //        entry = [this.round(entry[0]), this.round(entry[1])]
-        console.log(entry)
         const log = this.getLog(name)
         const latestElement: Point = log.length > 0
             ? log[log.length - 1]
             : [0, 0]
 
-        const dist = this.dist(latestElement, entry)
-        console.log(dist)
-        if (dist > this.settings.minDist) {
+        //        const dist = this.dist(latestElement, entry)
+        //if (dist > this.settings.minDist) {
+        if (latestElement[0] !== entry[0] && latestElement[1] !== entry[1]) {
             // store avg
             log[log.length - 1] = [
                 (latestElement[0] + entry[0]) / 2,
                 (latestElement[1] + entry[1]) / 2,
             ]
-        } else console.log("throw")
+        }
 
         log.push(entry)
         if (log.length > this.logLen) {
@@ -97,16 +92,28 @@ export class Tracer extends EventEmitter<TraceEvent & MultiValueEvent> {
         })
         this.emit("trace", this.log)
 
-        const collapse = (point: Point): number => point[0] + point[1]
+        // this.emit(
+        //     "values",
+        //     Object.fromEntries(
+        //         Array.from(this.log.entries()).map(([key, value]) => [
+        //             key,
+        //             value.map(collapse) || [],
+        //         ]),
+        //     ),
+        // )
+
+        const data = this.log.entries().map(([name, data]) => data).toArray()
+        const totaldata = data[0].map((_, index) =>
+            data.reduce((total: number, subdata: number) => {
+                return total + subdata[index].reduce((x, y) => x + y)
+            }, 0)
+        )
 
         this.emit(
             "values",
-            Object.fromEntries(
-                Array.from(this.log.entries()).map(([key, value]) => [
-                    key,
-                    value.map(collapse) || [],
-                ]),
-            ),
+            {
+                "total": totaldata,
+            },
         )
     }
 }

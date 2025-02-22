@@ -14,7 +14,7 @@ type SmootherSettings = {
 }
 
 const defaultSmootherSettings: SmootherSettings = {
-    windowSize: 5,
+    windowSize: 10,
     targetKeypoints: defaultTarget,
 }
 
