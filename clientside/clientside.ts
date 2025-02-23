@@ -189,23 +189,31 @@ async function init() {
     //load history
 
     const history1 = await binary.History.load("thunder.bin.gz")
-    //const history2 = await binary.History.load("lightning.bin.gz")
 
-    const center1 = new binary.Center(history1)
+    const pickyBoi1 = new binary.PickyBoi(history1, 5)
+    const smoother1 = new binary.Smoother(history1, 20, 0.2)
+    const pickyBoi2 = new binary.PickyBoi(smoother1, 5)
 
-    const smoother1 = new binary.Smoother(center1, 10, 0.3)
+    //const center1 = new binary.Center(smoother1)
 
-    const svg1 = wm.createSvgWindow("0 0 255 255", true, "smooother")
-    //const svg2 = wm.createSvgWindow("0 0 255 255", true, "no smoother")
+    const svg1 = wm.createSvgWindow("0 0 255 255", true, "plain")
+    const svg2 = wm.createSvgWindow("0 0 255 255", true, "euclidian")
+    const svg4 = wm.createSvgWindow("0 0 255 255", true, "")
+    const svg3 = wm.createSvgWindow("0 0 255 255", true, "euclidian smoother")
 
-    svg1.style.height = "99vh"
+    //svg1.style.height = "99vh"
     // new SkeletonDraw(center1, svg1, {
     //     lineWidth: "4",
     //     keypointRadius: "1.5",
     //     color: colorInterpolator([100, 100, 100], [55, 55, 55]),
     // })
 
-    new SkeletonDraw(smoother1, svg1)
+    const center1 = new binary.Center(history1)
+    const center2 = new binary.Center(pickyBoi1)
+    const center3 = new binary.Center(pickyBoi2)
+    new SkeletonDraw(center1, svg1)
+    new SkeletonDraw(center2, svg2)
+    new SkeletonDraw(center3, svg3)
 
     history1.play()
     //history2.play()
