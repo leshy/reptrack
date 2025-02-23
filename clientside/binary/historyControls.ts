@@ -59,12 +59,9 @@ export class HistoryControls {
     private nextBtn: HTMLButtonElement
     private seekBar: HTMLInputElement
     private frameLabel: HTMLSpanElement
-    private player: HistoryPlayer
-    constructor(history: History, domEl: HTMLElement) {
-        this.player = new HistoryPlayer(history)
-
+    constructor(private player: HistoryPlayer, domEl: HTMLElement) {
         const c = document.createElement("div")
-        c.className = "history-controls"
+        c.className = "controls"
         this.playStopBtn = document.createElement("button")
         this.playStopBtn.addEventListener("click", () => {
             if (!this.player.isPlaying) {
@@ -116,5 +113,25 @@ export class HistoryControls {
         const current = this.player.frame + 1
         const total = this.player.total
         this.frameLabel.textContent = `Frame: ${current} / ${total}`
+    }
+}
+
+export class HistoryDisplay {
+    private displayEl: HTMLDivElement
+
+    constructor(private player: HistoryPlayer, domEl: HTMLElement) {
+        this.displayEl = document.createElement("div")
+        domEl.appendChild(this.displayEl)
+        this.player.history.on("pose", () => {
+            this.update()
+        })
+        this.update()
+    }
+
+    private update() {
+        const current = this.player.frame + 1
+        const total = this.player.total
+
+        this.displayEl.textContent = `[${current}/${total}]`
     }
 }

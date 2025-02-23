@@ -1,2 +1,10 @@
 node_modules
 static/js/*
+static/*.mp4
+static/*.webm
+console
+clientside/trash*
+static/old
+converter
+tmp
+*.png

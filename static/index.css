@@ -35,7 +35,7 @@ body {
   position: relative;
   width: 100%;
   margin: 0;
-  padding: var(--line-height) 2ch;
+  padding: 0;
   max-width: calc(min(100ch, round(down, 100%, 1ch)));
   line-height: var(--line-height);
   overflow-x: hidden;
@@ -74,6 +74,7 @@ canvas {
 }
 
 .window {
+  border: 1px solid white;
     flex: 1 1;
     margin: 2px;
     padding: 0;
@@ -104,17 +105,14 @@ video {
   position: absolute;
   top: 0;
   right: 0;
-  background-color: #DDD;
-  color: black;
+  background-color: black;;
+  color: white;
   padding: 5px;
-  text-transform: uppercase;
 }
 
 
 
-
 button {
-  /* no multiline text */
   white-space: nowrap;
   border: none;
   padding: 5px;
@@ -131,16 +129,51 @@ button:hover {
 }
 
 
-.history-controls {
+.controls {
   position: absolute;
-  bottom: 0;
-  left: 0;
+  bottom: 5px;
+  left: 5px;
   width: 100%;
-  display: inline-flex;
-  align-items: center;
+  display: flex;
   gap: 0.5rem;
+  padding: 0;
+  margin: 0;
 }
-.frame-label {
-  margin-left: 1rem;
-  font-weight: bold;
+
+
+input[type="range"] {
+  -webkit-appearance: none;
+  width: 200px;
+  height: 100%;;
+  background: black;
+  outline: 1px solid white;
+  margin: 10px 0;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: black;
+  cursor: pointer;
+  border: 1px solid white;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background: black;
+  cursor: pointer;
+  border: 1px solid white;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  background: white;
+  border: 1px solid black;
+}
+
+input[type="range"]::-moz-range-thumb:hover {
+  background: white;
+  border: 1px solid black;
 }

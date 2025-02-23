@@ -200,7 +200,7 @@ async function init() {
 
     //const center1 = new binary.Center(smoother1)
 
-    const svg1 = wm.createSvgWindow("0 0 255 255", true, "plain")
+    const svg1 = wm.createSvgWindow("0 0 255 255", true, "")
     const svg2 = wm.createSvgWindow("0 0 255 255", true, "smoother")
     const svg3 = wm.createSvgWindow("0 0 255 255", true, "euclidian smoother")
     const svg4 = wm.createSvgWindow(
@@ -228,7 +228,13 @@ async function init() {
 
     //await poseEstimator.init()
     //await video.el.play()
-    new binary.HistoryControls(history1, svg1.parentElement as HTMLElement)
+
+    const player = new binary.HistoryPlayer(history1)
+    new binary.HistoryControls(player, svg1.parentElement as HTMLElement)
+    new binary.HistoryDisplay(
+        player,
+        svg1.parentElement?.querySelector(".windowTitle") as HTMLElement,
+    )
 
     //history1.play()
     //history2.play()
