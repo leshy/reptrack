@@ -58,10 +58,19 @@ export class History extends EventEmitter<BinaryPoseEvent> {
         }
     }
 
-    download(fileName: string): void {
-        const blob = new Blob([this.buffer], {
-            type: "application/octet-stream",
-        })
+    async download(fileName: string): Promise<void> {
+        let dataToDownload: ArrayBuffer
+        if ("CompressionStream" in window) {
+            const cs = new CompressionStream("gzip")
+            const writer = cs.writable.getWriter()
+            writer.write(new Uint8Array(this.buffer))
+            writer.close()
+            const compressedResponse = new Response(cs.readable)
+            dataToDownload = await compressedResponse.arrayBuffer()
+        } else {
+            dataToDownload = this.buffer
+        }
+        const blob = new Blob([dataToDownload], { type: "application/gzip" })
         const url = URL.createObjectURL(blob)
         const a = document.createElement("a")
         a.href = url
@@ -74,7 +83,17 @@ export class History extends EventEmitter<BinaryPoseEvent> {
 
     static async load(url: string): Promise<History> {
         const response = await fetch(url)
-        const arrayBuffer = await response.arrayBuffer()
+        const compressedBuffer = await response.arrayBuffer()
+        let arrayBuffer: ArrayBuffer
+        if ("DecompressionStream" in window) {
+            const blob = new Blob([compressedBuffer])
+            const ds = new DecompressionStream("gzip")
+            const decompressedStream = blob.stream().pipeThrough(ds)
+            const decompressedResponse = new Response(decompressedStream)
+            arrayBuffer = await decompressedResponse.arrayBuffer()
+        } else {
+            arrayBuffer = compressedBuffer
+        }
         const recordSize = Pose.RECORD_SIZE
         if (arrayBuffer.byteLength % recordSize !== 0) {
             throw new Error("Invalid file size")
