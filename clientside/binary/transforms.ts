@@ -128,29 +128,16 @@ export class Smoother extends EventEmitter<BinaryPoseEvent> {
     }
 }
 
-export class PickyBoi extends EventEmitter<BinaryPoseEvent> {
+export class EuclidianFilter extends EventEmitter<BinaryPoseEvent> {
     private lastPose: Pose | null = null
 
     constructor(
-        private poseEmitter: BinaryPoseEmitter,
-        private threshold: number,
+        poseEmitter: BinaryPoseEmitter,
+        private threshold: number = 5,
     ) {
         super()
         this.threshold = threshold
         poseEmitter.on("pose", this.process)
-    }
-
-    weightedEuclidianDistance(a: Pose, b: Pose): number {
-        let weightedSum = 0
-        for (let i = 0; i < Pose.keypointCount; i++) {
-            const [x1, y1, score1] = a.getKeypoint(i)
-            const [x2, y2, score2] = b.getKeypoint(i)
-            const weight = score1 * score2
-            const dx = x1 - x2
-            const dy = y1 - y2
-            weightedSum += weight * (dx * dx + dy * dy)
-        }
-        return Math.sqrt(weightedSum)
     }
 
     process = (pose: Pose) => {
@@ -158,8 +145,8 @@ export class PickyBoi extends EventEmitter<BinaryPoseEvent> {
             this.lastPose = pose
             return pose
         }
-        const distance = this.weightedEuclidianDistance(this.lastPose, pose)
-        console.log(distance)
+        const distance = this.lastPose.distance(pose)
+
         if (distance > this.threshold) {
             this.lastPose = pose
             this.emit("pose", pose)

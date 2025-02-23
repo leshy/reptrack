@@ -188,11 +188,11 @@ async function init() {
 
     //load history
 
-    const history1 = await binary.History.load("thunder.bin.gz")
+    const history1 = await binary.HistoryFile.load("lightning.bin.gz")
 
-    const pickyBoi1 = new binary.PickyBoi(history1, 5)
+    const eucidian1 = new binary.EuclidianFilter(history1, 5)
     const smoother1 = new binary.Smoother(history1, 20, 0.2)
-    const pickyBoi2 = new binary.PickyBoi(smoother1, 5)
+    const eucidian2 = new binary.EuclidianFilter(smoother1, 5)
 
     //const center1 = new binary.Center(smoother1)
 
@@ -209,8 +209,8 @@ async function init() {
     // })
 
     const center1 = new binary.Center(history1)
-    const center2 = new binary.Center(pickyBoi1)
-    const center3 = new binary.Center(pickyBoi2)
+    const center2 = new binary.Center(eucidian1)
+    const center3 = new binary.Center(eucidian2)
     new SkeletonDraw(center1, svg1)
     new SkeletonDraw(center2, svg2)
     new SkeletonDraw(center3, svg3)

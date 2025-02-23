@@ -61,6 +61,31 @@ export class Pose {
         return 5 + index * 3
     }
 
+    avg(b: Pose): Pose {
+        const avg = new Pose()
+        avg.timestamp = (this.timestamp + b.timestamp) / 2
+        avg.score = (this.score + b.score) / 2
+        for (let i = 0; i < Pose.keypointCount; i++) {
+            const [x1, y1, s1] = this.getKeypoint(i)
+            const [x2, y2, s2] = b.getKeypoint(i)
+            avg.setKeypoint(i, [(x1 + x2) / 2, (y1 + y2) / 2, (s1 + s2) / 2])
+        }
+        return avg
+    }
+
+    distance(b: Pose): number {
+        let weightedSum = 0
+        for (let i = 0; i < Pose.keypointCount; i++) {
+            const [x1, y1, score1] = this.getKeypoint(i)
+            const [x2, y2, score2] = b.getKeypoint(i)
+            const weight = score1 * score2
+            const dx = x1 - x2
+            const dy = y1 - y2
+            weightedSum += weight * (dx * dx + dy * dy)
+        }
+        return Math.sqrt(weightedSum)
+    }
+
     // Primary access: get keypoint by index.
     getKeypoint(index: number): [number, number, number] {
         const offset = this.getKeypointOffset(index)

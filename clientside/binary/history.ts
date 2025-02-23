@@ -57,7 +57,20 @@ export class History extends EventEmitter<BinaryPoseEvent> {
             this.emit("pose", pose)
         }
     }
+}
 
+// A pose view that acts as a window into the larger history buffer.
+export class HistoryPose extends Pose {
+    constructor(buffer: ArrayBuffer, offset: number) {
+        // Instead of allocating a new buffer, create a DataView into the given buffer.
+        super()
+        // Overwrite the internal view to point at the right slice without copying.
+        this.buffer = buffer
+        this.view = new DataView(buffer, offset, Pose.RECORD_SIZE)
+    }
+}
+
+export class HistoryFile extends History {
     async download(fileName: string): Promise<void> {
         let dataToDownload: ArrayBuffer
         if ("CompressionStream" in window) {
@@ -104,16 +117,5 @@ export class History extends EventEmitter<BinaryPoseEvent> {
         history.count = capacity
         history.writeIndex = 0
         return history
-    }
-}
-
-// A pose view that acts as a window into the larger history buffer.
-export class HistoryPose extends Pose {
-    constructor(buffer: ArrayBuffer, offset: number) {
-        // Instead of allocating a new buffer, create a DataView into the given buffer.
-        super()
-        // Overwrite the internal view to point at the right slice without copying.
-        this.buffer = buffer
-        this.view = new DataView(buffer, offset, Pose.RECORD_SIZE)
     }
 }
