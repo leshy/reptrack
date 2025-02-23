@@ -60,16 +60,43 @@ export class Pose {
     private getKeypointOffset(index: number): number {
         return 5 + index * 3
     }
-
     avg(b: Pose): Pose {
         const avg = new Pose()
-        avg.timestamp = (this.timestamp + b.timestamp) / 2
-        avg.score = (this.score + b.score) / 2
+
+        // Calculate weights based on overall pose scores
+        const totalScore = this.score + b.score
+        const weightA = this.score / totalScore
+        const weightB = b.score / totalScore
+
+        // Average timestamp
+        avg.timestamp = weightA * this.timestamp + weightB * b.timestamp
+
+        // Combine scores, increasing confidence
+        avg.score = Math.min(1, Math.sqrt((this.score ** 2 + b.score ** 2) / 2))
+
         for (let i = 0; i < Pose.keypointCount; i++) {
             const [x1, y1, s1] = this.getKeypoint(i)
             const [x2, y2, s2] = b.getKeypoint(i)
-            avg.setKeypoint(i, [(x1 + x2) / 2, (y1 + y2) / 2, (s1 + s2) / 2])
+
+            // Calculate weights for this specific keypoint
+            const keypointTotalScore = s1 + s2
+            const weight1 = keypointTotalScore > 0
+                ? s1 / keypointTotalScore
+                : 0.5
+            const weight2 = keypointTotalScore > 0
+                ? s2 / keypointTotalScore
+                : 0.5
+
+            // Calculate weighted average for this keypoint
+            const avgX = weight1 * x1 + weight2 * x2
+            const avgY = weight1 * y1 + weight2 * y2
+
+            // Combine keypoint scores, increasing confidence
+            const avgS = Math.min(1, Math.sqrt((s1 ** 2 + s2 ** 2) / 2))
+
+            avg.setKeypoint(i, [avgX, avgY, avgS])
         }
+
         return avg
     }
 
