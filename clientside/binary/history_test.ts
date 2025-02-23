@@ -88,7 +88,7 @@ Deno.test("Replay iterator respects timestamp differences", async () => {
 
     const times: number[] = []
     const startTime = performance.now()
-    for await (const _ of history.replay()) {
+    for await (const _ of history.iterate()) {
         times.push(performance.now() - startTime)
     }
     // Expect ~200ms delay between poses (allow tolerance)

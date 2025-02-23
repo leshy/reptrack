@@ -9,7 +9,7 @@ export class History extends EventEmitter<BinaryPoseEvent> {
     private writeIndex = 0
     private count = 0
 
-    constructor(capacity: number = 3000) {
+    constructor(capacity: number = 10000) {
         super()
         this.capacity = capacity
         this.buffer = new ArrayBuffer(capacity * this.recordSize)
@@ -40,7 +40,7 @@ export class History extends EventEmitter<BinaryPoseEvent> {
     }
 
     // Async replay iterator that respects timestamp differences
-    async *replay(): AsyncIterable<Pose> {
+    async *iterate(): AsyncIterable<Pose> {
         let prevTimestamp: number | null = null
         for (const pose of this.poses()) {
             if (prevTimestamp !== null) {
@@ -53,7 +53,7 @@ export class History extends EventEmitter<BinaryPoseEvent> {
     }
 
     async play() {
-        for await (const pose of this.replay()) {
+        for await (const pose of this.iterate()) {
             this.emit("pose", pose)
         }
     }

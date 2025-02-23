@@ -24,8 +24,9 @@ export enum KeypointName {
     "right_ankle",
 }
 
-export function isEmpty(keypoint: [number, number, number]): boolean {
-    return keypoint[0] === 0 && keypoint[1] === 0 && keypoint[2] === 0
+export function isEmpty([x, y, score]: Point, minScore: number = 0): boolean {
+    if (score < minScore) return true
+    return x === 0 && y === 0 && score === 0
 }
 
 export class Pose {
@@ -67,6 +68,15 @@ export class Pose {
         const y = this.view.getUint8(offset + 1)
         const score = this.view.getUint8(offset + 2) / 255
         return [x, y, score]
+    }
+
+    // Primary access: get keypoint coords by index.
+    getKeypointCoords(
+        index: number,
+        minScore: number = 0,
+    ): [[number, number], number] | [false, false] {
+        const [x, y, score] = this.getKeypoint(index)
+        return score > minScore ? [[x, y], score] : [false, false]
     }
 
     // Primary access: set keypoint by index.

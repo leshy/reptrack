@@ -30,8 +30,7 @@ class PoseEstimator extends EventEmitter<BinaryPoseEvent> {
 
         const detectorConfig = {
             modelType: poseDetection.movenet.modelType.SINGLEPOSE_THUNDER,
-            enableSmoothing: true,
-            minPoseScore: 0.1,
+            enableSmoothing: false,
         }
 
         const detector = await poseDetection.createDetector(
@@ -169,17 +168,23 @@ class PoseCenter extends EventEmitter<PoseEvent> {
 async function init() {
     const env = new Env(document)
 
-    const video = new Video("sample.mp4")
-    //const poseEstimator = new PoseEstimator(env, video)
+    // const video = new Video("sample.mp4")
+    // const poseEstimator = new PoseEstimator(env, video)
+    // const history = new binary.History()
+    // history.record(poseEstimator)
+    // window.hist = history
+    // new SkeletonDraw(poseEstimator, video.overlay, { relative: false })
+    // await poseEstimator.init()
+    // await video.el.play()
 
-    //const history = new binary.History()
+    //const video = new Video("sample.mp4")
     const history = await binary.History.load("recording.bin")
-    //history.record(poseEstimator)
-
-    window.hist = history
-
-    new SkeletonDraw(history, video.overlay, { relative: false })
+    const svg = wm.createSvgWindow("0 0 255 255")
+    //set height to 100%
+    svg.style.height = "99vh"
+    new SkeletonDraw(history, svg)
     history.play()
+
     //    poseEstimator.on("pose", console.log)
 
     // const poseCenter = new PoseCenter(poseEstimator)
@@ -195,9 +200,6 @@ async function init() {
     // new TracerDraw(env, tracer, svg)
     // const graph = wm.createSvgWindow("0 0 100 100", false)
     // new Grapher(tracer, graph)
-
-    await poseEstimator.init()
-    await video.el.play()
 }
 
 init()

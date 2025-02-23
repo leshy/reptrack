@@ -43,14 +43,13 @@ export class Video {
     }
 }
 
-export class Camera extends EventEmitter<VideoEvents> {
+export class Camera {
     public width: number
     public height: number
     public el: HTMLVideoElement
     public overlay: SVGSVGElement
 
     constructor() {
-        super()
         const video = document.createElement("video")
         video.autoplay = true
         video.playsInline = true // Important for mobile devices
