@@ -103,13 +103,23 @@ export class Pose {
     }
 
     // Build a Pose instance from a PoseEvent.
-    static fromEvent(event: PoseEvent): Pose {
+    static fromEvent(
+        event: PoseEvent,
+        width: number = 255,
+        height: number = 255,
+    ): Pose {
+        const scaleX = 255 / width
+        const scaleY = 255 / height
         const pose = new Pose()
         pose.timestamp = event.timestamp
         pose.score = Number(event.score)
         for (const kp of event.keypoints) {
             const index = KeypointName[kp.name as keyof typeof KeypointName]
-            pose.setKeypoint(index, [kp.x, kp.y, kp.score as number])
+            pose.setKeypoint(index, [
+                kp.x * scaleX,
+                kp.y * scaleY,
+                kp.score as number,
+            ])
         }
         return pose
     }
@@ -164,5 +174,4 @@ export interface Pose {
     right_knee: [number, number, number]
     left_ankle: [number, number, number]
     right_ankle: [number, number, number]
-    body_center: [number, number, number]
 }
