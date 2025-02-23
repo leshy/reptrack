@@ -75,25 +75,3 @@ Deno.test("HistoryPose view reflects mutations", () => {
     assertEquals(nose[1], 88)
     assertAlmostEquals(nose[2], 0.7, 0.01)
 })
-
-Deno.test("Replay iterator respects timestamp differences", async () => {
-    const history = new History(2)
-    const pose1 = new Pose()
-    pose1.timestamp = 100
-    const pose2 = new Pose()
-    pose2.timestamp = 300 // 200ms gap
-
-    history.push(pose1)
-    history.push(pose2)
-
-    const times: number[] = []
-    const startTime = performance.now()
-    for await (const _ of history.iterate()) {
-        times.push(performance.now() - startTime)
-    }
-    // Expect ~200ms delay between poses (allow tolerance)
-    const delay = times[1] - times[0]
-    if (Math.abs(delay - 200) > 50) {
-        throw new Error(`Expected ~200ms delay, got ${delay.toFixed(0)}ms`)
-    }
-})

@@ -3,11 +3,11 @@ import { BinaryPoseEmitter, BinaryPoseEvent } from "../types2.ts"
 import { Pose } from "./pose.ts"
 
 export class History extends EventEmitter<BinaryPoseEvent> {
-    private buffer: ArrayBuffer
+    public buffer: ArrayBuffer
+    public writeIndex = 0
+    public count = 0
     private capacity: number
     private recordSize = Pose.RECORD_SIZE
-    private writeIndex = 0
-    private count = 0
 
     constructor(capacity: number = 10000) {
         super()
@@ -29,7 +29,6 @@ export class History extends EventEmitter<BinaryPoseEvent> {
         if (this.count < this.capacity) this.count++
     }
 
-    // Returns an iterator yielding history views (not copies)
     *poses(): Iterable<Pose> {
         const start = this.count === this.capacity ? this.writeIndex : 0
         for (let i = 0; i < this.count; i++) {
@@ -39,32 +38,20 @@ export class History extends EventEmitter<BinaryPoseEvent> {
         }
     }
 
-    // Async replay iterator that respects timestamp differences
-    async *iterate(): AsyncIterable<Pose> {
-        let prevTimestamp: number | null = null
-        for (const pose of this.poses()) {
-            if (prevTimestamp !== null) {
-                const delay = pose.timestamp - prevTimestamp
-                await new Promise((res) => setTimeout(res, delay))
-            }
-            yield pose
-            prevTimestamp = pose.timestamp
-        }
-    }
-
-    async play() {
-        for await (const pose of this.iterate()) {
-            this.emit("pose", pose)
-        }
+    getPoseAt(i: number): Pose {
+        if (this.count === 0) throw new Error("No poses")
+        if (i < 0) i = 0
+        if (i >= this.count) i = this.count - 1
+        const start = this.count === this.capacity ? this.writeIndex : 0
+        const actualIndex = (start + i) % this.capacity
+        const offset = actualIndex * this.recordSize
+        return new HistoryPose(this.buffer, offset)
     }
 }
 
-// A pose view that acts as a window into the larger history buffer.
 export class HistoryPose extends Pose {
     constructor(buffer: ArrayBuffer, offset: number) {
-        // Instead of allocating a new buffer, create a DataView into the given buffer.
         super()
-        // Overwrite the internal view to point at the right slice without copying.
         this.buffer = buffer
         this.view = new DataView(buffer, offset, Pose.RECORD_SIZE)
     }
