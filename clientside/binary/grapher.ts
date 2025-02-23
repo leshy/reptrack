@@ -1,4 +1,4 @@
-import { History, Pose } from "./history.ts" // Adjust import based on your file structure
+import { History } from "./history.ts" // Adjust import based on your file structure
 import { KeypointName } from "./pose.ts" // Adjust import based on your file structure
 
 type KeypointGrapherSettings = {
@@ -8,6 +8,7 @@ type KeypointGrapherSettings = {
     lineColors: { [key in keyof typeof KeypointName]?: string }
     maxPoints: number
     zoomFactor: number
+    statusEl?: HTMLElement
 }
 
 const defaultSettings: KeypointGrapherSettings = {
@@ -19,7 +20,6 @@ const defaultSettings: KeypointGrapherSettings = {
     zoomFactor: 0.15, // 15% zoom per scroll
 }
 
-// Store event listeners and path data
 const svgZoomListeners = new WeakMap<SVGSVGElement, boolean>()
 const svgPaths = new WeakMap<
     SVGSVGElement,
@@ -34,13 +34,11 @@ const svgPaths = new WeakMap<
         }
     >
 >()
-
 export class KeypointGrapher {
     private history: History
     private settings: KeypointGrapherSettings
-    private initialStart: number // Original start index
-    private initialRange: number // Original range
-    private currentZoom: number // Zoom level (1 = no zoom, <1 = zoomed in, >1 = zoomed out)
+    private start: number
+    private end: number
 
     constructor(
         history: History,
@@ -48,9 +46,8 @@ export class KeypointGrapher {
     ) {
         this.history = history
         this.settings = { ...defaultSettings, ...settings }
-        this.initialStart = 0
-        this.initialRange = history.count
-        this.currentZoom = 1 // Start at full view
+        this.start = 0
+        this.end = history.count
     }
 
     private getRandomColor(): string {
@@ -121,12 +118,15 @@ export class KeypointGrapher {
 
         const finalPoints = this.downsamplePoints(points)
 
-        const timestamps = finalPoints.map((p) => p[0])
-        const coordValues = finalPoints.map((p) => p[1])
-        const minTime = Math.min(...timestamps)
-        const maxTime = Math.max(...timestamps)
-        const minCoord = Math.min(...coordValues)
-        const maxCoord = Math.max(...coordValues)
+        const minTime = finalPoints[0][0]
+        const maxTime = finalPoints[finalPoints.length - 1][0]
+
+        //const coordValues = finalPoints.map((p) => p[1])
+        //const minCoord = Math.min(...coordValues)
+        //const maxCoord = Math.max(...coordValues)
+
+        const minCoord = 0
+        const maxCoord = 255
         const timeDelta = maxTime - minTime
         const coordDelta = maxCoord - minCoord
         const graphWidth = 255 - 2 * this.settings.padding
@@ -153,87 +153,86 @@ export class KeypointGrapher {
         return pathData
     }
 
+    private updatePaths(svg: SVGSVGElement) {
+        const paths = svgPaths.get(svg)
+        if (!paths) return
+
+        const range = this.end - this.start
+        if (range <= 0) return
+
+        if (this.settings.statusEl) {
+            this.settings.statusEl.textContent = `${this.start} - ${this.end}`
+        }
+
+        for (const [_, { path, keypoint, coord }] of paths) {
+            const pathData = this.getPathData(
+                keypoint,
+                coord,
+                this.start,
+                range,
+            )
+            path.setAttribute("d", pathData)
+        }
+    }
+
+    setStart(newStart: number, svg: SVGSVGElement) {
+        this.start = Math.max(0, newStart)
+        this.updatePaths(svg)
+    }
+
+    setEnd(newEnd: number, svg: SVGSVGElement) {
+        this.end = Math.min(this.history.count, newEnd)
+        this.updatePaths(svg)
+    }
+
     private setupZoom(svg: SVGSVGElement) {
         if (svgZoomListeners.has(svg)) return
 
         const handleScroll = (event: WheelEvent) => {
             event.preventDefault()
 
-            // Adjust zoom level
             const zoomIn = event.deltaY < 0
             const zoomChange = this.settings.zoomFactor
-            this.currentZoom *= zoomIn ? 1 - zoomChange : 1 + zoomChange
+            const zoomFactor = zoomIn ? 1 - zoomChange : 1 + zoomChange
 
-            // Clamp zoom level
-            const minZoom = 0.01 // Show at least 10% of the original range
-            const maxZoom = 1 // Full view
-            this.currentZoom = Math.max(
-                minZoom,
-                Math.min(maxZoom, this.currentZoom),
+            const rect = svg.getBoundingClientRect()
+            const cursorX = event.clientX - rect.left
+            const cursorRatio = cursorX / rect.width
+
+            const currentRange = this.end - this.start
+            const newRange = Math.floor(currentRange * zoomFactor)
+            const clampedRange = Math.max(
+                1,
+                Math.min(this.history.count, newRange),
             )
 
-            // Update all paths
-            this.updatePaths(svg)
+            const pivotIndex = this.start + cursorRatio * currentRange
+
+            const newStart = Math.max(
+                0,
+                Math.floor(pivotIndex - cursorRatio * clampedRange),
+            )
+            const newEnd = Math.min(this.history.count, newStart + clampedRange)
+
+            this.setStart(newStart, svg)
+            this.setEnd(newEnd, svg)
         }
 
         svg.addEventListener("wheel", handleScroll, { passive: false })
         svgZoomListeners.set(svg, true)
     }
 
-    private updatePaths(svg: SVGSVGElement) {
-        const paths = svgPaths.get(svg)
-        if (!paths) return
-
-        // Calculate new start and range based on zoom
-        const totalRange = Math.min(
-            this.initialRange,
-            this.history.count - this.initialStart,
-        )
-        const visibleRange = Math.floor(totalRange * this.currentZoom)
-        const centerIndex = this.initialStart + totalRange / 2
-        const newStart = Math.max(0, Math.floor(centerIndex - visibleRange / 2))
-        const newRange = Math.min(visibleRange, this.history.count - newStart)
-
-        // Update each path
-        for (const [key, { path, keypoint, coord }] of paths) {
-            const pathData = this.getPathData(
-                keypoint,
-                coord,
-                newStart,
-                newRange,
-            )
-            path.setAttribute("d", pathData)
-            // Update stored start and range
-            paths.set(key, {
-                path,
-                keypoint,
-                coord,
-                start: newStart,
-                range: newRange,
-            })
-        }
-    }
-
     drawKeypointGraph(
         svg: SVGSVGElement,
         keypoint: keyof typeof KeypointName,
         coord: "x" | "y",
-        start: number,
-        range: number,
     ): SVGPathElement | null {
-        const pathData = this.getPathData(keypoint, coord, start, range)
-        if (pathData === "") return null
-
-        this.initialStart = start // Store initial bounds
-        this.initialRange = range
-
         this.setupZoom(svg)
 
         const path = document.createElementNS(
             "http://www.w3.org/2000/svg",
             "path",
         )
-        path.setAttribute("d", pathData)
         path.setAttribute("fill", "none")
         const color = this.settings.lineColors[keypoint] ||
             this.getRandomColor()
@@ -241,13 +240,14 @@ export class KeypointGrapher {
         path.setAttribute("stroke-width", String(this.settings.lineWidth))
         svg.appendChild(path)
 
-        // Store path data for updates
         if (!svgPaths.has(svg)) {
             svgPaths.set(svg, new Map())
         }
         const paths = svgPaths.get(svg)!
         const key = `${keypoint}-${coord}`
-        paths.set(key, { path, keypoint, coord, start, range })
+        paths.set(key, { path, keypoint, coord })
+
+        this.updatePaths(svg)
 
         return path
     }

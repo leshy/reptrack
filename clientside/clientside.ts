@@ -215,7 +215,11 @@ async function init() {
     //@ts-ignore
     svg5.parentElement.style["min-width"] = "50vw"
 
-    const grapher = new binary.KeypointGrapher(history1, {})
+    const grapher = new binary.KeypointGrapher(history1, {
+        statusEl: svg5.parentElement?.querySelector(
+            ".windowTitle",
+        ) as HTMLElement,
+    })
     const poi = [
         "nose",
         "left_wrist",
@@ -232,7 +236,7 @@ async function init() {
             name as keyof typeof binary.KeypointName,
             "y",
             0,
-            history1.capacity,
+            3000,
         )
     }
 
