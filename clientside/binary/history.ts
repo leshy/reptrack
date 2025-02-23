@@ -6,7 +6,7 @@ export class History extends EventEmitter<BinaryPoseEvent> {
     public buffer: ArrayBuffer
     public writeIndex = 0
     public count = 0
-    private capacity: number
+    public capacity: number
     private recordSize = Pose.RECORD_SIZE
 
     constructor(capacity: number = 10000) {

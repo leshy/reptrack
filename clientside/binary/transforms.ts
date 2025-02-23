@@ -75,85 +75,6 @@ export class Center extends EventEmitter<BinaryPoseEvent> {
     }
 }
 
-export class Smoother extends EventEmitter<BinaryPoseEvent> {
-    // History for each keypoint: array of [x, y, score] tuples
-    private history: [number, number, number][][] = Array.from(
-        { length: Pose.keypointCount },
-        () => [],
-    )
-
-    constructor(
-        private poseEmitter: BinaryPoseEmitter,
-        private windowSize: number = 5,
-        private minScore: number = 0.2,
-    ) {
-        super()
-        this.poseEmitter.on("pose", this.process.bind(this))
-    }
-
-    private process(pose: Pose): void {
-        const smoothedPose = new Pose()
-        smoothedPose.timestamp = pose.timestamp
-        smoothedPose.score = pose.score // Preserve overall pose score
-
-        for (let i = 0; i < Pose.keypointCount; i++) {
-            const [x, y, score] = pose.getKeypoint(i) // Assuming getKeypoint returns [x, y, score]
-
-            // Update history for detected keypoints
-            const keypointHistory = this.history[i]
-            if (score > this.minScore) {
-                keypointHistory.push([x, y, score])
-                if (keypointHistory.length > this.windowSize) {
-                    keypointHistory.shift() // Remove oldest
-                }
-            }
-
-            // Compute smoothed position
-            if (keypointHistory.length > 0) {
-                let sumX = 0, sumY = 0, sumWeights = 0
-                for (const [hx, hy, hs] of keypointHistory) {
-                    sumX += hx * hs
-                    sumY += hy * hs
-                    sumWeights += hs
-                }
-                const smoothedX = sumX / sumWeights
-                const smoothedY = sumY / sumWeights
-                smoothedPose.setKeypoint(i, [smoothedX, smoothedY, score])
-            } else {
-                smoothedPose.setKeypoint(i, [0, 0, 0]) // Undetected keypoint
-            }
-        }
-
-        this.emit("pose", smoothedPose)
-    }
-}
-
-export class EuclidianFilter extends EventEmitter<BinaryPoseEvent> {
-    private lastPose: Pose | null = null
-
-    constructor(
-        poseEmitter: BinaryPoseEmitter,
-        private threshold: number = 5,
-    ) {
-        super()
-        this.threshold = threshold
-        poseEmitter.on("pose", this.process)
-    }
-
-    process = (pose: Pose) => {
-        if (!this.lastPose) {
-            this.lastPose = pose
-            return pose
-        }
-        const distance = this.lastPose.distance(pose)
-
-        if (distance > this.threshold) {
-            this.lastPose = pose
-            this.emit("pose", pose)
-        }
-    }
-}
-
 export function weightedAveragePoses(poses: Pose[]): Pose {
     const avgPose = new Pose()
     if (poses.length === 0) return avgPose
@@ -195,6 +116,49 @@ export function weightedAveragePoses(poses: Pose[]): Pose {
     }
 
     return avgPose
+}
+
+export class Smoother extends EventEmitter<BinaryPoseEvent> {
+    private window: Pose[] = []
+    constructor(
+        private poseEmitter: BinaryPoseEmitter,
+        private windowSize: number = 5,
+    ) {
+        super()
+        this.poseEmitter.on("pose", this.process.bind(this))
+    }
+
+    private process(pose: Pose): void {
+        this.window.push(pose)
+        if (this.window.length > this.windowSize) { this.window.shift() }
+        this.emit("pose", weightedAveragePoses(this.window))
+    }
+}
+
+export class EuclidianFilter extends EventEmitter<BinaryPoseEvent> {
+    private lastPose: Pose | null = null
+
+    constructor(
+        poseEmitter: BinaryPoseEmitter,
+        private threshold: number = 5,
+    ) {
+        super()
+        this.threshold = threshold
+        poseEmitter.on("pose", this.process)
+    }
+
+    process = (pose: Pose) => {
+        if (!this.lastPose) {
+            this.lastPose = pose
+            return pose
+        }
+        const distance = this.lastPose.distance(pose)
+
+        if (distance > this.threshold) {
+            this.lastPose = pose
+            this.emit("pose", pose)
+        }
+    }
 }
 
 export class ConfidentEuclidianFilter extends EventEmitter<BinaryPoseEvent> {

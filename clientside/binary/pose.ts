@@ -24,6 +24,15 @@ export enum KeypointName {
     "right_ankle",
 }
 
+export type KeypointNameType = keyof typeof KeypointName
+
+export const keypointNames: KeypointNameType[] = Object.keys(
+    KeypointName,
+)
+    .filter(
+        (key) => isNaN(Number(key)),
+    ) as KeypointNameType[]
+
 export function isEmpty([x, y, score]: Point, minScore: number = 0): boolean {
     if (score < minScore) return true
     return x === 0 && y === 0 && score === 0

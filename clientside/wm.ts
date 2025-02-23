@@ -45,7 +45,7 @@ export function createSvgWindow(
     svg.style.position = "absolute"
     svg.style.top = "0"
     svg.style.left = "0"
-    svg.style.pointerEvents = "none"
+    //    svg.style.pointerEvents = "none"
     svg.setAttribute("viewBox", viewbox)
     createWindow(svg, "auto", title)
     return svg

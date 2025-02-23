@@ -9,7 +9,7 @@ type GrapherSettings = {
 
 const defaultSettings: GrapherSettings = {
     lineColors: {},
-    lineWidth: 0.3,
+    lineWidth: 1,
     padding: 5,
 }
 
@@ -36,7 +36,7 @@ export class Grapher {
         path.setAttribute("fill", "none")
         path.setAttribute(
             "stroke",
-            this.settings.lineColors[name] || this.getRandomColor(),
+            this.getRandomColor(),
         )
         path.setAttribute("stroke-width", String(this.settings.lineWidth))
         this.svg.appendChild(path)
