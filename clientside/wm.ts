@@ -10,10 +10,16 @@ if (!container) {
 export function createWindow(
     child: EL | EL[] | null = null,
     width: string | number = "auto",
+    title: string = "untited",
 ) {
     const parent = document.createElement("div")
     parent.className = "window"
     parent.style.width = String(width)
+
+    const titleEl = document.createElement("div")
+    titleEl.className = "windowTitle"
+    titleEl.innerText = title
+    parent.appendChild(titleEl)
 
     if (Array.isArray(child)) {
         child.forEach((el) => parent.appendChild(el))
@@ -28,6 +34,7 @@ export function createWindow(
 export function createSvgWindow(
     viewbox: string = "-1 -1 2 2",
     preserveRatio: Boolean = true,
+    name: string = "svg",
 ) {
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg")
     if (!preserveRatio) {
@@ -40,6 +47,6 @@ export function createSvgWindow(
     svg.style.left = "0"
     svg.style.pointerEvents = "none"
     svg.setAttribute("viewBox", viewbox)
-    createWindow(svg)
+    createWindow(svg, "auto", name)
     return svg
 }

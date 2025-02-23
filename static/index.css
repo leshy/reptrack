@@ -41,12 +41,14 @@ canvas {
 
 .window {
     flex: 1 1 49vw;
-    border: 0px dashed #888;
     margin: 2px;
     padding: 0;
     min-height: 48vh;
     box-sizing: border-box;
     position: relative;
+    /* stretch height to contain the children */
+    display: flex;
+  
 }
 
 svg {
@@ -61,4 +63,15 @@ video {
 
 #plotly_container {
     filter: invert(100%) hue-rotate(180deg);
+}
+
+.windowTitle {
+  font-famiy: monospace;
+  position: absolute;
+  top: 0;
+  right: 0;
+  background-color: #DDD;
+  color: black;
+  padding: 5px;
+  text-transform: uppercase;
 }

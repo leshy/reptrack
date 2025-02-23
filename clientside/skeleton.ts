@@ -8,37 +8,49 @@ type SkeletonDrawSettings = {
     center: boolean
     relative: boolean
     minScore: number
+    color: (score: number) => string
+    keypointRadius: string
+    lineWidth: string
 }
 
+export function colorInterpolator(endColor: [number, number, number], startColor: [number, number, number]): (score: number) => string {
+    return function(score: number): string {
+        // Clamp the score between 0 and 1
+        const clampedScore = Math.max(0, Math.min(1, score));
+
+        // Interpolate each component
+        const r = Math.round(startColor[0] + (endColor[0] - startColor[0]) * clampedScore);
+        const g = Math.round(startColor[1] + (endColor[1] - startColor[1]) * clampedScore);
+        const b = Math.round(startColor[2] + (endColor[2] - startColor[2]) * clampedScore);
+
+        // Return the RGB string
+        return `rgb(${r}, ${g}, ${b})`;
+    };
+}
 const defaultSettings: SkeletonDrawSettings = {
     relative: true,
-    minScore: 0,
+    minScore: 0.3,
     stats: true,
     keypoints: true,
     skeleton: true,
     center: true,
-}
-
-function getColorFromScore(score: number): string {
-    const clampedScore = Math.max(0, Math.min(1, score))
-    const red = 255
-    const greenBlue = Math.round(255 * clampedScore)
-    return `rgb(${red}, ${greenBlue}, ${greenBlue})`
+    keypointRadius: "1.5",
+    lineWidth: "1",
+    color: colorInterpolator([255, 255, 255], [255, 0, 0]),
 }
 
 export class SkeletonDraw {
     private skeletonGroup: SVGGElement
-
     private lineMap = new Map<string, Element>()
     private keypointMap = new Map<number, SVGCircleElement>()
-
     private centerPoint: SVGCircleElement | null = null
-
+    private settings: SkeletonDrawSettings
     constructor(
         private poseEmitter: BinaryPoseEmitter,
         private svg: SVGSVGElement,
-        private settings: SkeletonDrawSettings = { ...defaultSettings },
+        settings: Partial<SkeletonDrawSettings> = {},
     ) {
+        this.settings = { ...defaultSettings, ...settings }
         this.poseEmitter.on("pose", this.drawPose)
 
         this.skeletonGroup = document.createElementNS(
@@ -68,6 +80,7 @@ export class SkeletonDraw {
             const [kp2, kp2score] = pose.getKeypointCoords(j)
 
             if (!kp1 || !kp2) return
+            if ((kp1score < minScore) || (kp2score < minScore)) return
 
             const lineName = `${i}_${j}`
             currentLines.add(lineName)
@@ -81,7 +94,7 @@ export class SkeletonDraw {
                 line,
                 kp1,
                 kp2,
-                getColorFromScore((kp1score + kp2score) / 2),
+                this.settings.color((kp1score + kp2score) / 2),
             )
         })
 
@@ -91,7 +104,7 @@ export class SkeletonDraw {
     private createLine(namespace: string, lineName: string): Element {
         const line = document.createElementNS(namespace, "line")
         line.setAttribute("data-name", lineName)
-        line.setAttribute("stroke-width", "1")
+        line.setAttribute("stroke-width", this.settings.lineWidth)
         this.skeletonGroup.appendChild(line)
         this.lineMap.set(lineName, line)
         return line
@@ -122,8 +135,11 @@ export class SkeletonDraw {
     private drawKeypoints = (pose: Pose) => {
         const namespace = "http://www.w3.org/2000/svg"
         const currentIndices = new Set<number>()
+        const minScore = this.settings.minScore
+
 
         for (const [i, kp] of pose.iterKeypoints()) {
+            if (kp[2] < minScore) continue
             currentIndices.add(i)
             let circle = this.keypointMap.get(i)
             if (!circle) {
@@ -138,7 +154,7 @@ export class SkeletonDraw {
     private createCircle(namespace: string, index: number): SVGCircleElement {
         const circle = document.createElementNS(namespace, "circle")
         circle.setAttribute("data-index", index.toString())
-        circle.setAttribute("r", "1.5")
+        circle.setAttribute("r", this.settings.keypointRadius)
         this.skeletonGroup.appendChild(circle)
         this.keypointMap.set(index, circle)
         return circle
@@ -148,7 +164,7 @@ export class SkeletonDraw {
         circle: SVGCircleElement,
         kp: [number, number, number],
     ) {
-        this.setCircleAttributes(circle, kp, getColorFromScore(kp[2]))
+        this.setCircleAttributes(circle, kp, this.settings.color(kp[2]))
     }
 
     private setCircleAttributes(

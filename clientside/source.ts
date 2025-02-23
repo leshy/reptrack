@@ -21,12 +21,13 @@ export class Video {
         svgOverlay.style.left = "0"
 
         svgOverlay.style.pointerEvents = "none"
+        svgOverlay.setAttributeNS(null, "preserveAspectRatio", "none")
+        svgOverlay.setAttribute(
+            "viewBox",
+            "0 0 255 255",
+        )
 
         const resize = () => {
-            svgOverlay.setAttribute(
-                "viewBox",
-                `0 0 ${video.videoWidth} ${video.videoHeight}`,
-            )
             svgOverlay.style.width = String(video.clientWidth)
             svgOverlay.style.height = String(video.clientHeight)
         }

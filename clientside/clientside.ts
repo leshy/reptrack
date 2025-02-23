@@ -3,7 +3,7 @@ import * as poseDetection from "npm:@tensorflow-models/pose-detection"
 import { EventEmitter } from "npm:eventemitter3"
 import * as tf from "npm:@tensorflow/tfjs-core"
 import { allTargets, Keypoint, Pose, PoseEvent, STATE } from "./types.ts"
-import { SkeletonDraw } from "./skeleton.ts"
+import { colorInterpolator, SkeletonDraw } from "./skeleton.ts"
 import { Tracer } from "./tracer.ts"
 import { Grapher } from "./grapher.ts"
 import { Smoother } from "./smoother.ts"
@@ -18,6 +18,8 @@ import { BinaryPoseEvent } from "./types2.ts"
 
 class PoseEstimator extends EventEmitter<BinaryPoseEvent> {
     private detector?: poseDetection.PoseDetector
+    private height: number = 0
+    private width: number = 0
     constructor(private env: Env, private video: Video) {
         super()
     }
@@ -29,7 +31,7 @@ class PoseEstimator extends EventEmitter<BinaryPoseEvent> {
         await tf.ready()
 
         const detectorConfig = {
-            modelType: poseDetection.movenet.modelType.SINGLEPOSE_THUNDER,
+            modelType: poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING,
             enableSmoothing: false,
         }
 
@@ -38,9 +40,11 @@ class PoseEstimator extends EventEmitter<BinaryPoseEvent> {
             detectorConfig,
         )
         this.detector = detector
-
         this.video.el.onplay = this.loop
+        this.height = this.video.el.videoHeight
+        this.width = this.video.el.videoWidth
         console.log("ready")
+
         this.loop()
     }
 
@@ -54,7 +58,11 @@ class PoseEstimator extends EventEmitter<BinaryPoseEvent> {
                 if (poses.length) {
                     this.emit(
                         "pose",
-                        binary.Pose.fromEvent({ timestamp, ...poses[0] }),
+                        binary.Pose.fromEvent(
+                            { timestamp, ...poses[0] },
+                            this.width,
+                            this.height,
+                        ),
                     )
                 }
                 this.env.fpsEnd()
@@ -168,22 +176,39 @@ class PoseCenter extends EventEmitter<PoseEvent> {
 async function init() {
     const env = new Env(document)
 
+    // store history
     // const video = new Video("sample.mp4")
     // const poseEstimator = new PoseEstimator(env, video)
     // const history = new binary.History()
     // history.record(poseEstimator)
     // window.hist = history
-    // new SkeletonDraw(poseEstimator, video.overlay, { relative: false })
+    // new SkeletonDraw(poseEstimator, video.overlay)
     // await poseEstimator.init()
     // await video.el.play()
 
-    //const video = new Video("sample.mp4")
-    const history = await binary.History.load("recording.bin")
-    const svg = wm.createSvgWindow("0 0 255 255")
-    //set height to 100%
-    svg.style.height = "99vh"
-    new SkeletonDraw(history, svg)
-    history.play()
+    //load history
+
+    const history1 = await binary.History.load("thunder.bin.gz")
+    //const history2 = await binary.History.load("lightning.bin.gz")
+
+    const center1 = new binary.Center(history1)
+
+    const smoother1 = new binary.Smoother(center1, 10, 0.3)
+
+    const svg1 = wm.createSvgWindow("0 0 255 255", true, "smooother")
+    //const svg2 = wm.createSvgWindow("0 0 255 255", true, "no smoother")
+
+    svg1.style.height = "99vh"
+    // new SkeletonDraw(center1, svg1, {
+    //     lineWidth: "4",
+    //     keypointRadius: "1.5",
+    //     color: colorInterpolator([100, 100, 100], [55, 55, 55]),
+    // })
+
+    new SkeletonDraw(smoother1, svg1)
+
+    history1.play()
+    //history2.play()
 
     //    poseEstimator.on("pose", console.log)
 
