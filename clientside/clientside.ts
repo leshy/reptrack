@@ -31,7 +31,7 @@ class PoseEstimator extends EventEmitter<BinaryPoseEvent> {
         await tf.ready()
 
         const detectorConfig = {
-            modelType: poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING,
+            modelType: poseDetection.movenet.modelType.SINGLEPOSE_THUNDER,
             enableSmoothing: false,
         }
 
@@ -174,8 +174,6 @@ class PoseCenter extends EventEmitter<PoseEvent> {
 }
 
 async function init() {
-    const env = new Env(document)
-
     // store history
     // const video = new Video("sample.mp4")
     // const poseEstimator = new PoseEstimator(env, video)
@@ -188,18 +186,28 @@ async function init() {
 
     //load history
 
-    const history1 = await binary.HistoryFile.load("lightning.bin.gz")
+    //const env = new Env(document)
+    //const video = new Video("sample.mp4")
+    //const video = new Camera()
+    //const poseEstimator = new PoseEstimator(env, video)
+    //const smoother1 = new binary.Smoother(poseEstimator, 20, 0.1)
 
-    const eucidian1 = new binary.EuclidianFilter(history1, 5)
-    const smoother1 = new binary.Smoother(history1, 20, 0.2)
-    const eucidian2 = new binary.EuclidianFilter(smoother1, 5)
+    const history1 = await binary.HistoryFile.load("thunder.bin.gz")
+    const smoother1 = new binary.Smoother(history1, 20, 0.1)
+
+    const euclidian1 = new binary.EuclidianFilter(smoother1, 10)
+    const euclidian2 = new binary.ConfidentEuclidianFilter(smoother1, 10)
 
     //const center1 = new binary.Center(smoother1)
 
     const svg1 = wm.createSvgWindow("0 0 255 255", true, "plain")
-    const svg2 = wm.createSvgWindow("0 0 255 255", true, "euclidian")
-    const svg4 = wm.createSvgWindow("0 0 255 255", true, "")
+    const svg2 = wm.createSvgWindow("0 0 255 255", true, "smoother")
     const svg3 = wm.createSvgWindow("0 0 255 255", true, "euclidian smoother")
+    const svg4 = wm.createSvgWindow(
+        "0 0 255 255",
+        true,
+        "confident euclidian smoother",
+    )
 
     //svg1.style.height = "99vh"
     // new SkeletonDraw(center1, svg1, {
@@ -209,13 +217,20 @@ async function init() {
     // })
 
     const center1 = new binary.Center(history1)
-    const center2 = new binary.Center(eucidian1)
-    const center3 = new binary.Center(eucidian2)
-    new SkeletonDraw(center1, svg1)
-    new SkeletonDraw(center2, svg2)
-    new SkeletonDraw(center3, svg3)
+    const center2 = new binary.Center(smoother1)
+    const center3 = new binary.Center(euclidian1)
+    const center4 = new binary.Center(euclidian2)
 
-    history1.play()
+    new SkeletonDraw(center1, svg1, { minScore: 0.2 })
+    new SkeletonDraw(center2, svg2, { minScore: 0.2 })
+    new SkeletonDraw(center3, svg3, { minScore: 0.2 })
+    new SkeletonDraw(center4, svg4, { minScore: 0.2 })
+
+    //await poseEstimator.init()
+    //await video.el.play()
+    new binary.HistoryControls(history1, svg1.parentElement as HTMLElement)
+
+    //history1.play()
     //history2.play()
 
     //    poseEstimator.on("pose", console.log)

@@ -1,14 +1,48 @@
-body {
-	line-height: 1;
-  background-color: #000000;
-  overflow-x: hidden;
-  margin: 0;
-  padding: 0;
+:root,
+svg {
+  --color-red: #fd5548;
+  --color-green: #73e3bb;
+  --color-blue: #555;
+  --color-lightblue: #adf7f6;
+  --color-orange: #ffa500;
+  --color-bgblue: #141d22;
+  
+  --text-color: #fff;
+  --text-color-alt: #aaa;
+  --text-color-p: #ccc;
+  --background-color: #000;
+  --background-color-alt: #111;
+
+  --font-family: "JetBrains Mono", monospace;
+  --line-height: 1.2rem;
+  --border-thickness: 1px;
+
+  --font-weight-normal: 500;
+  --font-weight-medium: 600;
+  --font-weight-bold: 800;
+
+  fill: var(--text-color);
+  font-family: var(--font-family);
+  font-optical-sizing: auto;
+  font-weight: var(--font-weight-normal);
+  font-style: normal;
+  font-variant-numeric: tabular-nums lining-nums;
+  font-size: 16px;
+  width: 100%;
 }
 
-/* video { */
-/*     height: auto; */
-/* } */
+body {
+  position: relative;
+  width: 100%;
+  margin: 0;
+  padding: var(--line-height) 2ch;
+  max-width: calc(min(100ch, round(down, 100%, 1ch)));
+  line-height: var(--line-height);
+  overflow-x: hidden;
+  background-color: black;
+}
+
+
 
 canvas {
     background-color: rgba(0,0,0,1);
@@ -40,7 +74,7 @@ canvas {
 }
 
 .window {
-    flex: 1 1 49vw;
+    flex: 1 1;
     margin: 2px;
     padding: 0;
     min-height: 48vh;
@@ -74,4 +108,39 @@ video {
   color: black;
   padding: 5px;
   text-transform: uppercase;
+}
+
+
+
+
+button {
+  /* no multiline text */
+  white-space: nowrap;
+  border: none;
+  padding: 5px;
+  cursor: pointer;
+  margin: 0;
+  background-color: black;
+  color: white;
+  border: 1px solid white;
+}
+
+button:hover {
+  background-color: white;
+  color: black;
+}
+
+
+.history-controls {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.frame-label {
+  margin-left: 1rem;
+  font-weight: bold;
 }
