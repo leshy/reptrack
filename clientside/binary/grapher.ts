@@ -1,6 +1,6 @@
-import { History } from "./history.ts" // Adjust import based on your file structure
-import { KeypointName } from "./pose.ts" // Adjust import based on your file structure
-import { SvgWindow } from "../wm.ts" // Adjust import based on your file structure
+import { History } from "./history.ts"
+import { KeypointName } from "./pose.ts"
+import { SvgWindow } from "../wm.ts"
 
 type KeypointGrapherSettings = {
     padding: number
@@ -32,8 +32,6 @@ const svgPaths = new WeakMap<
             path: SVGPathElement
             keypoint: keyof typeof KeypointName
             coord: "x" | "y"
-            start: number
-            range: number
         }
     >
 >()
@@ -43,6 +41,7 @@ export class KeypointGrapher {
     private settings: KeypointGrapherSettings
     private start: number
     private end: number
+    private windows: Set<SvgWindow> = new Set()
 
     constructor(
         history: History,
@@ -87,8 +86,6 @@ export class KeypointGrapher {
                 const coordValue = keypointCoords[coordIndex]
                 minTime = Math.min(minTime, timestamp)
                 maxTime = Math.max(maxTime, timestamp)
-                //minCoord = Math.min(minCoord, coordValue)
-                //maxCoord = Math.max(maxCoord, coordValue)
                 minCoord = 0
                 maxCoord = 255
                 validPoints++
@@ -196,14 +193,18 @@ export class KeypointGrapher {
         }
     }
 
-    setStart(newStart: number, window: SvgWindow) {
+    setStart(newStart: number) {
         this.start = Math.max(0, newStart)
-        this.updatePaths(window)
+        for (const window of this.windows) {
+            this.updatePaths(window)
+        }
     }
 
-    setEnd(newEnd: number, window: SvgWindow) {
+    setEnd(newEnd: number) {
         this.end = Math.min(this.history.count, newEnd)
-        this.updatePaths(window)
+        for (const window of this.windows) {
+            this.updatePaths(window)
+        }
     }
 
     private setupZoom(window: SvgWindow) {
@@ -235,8 +236,8 @@ export class KeypointGrapher {
             )
             const newEnd = Math.min(this.history.count, newStart + clampedRange)
 
-            this.setStart(newStart, window)
-            this.setEnd(newEnd, window)
+            this.setStart(newStart)
+            this.setEnd(newEnd)
         }
 
         console.log("window", window)
@@ -250,6 +251,7 @@ export class KeypointGrapher {
         coord: "x" | "y",
     ): SVGPathElement | null {
         this.setupZoom(window)
+        this.windows.add(window)
 
         const path = document.createElementNS(
             "http://www.w3.org/2000/svg",
