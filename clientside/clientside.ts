@@ -237,7 +237,9 @@ async function init() {
     //@ts-ignore
     //svg5.parentElement.style["min-width"] = "50vw"
 
-    const grapher = new binary.KeypointGrapher(history1)
+    const grapher = new binary.KeypointGrapher(history1, {
+        title: "history graph",
+    })
 
     const poi = [
         "nose",

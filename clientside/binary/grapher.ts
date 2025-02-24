@@ -9,6 +9,7 @@ type KeypointGrapherSettings = {
     lineColors: { [key in keyof typeof KeypointName]?: string }
     maxPoints: number
     zoomFactor: number
+    title: string
 }
 
 const defaultSettings: KeypointGrapherSettings = {
@@ -18,6 +19,7 @@ const defaultSettings: KeypointGrapherSettings = {
     lineColors: {},
     maxPoints: 255,
     zoomFactor: 0.15, // 15% zoom per scroll
+    title: "graph",
 }
 
 const svgZoomListeners = new WeakMap<SvgWindow, boolean>()
@@ -162,10 +164,15 @@ export class KeypointGrapher {
 
         return pathData
     }
-    private getRandomColor(): string {
-        const hue = Math.floor(Math.random() * 360)
-        const saturation = Math.floor(Math.random() * 30) + 70 // 70-100%
-        const lightness = Math.floor(Math.random() * 30) + 60 // 60-90%
+
+    private getRandomColor(str: string): string {
+        let hash = 0
+        for (let i = 0; i < str.length; i++) {
+            hash = str.charCodeAt(i) + ((hash << 5) - hash)
+        }
+        const hue = Math.abs(hash % 360)
+        const saturation = (hash % 31) + 70 // 70-100%
+        const lightness = (hash % 31) + 60 // 60-90%
         return `hsl(${hue}, ${saturation}%, ${lightness}%)`
     }
 
@@ -176,7 +183,7 @@ export class KeypointGrapher {
         const range = this.end - this.start
         if (range <= 0) return
 
-        window.title = `${this.start} - ${this.end}`
+        window.title = `${this.settings.title} [${this.start}-${this.end}]`
 
         for (const [_, { path, keypoint, coord }] of paths) {
             const pathData = this.getPathData(
@@ -250,7 +257,7 @@ export class KeypointGrapher {
         )
         path.setAttribute("fill", "none")
         const color = this.settings.lineColors[keypoint] ||
-            this.getRandomColor()
+            this.getRandomColor(keypoint)
         path.setAttribute("stroke", color)
         path.setAttribute("stroke-width", String(this.settings.lineWidth))
         window.svg.appendChild(path)
