@@ -66,30 +66,6 @@ canvas {
   border: 1px solid white;
 }
 
-
-#window-container {
-    display: flex;
-    flex-wrap: wrap;
-    width: 100vw;
-}
-
-.window {
-  border: 1px solid white;
-    flex: 1 1 33vw;
-    margin: 2px;
-    padding: 0;
-    min-height: 48vh;
-    box-sizing: border-box;
-    position: relative;
-    /* stretch height to contain the children */
-    display: flex;
-}
-
-svg {
-  width: 100%;
-  height: 100%;
-}
-
 video {
   width: 100%;
   height: auto;
@@ -97,16 +73,6 @@ video {
 
 #plotly_container {
     filter: invert(100%) hue-rotate(180deg);
-}
-
-.windowTitle {
-  font-famiy: monospace;
-  position: absolute;
-  top: 0;
-  right: 0;
-  background-color: black;;
-  color: white;
-  padding: 5px;
 }
 
 
@@ -176,3 +142,67 @@ input[type="range"]::-moz-range-thumb:hover {
   background: white;
   border: 1px solid black;
 }
+
+
+
+
+#window-container {
+    display: flex;
+    flex-wrap: wrap;
+    width: 100vw;
+}
+
+/* .window { */
+/*   border: 1px solid white; */
+/*     flex: 1 1 33vw; */
+/*     margin: 2px; */
+/*     padding: 0; */
+/*     min-height: 48vh; */
+/*     box-sizing: border-box; */
+/*     position: relative; */
+/*     display: flex; */
+/* } */
+
+/* svg { */
+/*   width: 100%; */
+/*   height: 100%; */
+/* } */
+
+.window {
+  position:relative;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+    min-width: 33vw;
+    flex: 1 1 300px;
+    min-height: 33vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.window-title {
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  background-color: black;;
+  color: white;
+  padding: 5px;
+  border: 1px solid white;
+}
+
+
+.window-content {
+    flex: 1;
+    overflow: auto;
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+svg {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+

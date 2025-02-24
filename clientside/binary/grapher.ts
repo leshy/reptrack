@@ -12,9 +12,9 @@ type KeypointGrapherSettings = {
 }
 
 const defaultSettings: KeypointGrapherSettings = {
-    padding: 10,
+    padding: 5,
     minScore: 0.3,
-    lineWidth: 1,
+    lineWidth: 0.5,
     lineColors: {},
     maxPoints: 500,
     zoomFactor: 0.15, // 15% zoom per scroll
@@ -34,6 +34,7 @@ const svgPaths = new WeakMap<
         }
     >
 >()
+
 export class KeypointGrapher {
     private history: History
     private settings: KeypointGrapherSettings
@@ -50,41 +51,6 @@ export class KeypointGrapher {
         this.end = history.count
     }
 
-    private getRandomColor(): string {
-        const hue = Math.floor(Math.random() * 360)
-        const saturation = Math.floor(Math.random() * 30) + 70 // 70-100%
-        const lightness = Math.floor(Math.random() * 30) + 60 // 60-90%
-        return `hsl(${hue}, ${saturation}%, ${lightness}%)`
-    }
-
-    private downsamplePoints(points: [number, number][]): [number, number][] {
-        const targetPoints = Math.min(this.settings.maxPoints, points.length)
-        if (points.length <= targetPoints) return points
-
-        const binSize = points.length / targetPoints
-        const downsampled: [number, number][] = []
-
-        for (let i = 0; i < targetPoints; i++) {
-            const start = Math.floor(i * binSize)
-            const end = Math.min(Math.floor((i + 1) * binSize), points.length)
-            let timeSum = 0
-            let coordSum = 0
-            let count = 0
-
-            for (let j = start; j < end; j++) {
-                timeSum += points[j][0]
-                coordSum += points[j][1]
-                count++
-            }
-
-            if (count > 0) {
-                downsampled.push([timeSum / count, coordSum / count])
-            }
-        }
-
-        return downsampled
-    }
-
     private getPathData(
         keypoint: keyof typeof KeypointName,
         coord: "x" | "y",
@@ -97,8 +63,16 @@ export class KeypointGrapher {
         )
         if (effectiveRange <= 0) return ""
 
-        const points: [number, number][] = []
         const keypointIndex = KeypointName[keypoint]
+        const coordIndex = coord === "x" ? 0 : 1
+
+        let minTime = Infinity
+        let maxTime = -Infinity
+        let minCoord = Infinity
+        let maxCoord = -Infinity
+
+        // First pass: find min and max values and count valid points
+        let validPoints = 0
         for (let i = 0; i < effectiveRange; i++) {
             const pose = this.history.getPoseAt(start + i)
             const [keypointCoords, score] = pose.getKeypointCoords(
@@ -107,50 +81,91 @@ export class KeypointGrapher {
             )
             if (keypointCoords) {
                 const timestamp = pose.timestamp
-                const coordValue = coord === "x"
-                    ? keypointCoords[0]
-                    : keypointCoords[1]
-                points.push([timestamp, coordValue])
+                const coordValue = keypointCoords[coordIndex]
+                minTime = Math.min(minTime, timestamp)
+                maxTime = Math.max(maxTime, timestamp)
+                //minCoord = Math.min(minCoord, coordValue)
+                //maxCoord = Math.max(maxCoord, coordValue)
+                minCoord = 0
+                maxCoord = 255
+                validPoints++
             }
         }
 
-        if (points.length === 0) return ""
+        if (validPoints === 0) return ""
 
-        const finalPoints = this.downsamplePoints(points)
-
-        const minTime = finalPoints[0][0]
-        const maxTime = finalPoints[finalPoints.length - 1][0]
-
-        //const coordValues = finalPoints.map((p) => p[1])
-        //const minCoord = Math.min(...coordValues)
-        //const maxCoord = Math.max(...coordValues)
-
-        const minCoord = 0
-        const maxCoord = 255
         const timeDelta = maxTime - minTime
         const coordDelta = maxCoord - minCoord
         const graphWidth = 255 - 2 * this.settings.padding
         const graphHeight = 255 - 2 * this.settings.padding
 
-        let pathData = ""
-        for (const [timestamp, coordValue] of finalPoints) {
-            const x = timeDelta === 0
-                ? this.settings.padding + graphWidth / 2
-                : this.settings.padding +
-                    ((timestamp - minTime) / timeDelta) * graphWidth
-            const y = coordDelta === 0
-                ? this.settings.padding + graphHeight / 2
-                : 255 - this.settings.padding -
-                    ((coordValue - minCoord) / coordDelta) * graphHeight
+        // Determine downsampling factor
+        const downsampleFactor = Math.ceil(
+            validPoints / this.settings.maxPoints,
+        )
 
-            if (pathData === "") {
-                pathData = `M ${x} ${y}`
-            } else {
-                pathData += ` L ${x} ${y}`
+        let pathData = ""
+        let pointCount = 0
+        let accumulatedX = 0
+        let accumulatedY = 0
+        let accumulatedPoints = 0
+
+        // Second pass: generate downsampled path data
+        for (let i = 0; i < effectiveRange; i++) {
+            const pose = this.history.getPoseAt(start + i)
+            const [keypointCoords, score] = pose.getKeypointCoords(
+                keypointIndex,
+                this.settings.minScore,
+            )
+            if (keypointCoords) {
+                const timestamp = pose.timestamp
+                const coordValue = keypointCoords[coordIndex]
+
+                const x = timeDelta === 0
+                    ? this.settings.padding + graphWidth / 2
+                    : this.settings.padding +
+                        ((timestamp - minTime) / timeDelta) * graphWidth
+                const y = coordDelta === 0
+                    ? this.settings.padding + graphHeight / 2
+                    : 255 - this.settings.padding -
+                        ((coordValue - minCoord) / coordDelta) * graphHeight
+
+                accumulatedX += x
+                accumulatedY += y
+                accumulatedPoints++
+
+                if (accumulatedPoints === downsampleFactor) {
+                    const avgX = accumulatedX / accumulatedPoints
+                    const avgY = accumulatedY / accumulatedPoints
+
+                    if (pathData === "") {
+                        pathData = `M ${avgX} ${avgY}`
+                    } else {
+                        pathData += ` L ${avgX} ${avgY}`
+                    }
+
+                    pointCount++
+                    accumulatedX = 0
+                    accumulatedY = 0
+                    accumulatedPoints = 0
+                }
             }
         }
 
+        // Add any remaining accumulated points
+        if (accumulatedPoints > 0) {
+            const avgX = accumulatedX / accumulatedPoints
+            const avgY = accumulatedY / accumulatedPoints
+            pathData += ` L ${avgX} ${avgY}`
+        }
+
         return pathData
+    }
+    private getRandomColor(): string {
+        const hue = Math.floor(Math.random() * 360)
+        const saturation = Math.floor(Math.random() * 30) + 70 // 70-100%
+        const lightness = Math.floor(Math.random() * 30) + 60 // 60-90%
+        return `hsl(${hue}, ${saturation}%, ${lightness}%)`
     }
 
     private updatePaths(svg: SVGSVGElement) {

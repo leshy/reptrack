@@ -1,5 +1,6 @@
 // history-controls.ts
 import { History } from "./history.ts"
+import { Window } from "../wm.ts"
 
 export class HistoryPlayer {
     public frame = 0
@@ -59,7 +60,7 @@ export class HistoryControls {
     private nextBtn: HTMLButtonElement
     private seekBar: HTMLInputElement
     private frameLabel: HTMLSpanElement
-    constructor(private player: HistoryPlayer, domEl: HTMLElement) {
+    constructor(private window: Window, private player: HistoryPlayer) {
         const c = document.createElement("div")
         c.className = "controls"
         this.playStopBtn = document.createElement("button")
@@ -103,7 +104,7 @@ export class HistoryControls {
         this.player.history.on("pose", () => {
             this.updateUI()
         })
-        domEl.appendChild(c)
+        window.element.appendChild(c)
         this.updateUI()
     }
     private updateUI() {
@@ -117,11 +118,7 @@ export class HistoryControls {
 }
 
 export class HistoryDisplay {
-    private displayEl: HTMLDivElement
-
-    constructor(private player: HistoryPlayer, domEl: HTMLElement) {
-        this.displayEl = document.createElement("div")
-        domEl.appendChild(this.displayEl)
+    constructor(private window: Window, private player: HistoryPlayer) {
         this.player.history.on("pose", () => {
             this.update()
         })
@@ -132,6 +129,6 @@ export class HistoryDisplay {
         const current = this.player.frame + 1
         const total = this.player.total
 
-        this.displayEl.textContent = `[${current}/${total}]`
+        this.window.title = `[${current}/${total}]`
     }
 }

@@ -1,52 +1,106 @@
-export type EL = HTMLElement | SVGElement
-const container = document.getElementById("window-container")
+// Base Window class
+export class Window {
+    public element: HTMLDivElement
+    protected titleElement?: HTMLDivElement
+    protected contentElement: HTMLDivElement
+    protected subWindows: Window[] = []
 
-if (!container) {
-    throw new Error(
-        "No WM container found. create an element with window-container id",
-    )
+    constructor(title: string = "") {
+        // Create the main window element
+        this.element = document.createElement("div")
+        this.element.className = "window"
+
+        // Only create a title element if a title is provided
+        if (title) {
+            this.titleElement = document.createElement("div")
+            this.titleElement.className = "window-title"
+            this.titleElement.innerText = title
+            this.element.appendChild(this.titleElement)
+        }
+
+        // Create the content area
+        this.contentElement = document.createElement("div")
+        this.contentElement.className = "window-content"
+        this.contentElement.style.display = "flex"
+        this.contentElement.style.flexWrap = "wrap"
+        this.element.appendChild(this.contentElement)
+    }
+
+    // Getter for title
+    get title(): string {
+        return this.titleElement ? this.titleElement.innerText : ""
+    }
+
+    // Setter for title
+    set title(value: string) {
+        if (this.titleElement) {
+            this.titleElement.innerText = value
+        }
+    }
+
+    // Append the window to a parent element
+    appendTo(parent: HTMLElement) {
+        parent.appendChild(this.element)
+    }
+
+    // Add a sub-window
+    addWindow(window: Window) {
+        this.subWindows.push(window)
+        window.appendTo(this.contentElement)
+        return window
+    }
+
+    // Remove a sub-window
+    removeWindow(window: Window) {
+        const index = this.subWindows.indexOf(window)
+        if (index !== -1) {
+            this.subWindows.splice(index, 1)
+            this.contentElement.removeChild(window.element)
+        }
+    }
+
+    // Clear all sub-windows
+    clearWindows() {
+        this.subWindows.forEach((subWin) =>
+            this.contentElement.removeChild(subWin.element)
+        )
+        this.subWindows = []
+    }
 }
 
-export function createWindow(
-    child: EL | EL[] | null = null,
-    width: string | number = "auto",
-    title: string = "untited",
-) {
-    const parent = document.createElement("div")
-    parent.className = "window"
-    parent.style.width = String(width)
+// SvgWindow subclass
+export class SvgWindow extends Window {
+    private svgElement: SVGSVGElement
 
-    const titleEl = document.createElement("div")
-    titleEl.className = "windowTitle"
-    titleEl.innerText = title
-    parent.appendChild(titleEl)
+    constructor(
+        title: string = "",
+        viewbox: string = "-1 -1 2 2",
+        preserveRatio: boolean = true,
+    ) {
+        // Call the base Window constructor
+        super(title)
 
-    if (Array.isArray(child)) {
-        child.forEach((el) => parent.appendChild(el))
-    } else if (child) {
-        parent.appendChild(child)
+        // Create the SVG element
+        this.svgElement = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "svg",
+        )
+        this.svgElement.setAttribute("viewBox", viewbox)
+        if (!preserveRatio) {
+            this.svgElement.setAttribute("preserveAspectRatio", "none")
+        }
+        this.svgElement.style.width = "100%"
+        this.svgElement.style.height = "100%"
+        this.svgElement.style.position = "absolute"
+        this.svgElement.style.top = "0"
+        this.svgElement.style.left = "0"
+
+        // Append the SVG element to the content area
+        this.contentElement.appendChild(this.svgElement)
     }
-    // @ts-ignore
-    container.appendChild(parent)
-    return parent
-}
 
-export function createSvgWindow(
-    viewbox: string = "-1 -1 2 2",
-    preserveRatio: Boolean = true,
-    title: string = "svg",
-) {
-    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg")
-    if (!preserveRatio) {
-        svg.setAttributeNS(null, "preserveAspectRatio", "none")
+    // Getter for the SVG element
+    get svg(): SVGSVGElement {
+        return this.svgElement
     }
-    svg.style.width = "100%"
-    svg.style.height = "100%"
-    svg.style.position = "absolute"
-    svg.style.top = "0"
-    svg.style.left = "0"
-    //    svg.style.pointerEvents = "none"
-    svg.setAttribute("viewBox", viewbox)
-    createWindow(svg, "auto", title)
-    return svg
 }

@@ -196,30 +196,53 @@ async function init() {
 
     const history1 = await binary.HistoryFile.load("lightning.bin.gz")
     const smoother1 = new binary.Smoother(history1, 20, 0.2)
-
     const euclidian1 = new binary.EuclidianFilter(history1, 10)
     const euclidian2 = new binary.ConfidentEuclidianFilter(smoother1, 10)
 
     //const center1 = new binary.Center(smoother1)
+    const root = new wm.Window()
 
-    const svg1 = wm.createSvgWindow("0 0 255 255", true, "")
-    const svg2 = wm.createSvgWindow("0 0 255 255", true, "smoother")
-    const svg3 = wm.createSvgWindow("0 0 255 255", true, "euclidian distance")
-    const svg4 = wm.createSvgWindow(
-        "0 0 255 255",
-        true,
-        "confident euclidian distance",
+    // find #window-container by id
+    const container = document.getElementById("window-container")?.appendChild(
+        root.element,
     )
-    const svg5 = wm.createSvgWindow("0 0 255 255", false, "grapher")
+
+    const svg1 = root.addWindow(
+        new wm.SvgWindow("history", "0 0 255 255", true),
+    )
+    const svg2 = root.addWindow(
+        new wm.SvgWindow("smoother", "0 0 255 255", true),
+    )
+    const svg3 = root.addWindow(
+        new wm.SvgWindow("euclidian distance", "0 0 255 255", true),
+    )
+    const svg4 = root.addWindow(
+        new wm.SvgWindow(
+            "confident euclidian distance",
+            "0 0 255 255",
+            true,
+        ),
+    )
+
+    const graph = root.addWindow(new wm.Window())
+
+    const grapherX = graph.addWindow(
+        new wm.SvgWindow("grapher X", "0 0 255 255", false),
+    )
+
+    const grapherY = graph.addWindow(
+        new wm.SvgWindow("grapher Y", "0 0 255 255", false),
+    )
 
     //@ts-ignore
-    svg5.parentElement.style["min-width"] = "50vw"
+    //svg5.parentElement.style["min-width"] = "50vw"
 
     const grapher = new binary.KeypointGrapher(history1, {
-        statusEl: svg5.parentElement?.querySelector(
+        statusEl: graph.parentElement?.querySelector(
             ".windowTitle",
         ) as HTMLElement,
     })
+
     const poi = [
         "nose",
         "left_wrist",
@@ -232,11 +255,14 @@ async function init() {
 
     for (const name of poi) {
         grapher.drawKeypointGraph(
-            svg5,
+            grapherY.svg,
             name as keyof typeof binary.KeypointName,
             "y",
-            0,
-            3000,
+        )
+        grapher.drawKeypointGraph(
+            grapherX.svg,
+            name as keyof typeof binary.KeypointName,
+            "x",
         )
     }
 
@@ -252,22 +278,19 @@ async function init() {
     const center3 = new binary.Center(euclidian1)
     const center4 = new binary.Center(euclidian2)
 
-    new SkeletonDraw(history1, svg1, { minScore: 0.2 })
-    new SkeletonDraw(center2, svg2, { minScore: 0.2 })
-    new SkeletonDraw(center3, svg3, { minScore: 0.2 })
-    new SkeletonDraw(center4, svg4, { minScore: 0.2 })
+    new SkeletonDraw(history1, svg1.svg, { minScore: 0.2 })
+    new SkeletonDraw(center2, svg2.svg, { minScore: 0.2 })
+    new SkeletonDraw(center3, svg3.svg, { minScore: 0.2 })
+    new SkeletonDraw(center4, svg4.svg, { minScore: 0.2 })
 
     //await poseEstimator.init()
     //await video.el.play()
 
     const player = new binary.HistoryPlayer(history1)
-    new binary.HistoryControls(player, svg1.parentElement as HTMLElement)
-    new binary.HistoryDisplay(
-        player,
-        svg1.parentElement?.querySelector(".windowTitle") as HTMLElement,
-    )
+    new binary.HistoryControls(svg1, player)
+    new binary.HistoryDisplay(svg1, player)
 
-    //history1.play()
+    player.play()
     //history2.play()
 
     //    poseEstimator.on("pose", console.log)
