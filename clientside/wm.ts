@@ -44,7 +44,7 @@ export class Window {
     }
 
     // Add a sub-window
-    addWindow(window: Window) {
+    addWindow<W extends Window>(window: W): W {
         this.subWindows.push(window)
         window.appendTo(this.contentElement)
         return window

@@ -1,5 +1,6 @@
 import { History } from "./history.ts" // Adjust import based on your file structure
 import { KeypointName } from "./pose.ts" // Adjust import based on your file structure
+import { SvgWindow } from "../wm.ts" // Adjust import based on your file structure
 
 type KeypointGrapherSettings = {
     padding: number
@@ -8,21 +9,21 @@ type KeypointGrapherSettings = {
     lineColors: { [key in keyof typeof KeypointName]?: string }
     maxPoints: number
     zoomFactor: number
-    statusEl?: HTMLElement
 }
 
 const defaultSettings: KeypointGrapherSettings = {
-    padding: 5,
+    padding: 0,
     minScore: 0.3,
     lineWidth: 0.5,
     lineColors: {},
-    maxPoints: 500,
+    maxPoints: 255,
     zoomFactor: 0.15, // 15% zoom per scroll
 }
 
-const svgZoomListeners = new WeakMap<SVGSVGElement, boolean>()
+const svgZoomListeners = new WeakMap<SvgWindow, boolean>()
+
 const svgPaths = new WeakMap<
-    SVGSVGElement,
+    SvgWindow,
     Map<
         string,
         {
@@ -168,16 +169,14 @@ export class KeypointGrapher {
         return `hsl(${hue}, ${saturation}%, ${lightness}%)`
     }
 
-    private updatePaths(svg: SVGSVGElement) {
-        const paths = svgPaths.get(svg)
+    private updatePaths(window: SvgWindow) {
+        const paths = svgPaths.get(window)
         if (!paths) return
 
         const range = this.end - this.start
         if (range <= 0) return
 
-        if (this.settings.statusEl) {
-            this.settings.statusEl.textContent = `${this.start} - ${this.end}`
-        }
+        window.title = `${this.start} - ${this.end}`
 
         for (const [_, { path, keypoint, coord }] of paths) {
             const pathData = this.getPathData(
@@ -190,18 +189,18 @@ export class KeypointGrapher {
         }
     }
 
-    setStart(newStart: number, svg: SVGSVGElement) {
+    setStart(newStart: number, window: SvgWindow) {
         this.start = Math.max(0, newStart)
-        this.updatePaths(svg)
+        this.updatePaths(window)
     }
 
-    setEnd(newEnd: number, svg: SVGSVGElement) {
+    setEnd(newEnd: number, window: SvgWindow) {
         this.end = Math.min(this.history.count, newEnd)
-        this.updatePaths(svg)
+        this.updatePaths(window)
     }
 
-    private setupZoom(svg: SVGSVGElement) {
-        if (svgZoomListeners.has(svg)) return
+    private setupZoom(window: SvgWindow) {
+        if (svgZoomListeners.has(window)) return
 
         const handleScroll = (event: WheelEvent) => {
             event.preventDefault()
@@ -210,7 +209,7 @@ export class KeypointGrapher {
             const zoomChange = this.settings.zoomFactor
             const zoomFactor = zoomIn ? 1 - zoomChange : 1 + zoomChange
 
-            const rect = svg.getBoundingClientRect()
+            const rect = window.svg.getBoundingClientRect()
             const cursorX = event.clientX - rect.left
             const cursorRatio = cursorX / rect.width
 
@@ -229,20 +228,21 @@ export class KeypointGrapher {
             )
             const newEnd = Math.min(this.history.count, newStart + clampedRange)
 
-            this.setStart(newStart, svg)
-            this.setEnd(newEnd, svg)
+            this.setStart(newStart, window)
+            this.setEnd(newEnd, window)
         }
 
-        svg.addEventListener("wheel", handleScroll, { passive: false })
-        svgZoomListeners.set(svg, true)
+        console.log("window", window)
+        window.svg.addEventListener("wheel", handleScroll, { passive: false })
+        svgZoomListeners.set(window, true)
     }
 
     drawKeypointGraph(
-        svg: SVGSVGElement,
+        window: SvgWindow,
         keypoint: keyof typeof KeypointName,
         coord: "x" | "y",
     ): SVGPathElement | null {
-        this.setupZoom(svg)
+        this.setupZoom(window)
 
         const path = document.createElementNS(
             "http://www.w3.org/2000/svg",
@@ -253,16 +253,16 @@ export class KeypointGrapher {
             this.getRandomColor()
         path.setAttribute("stroke", color)
         path.setAttribute("stroke-width", String(this.settings.lineWidth))
-        svg.appendChild(path)
+        window.svg.appendChild(path)
 
-        if (!svgPaths.has(svg)) {
-            svgPaths.set(svg, new Map())
+        if (!svgPaths.has(window)) {
+            svgPaths.set(window, new Map())
         }
-        const paths = svgPaths.get(svg)!
+        const paths = svgPaths.get(window)!
         const key = `${keypoint}-${coord}`
         paths.set(key, { path, keypoint, coord })
 
-        this.updatePaths(svg)
+        this.updatePaths(window)
 
         return path
     }

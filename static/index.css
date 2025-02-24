@@ -170,13 +170,13 @@ input[type="range"]::-moz-range-thumb:hover {
 
 .window {
   position:relative;
-    border: 1px solid #ccc;
-    box-sizing: border-box;
-    min-width: 33vw;
-    flex: 1 1 300px;
-    min-height: 33vh;
-    display: flex;
-    flex-direction: column;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+  min-width: 33vw;
+  flex: 1 1 300px;
+  min-height: 33vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .window-title {
