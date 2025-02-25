@@ -13,6 +13,8 @@ import { Camera, Video } from "./source.ts"
 import { FFTDetector } from "./fft.ts"
 import { Env } from "./env.ts"
 
+import * as pt from "./binary/pureTransform.ts"
+
 import * as binary from "./binary/mod.ts"
 import { BinaryPoseEvent } from "./types2.ts"
 
@@ -194,18 +196,20 @@ async function init() {
     //const poseEstimator = new PoseEstimator(env, video)
     //const smoother1 = new binary.Smoother(poseEstimator, 20, 0.1)
 
-    const history1 = await binary.HistoryFile.load("lightning.bin.gz")
-    const smoother1 = new binary.Smoother(history1, 20, 0.2)
+    const history1 = await binary.HistoryFile.load("thundernew.bin.gz")
+
+    //const smoother1 = new pt.Avg(new pt.ScoreFilter(history1, 0.7), 20)
+    const smoother1 = new pt.Node(
+        history1,
+        pt.pipe(pt.scoreFilter(0.2), pt.attachState(pt.avg(10)))
+    )
+
     const euclidian1 = new binary.EuclidianFilter(history1, 10)
     const euclidian2 = new binary.ConfidentEuclidianFilter(smoother1, 10)
 
-    //const center1 = new binary.Center(smoother1)
     const root = new wm.Window()
 
-    // find #window-container by id
-    const container = document.getElementById("window-container")?.appendChild(
-        root.element,
-    )
+    document.getElementById("window-container")?.appendChild(root.element)
 
     const svg1 = root.addWindow(
         new wm.SvgWindow("history", "0 0 255 255", true),
@@ -272,9 +276,10 @@ async function init() {
     // })
 
     //    const center1 = new binary.Center(history1)
-    const center2 = new binary.Center(smoother1)
-    const center3 = new binary.Center(euclidian1)
-    const center4 = new binary.Center(euclidian2)
+
+    const center2 = new pt.Center(smoother1)
+    const center3 = new pt.Center(euclidian1)
+    const center4 = new pt.Center(euclidian2)
 
     new SkeletonDraw(history1, svg1.svg, { minScore: 0.2 })
     new SkeletonDraw(center2, svg2.svg, { minScore: 0.2 })

@@ -15,7 +15,7 @@ type KeypointGrapherSettings = {
 const defaultSettings: KeypointGrapherSettings = {
     padding: 0,
     minScore: 0.3,
-    lineWidth: 0.5,
+    lineWidth: 0.75,
     lineColors: {},
     maxPoints: 255,
     zoomFactor: 0.15, // 15% zoom per scroll

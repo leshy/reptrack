@@ -7,7 +7,7 @@ export class History extends EventEmitter<BinaryPoseEvent> {
     public writeIndex = 0
     public count = 0
     public capacity: number
-    private recordSize = Pose.RECORD_SIZE
+    public recordSize = Pose.RECORD_SIZE
 
     constructor(capacity: number = 10000) {
         super()
@@ -47,6 +47,14 @@ export class History extends EventEmitter<BinaryPoseEvent> {
         const offset = actualIndex * this.recordSize
         return new HistoryPose(this.buffer, offset)
     }
+
+    get startTime() {
+        return this.getPoseAt(0).timestamp
+    }
+
+    get endTime() {
+        return this.getPoseAt(this.count - 1).timestamp
+    }
 }
 
 export class HistoryPose extends Pose {
@@ -56,20 +64,19 @@ export class HistoryPose extends Pose {
         this.view = new DataView(buffer, offset, Pose.RECORD_SIZE)
     }
 }
-
 export class HistoryFile extends History {
     async download(fileName: string): Promise<void> {
-        let dataToDownload: ArrayBuffer
+        let dataToDownload: ArrayBuffer = this.getOrderedBuffer()
+
         if ("CompressionStream" in window) {
             const cs = new CompressionStream("gzip")
             const writer = cs.writable.getWriter()
-            writer.write(new Uint8Array(this.buffer))
+            writer.write(new Uint8Array(dataToDownload))
             writer.close()
             const compressedResponse = new Response(cs.readable)
             dataToDownload = await compressedResponse.arrayBuffer()
-        } else {
-            dataToDownload = this.buffer
         }
+
         const blob = new Blob([dataToDownload], { type: "application/gzip" })
         const url = URL.createObjectURL(blob)
         const a = document.createElement("a")
@@ -79,6 +86,27 @@ export class HistoryFile extends History {
         a.click()
         a.remove()
         URL.revokeObjectURL(url)
+    }
+
+    private getOrderedBuffer(): ArrayBuffer {
+        const start = this.count === this.capacity ? this.writeIndex : 0
+        const dataSize = this.count * this.recordSize
+        const orderedBuffer = new ArrayBuffer(dataSize)
+        const targetArray = new Uint8Array(orderedBuffer)
+        const sourceArray = new Uint8Array(this.buffer)
+
+        if (this.count === this.capacity) {
+            // Buffer is full and has started cycling
+            const firstPart = sourceArray.subarray(start * this.recordSize)
+            const secondPart = sourceArray.subarray(0, start * this.recordSize)
+            targetArray.set(firstPart)
+            targetArray.set(secondPart, firstPart.length)
+        } else {
+            // Buffer is not full yet
+            targetArray.set(sourceArray.subarray(0, dataSize))
+        }
+
+        return orderedBuffer
     }
 
     static async load(url: string): Promise<History> {
@@ -99,7 +127,7 @@ export class HistoryFile extends History {
             throw new Error("Invalid file size")
         }
         const capacity = arrayBuffer.byteLength / recordSize
-        const history = new History(capacity)
+        const history = new HistoryFile(capacity)
         history.buffer = arrayBuffer
         history.count = capacity
         history.writeIndex = 0

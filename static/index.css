@@ -78,6 +78,8 @@ video {
 
 
 button {
+  font-family: var(--font-family);
+
   white-space: nowrap;
   border: none;
   padding: 5px;
@@ -100,7 +102,7 @@ button:hover {
   left: 5px;
   width: 100%;
   display: flex;
-  gap: 0.5rem;
+  gap: 5px;
   padding: 0;
   margin: 0;
 }
@@ -109,25 +111,25 @@ button:hover {
 input[type="range"] {
   -webkit-appearance: none;
   width: 200px;
-  height: 100%;;
   background: black;
   outline: 1px solid white;
-  margin: 10px 0;
+  padding-left: 5px;
+  padding-right: 5px;
 }
 
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 20px;
-  height: 20px;
+  width: 1.5em;
+  height: 1em;
   background: black;
   cursor: pointer;
   border: 1px solid white;
 }
 
 input[type="range"]::-moz-range-thumb {
-  width: 20px;
-  height: 20px;
+  width: 1.5em;
+  height: 1em;
   background: black;
   cursor: pointer;
   border: 1px solid white;
@@ -135,12 +137,10 @@ input[type="range"]::-moz-range-thumb {
 
 input[type="range"]::-webkit-slider-thumb:hover {
   background: white;
-  border: 1px solid black;
 }
 
 input[type="range"]::-moz-range-thumb:hover {
   background: white;
-  border: 1px solid black;
 }
 
 
@@ -181,8 +181,8 @@ input[type="range"]::-moz-range-thumb:hover {
 
 .window-title {
   position: absolute;
-  top: -1px;
-  right: -1px;
+  top: 5px;
+  right: 5px;
   background-color: black;;
   color: white;
   padding: 5px;

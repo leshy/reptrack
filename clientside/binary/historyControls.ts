@@ -74,14 +74,14 @@ export class HistoryControls {
         })
         c.appendChild(this.playStopBtn)
         this.prevBtn = document.createElement("button")
-        this.prevBtn.textContent = "Prev Frame"
+        this.prevBtn.textContent = "Prev Frm"
         this.prevBtn.addEventListener("click", () => {
             this.player.prevFrame()
             this.updateUI()
         })
         c.appendChild(this.prevBtn)
         this.nextBtn = document.createElement("button")
-        this.nextBtn.textContent = "Next Frame"
+        this.nextBtn.textContent = "Next Frm"
         this.nextBtn.addEventListener("click", () => {
             this.player.nextFrame()
             this.updateUI()
@@ -108,7 +108,7 @@ export class HistoryControls {
         this.updateUI()
     }
     private updateUI() {
-        this.playStopBtn.textContent = this.player.isPlaying ? "Stop" : "Play"
+        this.playStopBtn.textContent = this.player.isPlaying ? "■" : "▶"
         this.seekBar.max = String(Math.max(this.player.total - 1, 0))
         this.seekBar.value = String(this.player.frame)
         const current = this.player.frame + 1
