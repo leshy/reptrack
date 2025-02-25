@@ -1,5 +1,5 @@
 import { EventEmitter } from "npm:eventemitter3"
-import { BinaryPoseEmitter, BinaryPoseEvent } from "../types2.ts"
+import { BinaryPoseEmitter, BinaryPoseEvent } from "../types.ts"
 import { Pose } from "./pose.ts"
 
 export class History extends EventEmitter<BinaryPoseEvent> {

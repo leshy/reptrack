@@ -1,6 +1,6 @@
-import { History } from "./history.ts"
-import { KeypointName } from "./pose.ts"
-import { SvgWindow } from "../wm.ts"
+import { History } from "../binary/history.ts"
+import { KeypointName } from "../binary/pose.ts"
+import { SvgWindow } from "./wm.ts"
 
 type KeypointGrapherSettings = {
     padding: number

@@ -1,11 +1,13 @@
 import * as poseDetection from "npm:@tensorflow-models/pose-detection"
-import { BinaryPoseEmitter, KeypointName, Pose } from "./types2.ts"
+import { BinaryPoseEmitter, KeypointName, Pose } from "../types.ts"
+import { center } from "../pureTransform.ts"
 
 type SkeletonDrawSettings = {
     stats: boolean
     keypoints: boolean
     skeleton: boolean
     center: boolean
+    focus: boolean
     relative: boolean
     minScore: number
     color: (score: number) => string
@@ -13,19 +15,28 @@ type SkeletonDrawSettings = {
     lineWidth: string
 }
 
-export function colorInterpolator(endColor: [number, number, number], startColor: [number, number, number]): (score: number) => string {
-    return function(score: number): string {
+export function colorInterpolator(
+    endColor: [number, number, number],
+    startColor: [number, number, number],
+): (score: number) => string {
+    return function (score: number): string {
         // Clamp the score between 0 and 1
-        const clampedScore = Math.max(0, Math.min(1, score));
+        const clampedScore = Math.max(0, Math.min(1, score))
 
         // Interpolate each component
-        const r = Math.round(startColor[0] + (endColor[0] - startColor[0]) * clampedScore);
-        const g = Math.round(startColor[1] + (endColor[1] - startColor[1]) * clampedScore);
-        const b = Math.round(startColor[2] + (endColor[2] - startColor[2]) * clampedScore);
+        const r = Math.round(
+            startColor[0] + (endColor[0] - startColor[0]) * clampedScore,
+        )
+        const g = Math.round(
+            startColor[1] + (endColor[1] - startColor[1]) * clampedScore,
+        )
+        const b = Math.round(
+            startColor[2] + (endColor[2] - startColor[2]) * clampedScore,
+        )
 
         // Return the RGB string
-        return `rgb(${r}, ${g}, ${b})`;
-    };
+        return `rgb(${r}, ${g}, ${b})`
+    }
 }
 const defaultSettings: SkeletonDrawSettings = {
     relative: true,
@@ -34,6 +45,7 @@ const defaultSettings: SkeletonDrawSettings = {
     keypoints: true,
     skeleton: true,
     center: true,
+    focus: true,
     keypointRadius: "1.5",
     lineWidth: "1",
     color: colorInterpolator([255, 255, 255], [255, 0, 0]),
@@ -62,9 +74,10 @@ export class SkeletonDraw {
     }
 
     private drawPose = (pose: Pose) => {
+        if (this.settings.focus) pose = center()(pose) as Pose
         if (this.settings.skeleton) this.drawSkeleton(pose)
         if (this.settings.keypoints) this.drawKeypoints(pose)
-        if (this.settings.center) this.drawCenter(pose)
+        //if (this.settings.center) this.drawCenter(pose)
     }
 
     private drawSkeleton = (pose: Pose) => {
@@ -137,7 +150,6 @@ export class SkeletonDraw {
         const currentIndices = new Set<number>()
         const minScore = this.settings.minScore
 
-
         for (const [i, kp] of pose.iterKeypoints()) {
             if (kp[2] < minScore) continue
             currentIndices.add(i)
@@ -186,35 +198,35 @@ export class SkeletonDraw {
         })
     }
 
-    private drawCenter = (pose: Pose) => {
-        const namespace = "http://www.w3.org/2000/svg"
-        const centerIndex = KeypointName.body_center
-        const center = pose.getKeypoint(centerIndex)
+    // private drawCenter = (pose: Pose) => {
+    //     const namespace = "http://www.w3.org/2000/svg"
+    //     const centerIndex = KeypointName.body_center
+    //     const center = pose.getKeypoint(centerIndex)
 
-        if (center) {
-            if (!this.centerPoint) {
-                this.centerPoint = this.createCenterCircle(
-                    namespace,
-                    centerIndex,
-                )
-            }
-            this.setCircleAttributes(this.centerPoint, center)
-        } else {
-            this.removeCenterPoint()
-        }
-    }
+    //     if (center) {
+    //         if (!this.centerPoint) {
+    //             this.centerPoint = this.createCenterCircle(
+    //                 namespace,
+    //                 centerIndex,
+    //             )
+    //         }
+    //         this.setCircleAttributes(this.centerPoint, center)
+    //     } else {
+    //         this.removeCenterPoint()
+    //     }
+    // }
 
-    private createCenterCircle(
-        namespace: string,
-        centerIndex: KeypointName,
-    ): SVGCircleElement {
-        const centerPoint = document.createElementNS(namespace, "circle")
-        centerPoint.setAttribute("data-index", centerIndex.toString())
-        centerPoint.setAttribute("r", "0.02")
-        centerPoint.setAttribute("fill", "#FF0000")
-        this.skeletonGroup.appendChild(centerPoint)
-        return centerPoint
-    }
+    // private createCenterCircle(
+    //     namespace: string,
+    //     centerIndex: KeypointName,
+    // ): SVGCircleElement {
+    //     const centerPoint = document.createElementNS(namespace, "circle")
+    //     centerPoint.setAttribute("data-index", centerIndex.toString())
+    //     centerPoint.setAttribute("r", "0.02")
+    //     centerPoint.setAttribute("fill", "#FF0000")
+    //     this.skeletonGroup.appendChild(centerPoint)
+    //     return centerPoint
+    // }
 
     private removeCenterPoint() {
         if (this.centerPoint) {

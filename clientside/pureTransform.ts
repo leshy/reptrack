@@ -1,7 +1,7 @@
 import { EventEmitter } from "npm:eventemitter3"
-import { Pose } from "./pose.ts"
-import { BinaryPoseEmitter, BinaryPoseEvent } from "../types2.ts"
-import * as poseTools from "./poseTools.ts"
+import { Pose } from "./binary/pose.ts"
+import { BinaryPoseEmitter, BinaryPoseEvent } from "./types.ts"
+import * as poseTools from "./binary/poseTools.ts"
 
 export type SimpleTransform = (pose: Pose) => Pose | undefined
 
@@ -42,25 +42,29 @@ export class Node extends EventEmitter<BinaryPoseEvent> {
     }
 }
 
-function isSimpleTransform(
-    t: SimpleTransform | StateTransform<unknown>,
+function isSimple(
+    t:
+        | SimpleTransform
+        // @ts-ignore
+        | StateTransform<any>,
 ): t is SimpleTransform {
     return t.length === 1
 }
 
-export function node(
+export const node = (
     poseEmitter: BinaryPoseEmitter,
-    ...transforms: Array<SimpleTransform | StateTransform<unknown>>
-): Node {
-    return new Node(
-        poseEmitter,
-        pipe(
-            ...transforms.map((t): SimpleTransform =>
-                isSimpleTransform(t) ? t : attachState(t)
-            ),
+    ...transforms: Array<
+        // @ts-ignore
+        SimpleTransform | StateTransform<any>
+    >
+) => new Node(
+    poseEmitter,
+    pipe(
+        ...transforms.map((t): SimpleTransform =>
+            isSimple(t) ? t : attachState(t)
         ),
-    )
-}
+    ),
+)
 
 export class Center extends Node {
     constructor(poseEmitter: BinaryPoseEmitter, rescale: boolean = true) {
@@ -98,7 +102,7 @@ export function avg(windowSize: number = 10): WindowTransform {
 }
 
 export function center(rescale: boolean = true): SimpleTransform {
-    return (pose: Pose): Pose | undefined => {
+    return (pose: Pose): Pose => {
         // Variables for weighted average of detected keypoints
         let sumX = 0
         let sumY = 0
@@ -191,11 +195,15 @@ export function confidentEuclideanFilter(
 ): StateTransform<ConfidentEuclideanState> {
     return (
         pose: Pose,
-        state: ConfidentEuclideanState = {
-            lastPose: undefined,
-            previously: [],
-        },
+        state: ConfidentEuclideanState | undefined,
     ): [Pose | undefined, ConfidentEuclideanState] => {
+        if (!state) {
+            state = {
+                lastPose: undefined,
+                previously: [],
+            }
+        }
+
         if (state.lastPose === undefined) {
             // First pose: set lastPose to pose, do not output
             return [undefined, { lastPose: pose, previously: [] }]

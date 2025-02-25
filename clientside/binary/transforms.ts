@@ -1,6 +1,6 @@
 import { EventEmitter } from "npm:eventemitter3"
 import { Pose } from "./pose.ts"
-import { BinaryPoseEmitter, BinaryPoseEvent } from "../types2.ts"
+import { BinaryPoseEmitter, BinaryPoseEvent } from "../types.ts"
 
 export class Center extends EventEmitter<BinaryPoseEvent> {
     constructor(
@@ -130,7 +130,7 @@ export class Smoother extends EventEmitter<BinaryPoseEvent> {
 
     private process(pose: Pose): void {
         this.window.push(pose)
-        if (this.window.length > this.windowSize) { this.window.shift() }
+        if (this.window.length > this.windowSize) this.window.shift()
         this.emit("pose", weightedAveragePoses(this.window))
     }
 }
