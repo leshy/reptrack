@@ -1,6 +1,7 @@
 import { EventEmitter } from "npm:eventemitter3"
 import { Pose } from "./pose.ts"
 import { BinaryPoseEmitter, BinaryPoseEvent } from "../types2.ts"
+import * as poseTools from "./poseTools.ts"
 
 export type SimpleTransform = (pose: Pose) => Pose | undefined
 
@@ -9,9 +10,7 @@ export type StateTransform<STATE> = (
     state: STATE | undefined,
 ) => [Pose | undefined, STATE | undefined]
 
-type PoseWindow = Pose[]
-
-export type WindowTransform = StateTransform<PoseWindow>
+export type WindowTransform = StateTransform<Pose[]>
 
 export function pipe(
     ...transforms: SimpleTransform[]
@@ -43,6 +42,26 @@ export class Node extends EventEmitter<BinaryPoseEvent> {
     }
 }
 
+function isSimpleTransform(
+    t: SimpleTransform | StateTransform<unknown>,
+): t is SimpleTransform {
+    return t.length === 1
+}
+
+export function node(
+    poseEmitter: BinaryPoseEmitter,
+    ...transforms: Array<SimpleTransform | StateTransform<unknown>>
+): Node {
+    return new Node(
+        poseEmitter,
+        pipe(
+            ...transforms.map((t): SimpleTransform =>
+                isSimpleTransform(t) ? t : attachState(t)
+            ),
+        ),
+    )
+}
+
 export class Center extends Node {
     constructor(poseEmitter: BinaryPoseEmitter, rescale: boolean = true) {
         super(poseEmitter, center(rescale))
@@ -64,59 +83,17 @@ export function scoreFilter(score: number = 0.2): SimpleTransform {
     }
 }
 
-export function weightedAveragePoses(poses: Pose[]): Pose {
-    const avgPose = new Pose()
-    if (poses.length === 0) return avgPose
-
-    // Compute weighted average for timestamp using pose score as weight.
-    let totalPoseScore = 0
-    let sumTimestamp = 0
-    for (const pose of poses) {
-        totalPoseScore += pose.score
-        sumTimestamp += pose.timestamp * pose.score
-    }
-    avgPose.timestamp = totalPoseScore ? sumTimestamp / totalPoseScore : 0
-
-    // Combine overall score (using square-root of average squared scores).
-    const sumScoreSq = poses.reduce((sum, pose) => sum + pose.score ** 2, 0)
-    avgPose.score = Math.min(1, Math.sqrt(sumScoreSq / poses.length))
-
-    // For each keypoint, compute weighted average positions.
-    for (let i = 0; i < Pose.keypointCount; i++) {
-        let totalKeypointScore = 0
-        let sumX = 0
-        let sumY = 0
-        let sumKeypointScoreSq = 0
-
-        for (const pose of poses) {
-            const [x, y, s] = pose.getKeypoint(i)
-            totalKeypointScore += s
-            sumX += x * s
-            sumY += y * s
-            sumKeypointScoreSq += s * s
-        }
-        const avgX = totalKeypointScore ? sumX / totalKeypointScore : 0
-        const avgY = totalKeypointScore ? sumY / totalKeypointScore : 0
-        const avgS = totalKeypointScore
-            ? Math.min(1, Math.sqrt(sumKeypointScoreSq / poses.length))
-            : 0
-
-        avgPose.setKeypoint(i, [avgX, avgY, avgS])
-    }
-
-    return avgPose
-}
-
-export function avg(windowSize: number = 10): StateTransform<PoseWindow> {
+export function avg(windowSize: number = 10): WindowTransform {
     return (
         pose: Pose,
-        window: PoseWindow = [],
-    ): [Pose | undefined, PoseWindow] => {
+        window: Pose[] | undefined,
+    ) => {
+        if (!window) window = []
         window.push(pose)
         if (window.length > windowSize) {
             window.shift()
         }
-        return [weightedAveragePoses(window), window]
+        return [poseTools.weightedAverage(window), window]
     }
 }
 
@@ -152,8 +129,8 @@ export function center(rescale: boolean = true): SimpleTransform {
         // Find the maximum deviation from the center for scaling if rescale is true
         let maxDeviation = 0
         if (rescale) {
-            for (const [i, kp] of pose.iterKeypoints()) {
-                const [x, y, _] = kp
+            for (const [_, kp] of pose.iterKeypoints()) {
+                const [x, y, __] = kp
                 const dx = Math.abs(x - cx)
                 const dy = Math.abs(y - cy)
                 maxDeviation = Math.max(maxDeviation, dx, dy)
@@ -180,5 +157,65 @@ export function center(rescale: boolean = true): SimpleTransform {
         }
 
         return adjustedPose
+    }
+}
+
+export function euclideanFilter(
+    threshold: number = 5,
+): StateTransform<Pose | undefined> {
+    return (
+        pose: Pose,
+        lastPose: Pose | undefined,
+    ): [Pose | undefined, Pose | undefined] => {
+        if (lastPose === undefined) {
+            return [pose, pose]
+        }
+
+        const distance = lastPose.distance(pose)
+
+        if (distance > threshold) {
+            return [pose, pose]
+        } else {
+            return [undefined, lastPose]
+        }
+    }
+}
+
+interface ConfidentEuclideanState {
+    lastPose: Pose | undefined
+    previously: Pose[]
+}
+
+export function confidentEuclideanFilter(
+    threshold: number = 5,
+): StateTransform<ConfidentEuclideanState> {
+    return (
+        pose: Pose,
+        state: ConfidentEuclideanState = {
+            lastPose: undefined,
+            previously: [],
+        },
+    ): [Pose | undefined, ConfidentEuclideanState] => {
+        if (state.lastPose === undefined) {
+            // First pose: set lastPose to pose, do not output
+            return [undefined, { lastPose: pose, previously: [] }]
+        } else {
+            const distance = state.lastPose.distance(pose)
+            if (distance > threshold) {
+                // Compute average if previously is not empty
+                const average = state.previously.length > 0
+                    ? poseTools.weightedAverage(state.previously)
+                    : undefined
+                // Output the average (if exists), update state
+                return [average, { lastPose: pose, previously: [] }]
+            } else {
+                // Add pose to previously, do not output
+                const newPreviously = [...state.previously, pose]
+                return [undefined, {
+                    lastPose: state.lastPose,
+                    previously: newPreviously,
+                }]
+            }
+        }
     }
 }

@@ -198,14 +198,27 @@ async function init() {
 
     const history1 = await binary.HistoryFile.load("thundernew.bin.gz")
 
-    //const smoother1 = new pt.Avg(new pt.ScoreFilter(history1, 0.7), 20)
-    const smoother1 = new pt.Node(
+    // const smoother1 = new pt.Node(
+    //     history1,
+    //     pt.pipe(pt.scoreFilter(0.2), pt.attachState(pt.avg(10)))
+    // )
+
+    const smoother1 = pt.node(
         history1,
-        pt.pipe(pt.scoreFilter(0.2), pt.attachState(pt.avg(10)))
+        pt.scoreFilter(0.2),
+        pt.avg(10),
     )
 
-    const euclidian1 = new binary.EuclidianFilter(history1, 10)
-    const euclidian2 = new binary.ConfidentEuclidianFilter(smoother1, 10)
+    const euclidian1 = new pt.Node(
+        history1,
+        pt.attachState(pt.euclideanFilter(10)),
+    )
+
+    //const euclidian2 = new binary.ConfidentEuclidianFilter(smoother1, 10)
+    const euclidian2 = new pt.Node(
+        smoother1,
+        pt.attachState(pt.confidentEuclideanFilter(10)),
+    )
 
     const root = new wm.Window()
 
