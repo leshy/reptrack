@@ -111,7 +111,7 @@ async function init() {
     //const center3 = new pt.Center(euclidean1)
     //const center4 = new pt.Center(euclidean2)
 
-    new ui.SkeletonDraw(history1, svg1.svg, { minScore: 0.2 })
+    new ui.SkeletonDraw(history1, svg1.svg, { minScore: 0 })
     new ui.SkeletonDraw(smoother1, svg2.svg, { minScore: 0.2 })
     new ui.SkeletonDraw(euclidean1, svg3.svg, { minScore: 0.2 })
     new ui.SkeletonDraw(euclidean2, svg4.svg, { minScore: 0.2 })
@@ -125,8 +125,6 @@ async function init() {
 
     //player.play()
     //history2.play()
-
-    //    poseEstimator.on("pose", console.log)
 
     // const poseCenter = new PoseCenter(poseEstimator)
     // const svg = wm.createSvgWindow()

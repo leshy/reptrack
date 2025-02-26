@@ -228,6 +228,10 @@ export class SkeletonDraw {
             circle.classList.add("clickable-keypoint")
             circle.addEventListener("click", (event) => {
                 quickDisplay(this.svg, event, this.pose.keypointStr(index))
+                console.log(this.pose.keypointStr(index))
+                console.log(this.pose, this.pose.getKeypoint(index))
+                window.pose = this.pose
+                window.kp = this.pose.getKeypoint(index)
             })
         }
 
