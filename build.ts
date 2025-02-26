@@ -11,6 +11,9 @@ await esbuild.build({
     bundle: true,
     format: "esm",
     target: ["es2020"],
+    define: {
+        "import.meta.url": '""',
+    },
 })
 
 // await esbuild.build({

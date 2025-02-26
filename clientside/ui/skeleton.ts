@@ -1,6 +1,7 @@
 import * as poseDetection from "npm:@tensorflow-models/pose-detection"
 import { BinaryPoseEmitter, Pose } from "../types.ts"
 import { center } from "../pureTransform.ts"
+import { SvgWindow } from "./wm.ts"
 
 type SkeletonDrawSettings = {
     stats: boolean
@@ -40,57 +41,61 @@ export function colorInterpolator(
     }
 }
 
-function quickDisplay(svg: SVGElement, event: MouseEvent, data: string) {
+function quickDisplay(event: MouseEvent, data: string) {
     // Remove any existing display
-    removeQuickDisplay();
+    removeQuickDisplay()
 
     // Create floating display
-    const display = document.createElement("div");
-    display.className = "quick-display";
-    display.innerHTML = data.replace(/\n/g, "<br>");
-    document.body.appendChild(display);
+    const display = document.createElement("div")
+    display.className = "quick-display"
+    display.innerHTML = data.replace(/\n/g, "<br>")
+    document.body.appendChild(display)
 
     // Position the display
-    display.style.left = `${event.clientX + 50}px`;
-    display.style.top = `${event.clientY + 50}px`;
+    display.style.left = `${event.clientX + 50}px`
+    display.style.top = `${event.clientY + 50}px`
 
     // Create full-screen overlay SVG if it doesn't exist
-    let overlaySvg = document.getElementById("overlay-svg") as SVGSVGElement;
+    let overlaySvg = document.getElementById("overlay-svg") as
+        | SVGSVGElement
+        | null
     if (!overlaySvg) {
-        overlaySvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        overlaySvg.id = "overlay-svg";
-        overlaySvg.style.position = "fixed";
-        overlaySvg.style.top = "0";
-        overlaySvg.style.left = "0";
-        overlaySvg.style.width = "100%";
-        overlaySvg.style.height = "100%";
-        overlaySvg.style.pointerEvents = "none";
-        document.body.appendChild(overlaySvg);
+        overlaySvg = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "svg",
+        )
+        overlaySvg.id = "overlay-svg"
+        overlaySvg.style.position = "fixed"
+        overlaySvg.style.top = "0"
+        overlaySvg.style.left = "0"
+        overlaySvg.style.width = "100%"
+        overlaySvg.style.height = "100%"
+        overlaySvg.style.pointerEvents = "none"
+        document.body.appendChild(overlaySvg)
     }
 
     // Draw line in the overlay SVG
-    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-    line.setAttribute("x1", event.clientX.toString());
-    line.setAttribute("y1", event.clientY.toString());
-    line.setAttribute("x2", (event.clientX + 50).toString());
-    line.setAttribute("y2", (event.clientY + 50).toString());
-    line.setAttribute("stroke", "white");
-    line.setAttribute("stroke-width", "2");
-    line.id = "quick-display-line";
-    overlaySvg.appendChild(line);
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line")
+    line.setAttribute("x1", event.clientX.toString())
+    line.setAttribute("y1", event.clientY.toString())
+    line.setAttribute("x2", (event.clientX + 50).toString())
+    line.setAttribute("y2", (event.clientY + 50).toString())
+    line.setAttribute("stroke", "white")
+    line.setAttribute("stroke-width", "2")
+    line.id = "quick-display-line"
+    overlaySvg.appendChild(line)
 
     // Set up event listener to remove display
-    document.addEventListener("mousemove", removeQuickDisplay);
+    document.addEventListener("mousemove", removeQuickDisplay)
 }
 
 function removeQuickDisplay() {
-    const display = document.querySelector(".quick-display");
-    const line = document.getElementById("quick-display-line");
-    if (display) display.remove();
-    if (line) line.remove();
-    document.removeEventListener("mousemove", removeQuickDisplay);
+    const display = document.querySelector(".quick-display")
+    const line = document.getElementById("quick-display-line")
+    if (display) display.remove()
+    if (line) line.remove()
+    document.removeEventListener("mousemove", removeQuickDisplay)
 }
-
 
 const defaultSettings: SkeletonDrawSettings = {
     relative: true,
@@ -106,15 +111,16 @@ const defaultSettings: SkeletonDrawSettings = {
     interactive: true,
 }
 
-export class SkeletonDraw {
+export class Skeleton {
     private skeletonGroup: SVGGElement
     private lineMap = new Map<string, Element>()
     private keypointMap = new Map<number, Element>()
     private settings: SkeletonDrawSettings
     private pose?: Pose
+
     constructor(
         private poseEmitter: BinaryPoseEmitter,
-        private svg: SVGSVGElement,
+        private svgWindow: SvgWindow,
         settings: Partial<SkeletonDrawSettings> = {},
     ) {
         this.settings = { ...defaultSettings, ...settings }
@@ -124,8 +130,9 @@ export class SkeletonDraw {
             "http://www.w3.org/2000/svg",
             "g",
         )
+
         this.skeletonGroup.setAttribute("id", "skeleton-group")
-        this.svg.appendChild(this.skeletonGroup)
+        this.svgWindow.svg.appendChild(this.skeletonGroup)
     }
 
     private drawPose = (pose: Pose) => {
@@ -226,11 +233,20 @@ export class SkeletonDraw {
 
         if (this.settings.interactive) {
             circle.classList.add("clickable-keypoint")
-            circle.addEventListener("click", (event) => {
-                quickDisplay(this.svg, event, this.pose.keypointStr(index))
+            circle.addEventListener("click", (event: Event) => {
+                quickDisplay(
+                    (event as unknown) as MouseEvent,
+                    // @ts-ignore
+                    this.pose.keypointStr(index),
+                )
+
+                // @ts-ignore
                 console.log(this.pose.keypointStr(index))
+                // @ts-ignore
                 console.log(this.pose, this.pose.getKeypoint(index))
+                // @ts-ignore
                 window.pose = this.pose
+                // @ts-ignore
                 window.kp = this.pose.getKeypoint(index)
             })
         }

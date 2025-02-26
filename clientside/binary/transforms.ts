@@ -18,7 +18,7 @@ export class Center extends EventEmitter<BinaryPoseEvent> {
         let sumScore = 0
 
         // Compute the center as a weighted average based on keypoint scores
-        for (const kp of pose.iterKeypoints()) {
+        for (const kp of pose.keypoints()) {
             const [x, y, score] = kp
             sumX += x * score
             sumY += y * score
@@ -43,7 +43,7 @@ export class Center extends EventEmitter<BinaryPoseEvent> {
         // Find the maximum deviation from the center for scaling if rescale is true
         let maxDeviation = 0
         if (this.rescale) {
-            for (const [i, kp] of pose.iterKeypoints()) {
+            for (const [i, kp] of pose.keypoints()) {
                 const [x, y, score] = kp
                 const dx = Math.abs(x - cx)
                 const dy = Math.abs(y - cy)

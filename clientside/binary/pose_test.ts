@@ -111,7 +111,7 @@ Deno.test("nonEmptyKeypoints iterator", () => {
     const pose = new Pose()
 
     // Initialize all keypoints with predictable values.
-    for (let i = 0; i < Pose.keypointCount; i++) {
+    for (let i = 0; i < Pose.KEYPOINT_COUNT - 1; i++) {
         const point: [number, number, number] = [
             i + 0.2,
             i + 0.7,

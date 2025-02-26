@@ -81,6 +81,32 @@ export function attachState<T>(transform: StateTransform<T>): SimpleTransform {
     }
 }
 
+export function spyState<T>(
+    transform: StateTransform<T>,
+    callback: (arg0: T | undefined) => unknown,
+): SimpleTransform {
+    let state: T | undefined
+    return (pose: Pose): Pose | undefined => {
+        const [newPose, newState] = transform(pose, state)
+        state = newState
+        callback(newState)
+        return newPose
+    }
+}
+
+export function spyStateEmit<T>(
+    transform: StateTransform<T>,
+    callback: (arg0: T | undefined) => unknown,
+): SimpleTransform {
+    let state: T | undefined
+    return (pose: Pose): Pose | undefined => {
+        const [newPose, newState] = transform(pose, state)
+        state = newState
+        if (newPose) callback(newState)
+        return newPose
+    }
+}
+
 export function scoreFilter(score: number = 0.2): SimpleTransform {
     return (pose: Pose) => {
         if (pose.score > score) {
@@ -103,6 +129,38 @@ export function avg(windowSize: number = 10): WindowTransform {
     }
 }
 
+export type FPState = [
+    number | undefined, // current frame number
+    Pose[], // pose bucket
+    number, // prev bucket length
+]
+
+export function fpsPeg(fps: number = 10): StateTransform<FPState> {
+    // Frame interval in milliseconds (e.g., 100 ms for 10 fps)
+    const interval = 1000 / fps
+    return (
+        pose: Pose,
+        state: FPState | undefined,
+    ): [Pose | undefined, FPState] => {
+        // Calculate the frame number for this pose based on its timestamp
+        const frame = Math.floor(pose.timestamp / interval)
+
+        if (!state) {
+            return [undefined, [frame, [pose], 0]]
+        }
+
+        const [bucketFrame, bucket] = state
+
+        if (frame === bucketFrame) {
+            return [undefined, [frame, [pose, ...bucket], 0]]
+        }
+        return [
+            poseTools.weightedAverage(bucket),
+            [frame, [pose], bucket.length],
+        ]
+    }
+}
+
 export function center(rescale: boolean = true): SimpleTransform {
     return (pose: Pose): Pose | undefined => {
         // Variables for weighted average of detected keypoints
@@ -111,7 +169,7 @@ export function center(rescale: boolean = true): SimpleTransform {
         let sumScore = 0
 
         // Compute the center as a weighted average based on keypoint scores
-        for (const kp of pose.iterKeypoints()) {
+        for (const kp of pose.keypoints()) {
             const [x, y, score] = kp
             sumX += x * score
             sumY += y * score
@@ -135,7 +193,7 @@ export function center(rescale: boolean = true): SimpleTransform {
         // Find the maximum deviation from the center for scaling if rescale is true
         let maxDeviation = 0
         if (rescale) {
-            for (const kp of pose.iterKeypoints()) {
+            for (const kp of pose.keypoints()) {
                 const [x, y, __] = kp
                 const dx = Math.abs(x - cx)
                 const dy = Math.abs(y - cy)
@@ -147,7 +205,7 @@ export function center(rescale: boolean = true): SimpleTransform {
         const s = maxDeviation > 0 ? 127 / maxDeviation : 1
 
         // Adjust each keypoint to center at (127, 127), with optional scaling
-        for (let i = 0; i < Pose.keypointCount; i++) {
+        for (let i = 0; i < Pose.KEYPOINT_COUNT - 1; i++) {
             const [x, y, score] = pose.getKeypoint(i)
             // Skip adjustment for unset keypoints ([0,0,0])
             if (x === 0 && y === 0 && score === 0) {
@@ -188,9 +246,10 @@ export function euclideanFilter(
     }
 }
 
-interface ConfidentEuclideanState {
+export type ConfidentEuclideanState = {
     lastPose: Pose | undefined
     previously: Pose[]
+    frame: number
 }
 
 export function confidentEuclideanFilter(
@@ -204,12 +263,13 @@ export function confidentEuclideanFilter(
             state = {
                 lastPose: undefined,
                 previously: [],
+                frame: 0,
             }
         }
 
         if (state.lastPose === undefined) {
             // First pose: set lastPose to pose, do not output
-            return [undefined, { lastPose: pose, previously: [] }]
+            return [undefined, { lastPose: pose, previously: [], frame: 0 }]
         } else {
             const distance = state.lastPose.distance(pose)
             if (distance > threshold) {
@@ -218,13 +278,18 @@ export function confidentEuclideanFilter(
                     ? poseTools.weightedAverage(state.previously)
                     : undefined
                 // Output the average (if exists), update state
-                return [average, { lastPose: pose, previously: [] }]
+                return [average, {
+                    lastPose: pose,
+                    previously: [],
+                    frame: state.frame + 1,
+                }]
             } else {
                 // Add pose to previously, do not output
                 const newPreviously = [...state.previously, pose]
                 return [undefined, {
                     lastPose: state.lastPose,
                     previously: newPreviously,
+                    frame: state.frame,
                 }]
             }
         }

@@ -8,7 +8,7 @@ export class History extends EventEmitter<BinaryPoseEvent> {
     public count = 0
     public capacity: number
     public recordSize = Pose.RECORD_SIZE
-
+    public name: string = "History"
     constructor(capacity: number = 10000) {
         super()
         this.capacity = capacity
@@ -35,6 +35,12 @@ export class History extends EventEmitter<BinaryPoseEvent> {
             const index = (start + i) % this.capacity
             const offset = index * this.recordSize
             yield new HistoryPose(this.buffer, offset)
+        }
+    }
+
+    *keypoints(index: number): Iterable<[number, [number, number, number]]> {
+        for (const pose of this.poses()) {
+            yield [pose.timestamp, pose.getKeypoint(index)]
         }
     }
 
@@ -65,6 +71,13 @@ export class HistoryPose extends Pose {
     }
 }
 export class HistoryFile extends History {
+    override name: string
+
+    constructor(capacity: number = 10000, url: string) {
+        super(capacity)
+        this.name = url
+    }
+
     async download(fileName: string): Promise<void> {
         let dataToDownload: ArrayBuffer = this.getOrderedBuffer()
 
@@ -109,7 +122,7 @@ export class HistoryFile extends History {
         return orderedBuffer
     }
 
-    static async load(url: string): Promise<History> {
+    static async load(url): Promise<History> {
         const response = await fetch(url)
         const compressedBuffer = await response.arrayBuffer()
         let arrayBuffer: ArrayBuffer
@@ -127,7 +140,7 @@ export class HistoryFile extends History {
             throw new Error("Invalid file size")
         }
         const capacity = arrayBuffer.byteLength / recordSize
-        const history = new HistoryFile(capacity)
+        const history = new HistoryFile(capacity, url)
         history.buffer = arrayBuffer
         history.count = capacity
         history.writeIndex = 0

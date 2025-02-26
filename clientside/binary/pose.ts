@@ -1,4 +1,4 @@
-import { aget, compose, filter, negate } from "../utils/mod.ts"
+import { aget, compose } from "../utils/mod.ts"
 
 import * as poseDetection from "npm:@tensorflow-models/pose-detection"
 
@@ -52,8 +52,8 @@ export const isEmptyIndexed: (point: [number, Point]) => boolean = compose(
 
 export class Pose {
     // 4 bytes for timestamp, 1 byte for overall score, plus 3 bytes per keypoint.
-    static keypointCount = 18
-    static RECORD_SIZE = 4 + 1 + 3 * Pose.keypointCount
+    static KEYPOINT_COUNT = 18
+    static RECORD_SIZE = 4 + 1 + 3 * Pose.KEYPOINT_COUNT
 
     public buffer: ArrayBuffer
     public view: DataView
@@ -73,6 +73,7 @@ export class Pose {
     get score(): number {
         return this.view.getUint8(4) / 255
     }
+
     set score(val: number) {
         this.view.setUint8(4, Math.round(val * 255))
     }
@@ -84,7 +85,7 @@ export class Pose {
 
     distance(b: Pose): number {
         let weightedSum = 0
-        for (let i = 0; i < Pose.keypointCount; i++) {
+        for (let i = 0; i < Pose.KEYPOINT_COUNT; i++) {
             const [x1, y1, score1] = this.getKeypoint(i)
             const [x2, y2, score2] = b.getKeypoint(i)
             const weight = score1 * score2
@@ -163,14 +164,14 @@ export class Pose {
         return this.buffer
     }
 
-    *iterKeypoints(): IterableIterator<Point> {
-        for (let i = 0; i < Pose.keypointCount - 1; i++) {
+    *keypoints(): IterableIterator<Point> {
+        for (let i = 0; i < Pose.KEYPOINT_COUNT - 1; i++) {
             yield this.getKeypoint(i)
         }
     }
 
     *indexedKeypoints(): IterableIterator<[number, Point]> {
-        for (let i = 0; i < Pose.keypointCount - 1; i++) {
+        for (let i = 0; i < Pose.KEYPOINT_COUNT - 1; i++) {
             yield [i, this.getKeypoint(i)]
         }
     }

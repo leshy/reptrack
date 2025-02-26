@@ -74,7 +74,7 @@ export function weightedAverage(poses: Pose[]): Pose {
     avgPose.timestamp = totalPoseScore ? sumTimestamp / totalPoseScore : 0
 
     // For each keypoint: compute position and score with agreement
-    for (let i = 0; i < Pose.keypointCount; i++) {
+    for (let i = 0; i < Pose.KEYPOINT_COUNT; i++) {
         const keypoints = []
         for (const pose of poses) {
             keypoints.push(pose.getKeypoint(i))
@@ -85,13 +85,13 @@ export function weightedAverage(poses: Pose[]): Pose {
 
     // Overall pose score as average of keypoint scores
     //avgPose.score = avgPose.keypoints.reduce((sum, kp) => sum + kp[2], 0) /
-    //    Pose.keypointCount
+    //    Pose.KEYPOINT_COUNT
 
     avgPose.score = reduce(
-        filter(avgPose.iterKeypoints(), isEmpty),
+        filter(avgPose.keypoints(), isEmpty),
         (sum: number, kp: Point) => sum + kp[2],
         0,
-    ) / Pose.keypointCount
+    ) / Pose.KEYPOINT_COUNT
 
     return avgPose
 }

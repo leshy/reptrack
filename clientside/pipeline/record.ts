@@ -12,7 +12,7 @@ export async function record() {
     const video = root.addWindow(new source.VideoWindow("video.mp4"))
     const pose = new node.PoseEstimator(env, video)
     const svg = root.addWindow(new ui.SvgWindow("pose", "0 0 255 255", true))
-    new ui.SkeletonDraw(pose, svg.svg)
+    new ui.Skeleton(pose, svg)
 
     const recorder = new binary.HistoryFile(50000)
     recorder.record(pose)

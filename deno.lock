@@ -19,7 +19,8 @@
     "npm:plotly@^1.0.6": "1.0.6",
     "npm:prettier@^3.5.1": "3.5.1",
     "npm:ts-fp@*": "1.0.0",
-    "npm:ts-fp@1": "1.0.0"
+    "npm:ts-fp@1": "1.0.0",
+    "npm:webfft@^1.0.3": "1.0.3"
   },
   "jsr": {
     "@luca/esbuild-deno-loader@0.11.1": {
@@ -391,6 +392,9 @@
     "tslib@2.4.0": {
       "integrity": "sha512-d6xOpEDfsi2CZVlPQzGeux8XMwLT9hssAsaPYExaQMuYskwb+x1x7J371tWlbBdWHroy99KnVB6qIkUbs5X3UQ=="
     },
+    "webfft@1.0.3": {
+      "integrity": "sha512-Xi9V1yiKuxJvfo9TysWs17C4++7c62KSr1uS9WKj6o3ZMVJdxkoT301qltym0hZxvSU0+8tWuGF1FHNdeP158g=="
+    },
     "webidl-conversions@3.0.1": {
       "integrity": "sha512-2JAn3z8AR6rjK8Sm8orRC0h/bcl/DqL7tRPdGZ4I1CjdF+EaMLmYxBHyXuKL849eucPFhvBoxMsflfOb8kxaeQ=="
     },
@@ -457,7 +461,8 @@
       "npm:fft-js@^0.0.12",
       "npm:plotly@^1.0.6",
       "npm:prettier@^3.5.1",
-      "npm:ts-fp@1"
+      "npm:ts-fp@1",
+      "npm:webfft@^1.0.3"
     ]
   }
 }
