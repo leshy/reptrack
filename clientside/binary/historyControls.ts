@@ -1,6 +1,6 @@
 // history-controls.ts
 import { History } from "./history.ts"
-import { Window } from "../wm.ts"
+import { Window } from "../ui/wm.ts"
 
 export class HistoryPlayer {
     public frame = 0

@@ -1,9 +1,36 @@
 import { EventEmitter } from "npm:eventemitter3"
-import { createWindow } from "./wm.ts"
+import { SvgWindow } from "./ui/wm.ts"
+
+// SvgWindow subclass
+export class GenericVideoWindow extends SvgWindow {
+    private videoElement: HTMLVideoElement
+
+    constructor(
+        title: string = "video",
+    ) {
+        super(title)
+        const video = document.createElement("video")
+        video.autoplay = true
+        video.controls = true
+        this.videoElement = video
+        this.contentElement.appendChild(video)
+    }
+
+    // Getter for the SVG element
+    get video(): HTMLVideoElement {
+        return this.videoElement
+    }
+}
+
+export class VideoWindow extends GenericVideoWindow {
+    constructor(private src: string) {
+        super(src)
+        this.video.src = src
+    }
+}
 
 export class GenericVideo {
     public el: HTMLVideoElement
-    public overlay: SVGSVGElement
 
     constructor() {
         const video = document.createElement("video")
@@ -39,9 +66,9 @@ export class GenericVideo {
         video.addEventListener("resize", resize)
         window.addEventListener("resize", resize)
 
-        createWindow([video, svgOverlay], "auto", "source")
+        //createWindow([video, svgOverlay], "auto", "source")
 
-        this.overlay = svgOverlay
+        //this.overlay = svgOverlay
         this.el = video
         resize()
     }

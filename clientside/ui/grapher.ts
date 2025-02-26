@@ -15,7 +15,7 @@ type KeypointGrapherSettings = {
 const defaultSettings: KeypointGrapherSettings = {
     padding: 0,
     minScore: 0.3,
-    lineWidth: 0.75,
+    lineWidth: 0.5,
     lineColors: {},
     maxPoints: 255,
     zoomFactor: 0.15, // 15% zoom per scroll
@@ -70,6 +70,7 @@ export class KeypointGrapher {
 
         let minTime = Infinity
         let maxTime = -Infinity
+
         let minCoord = Infinity
         let maxCoord = -Infinity
 
@@ -86,8 +87,13 @@ export class KeypointGrapher {
                 const coordValue = keypointCoords[coordIndex]
                 minTime = Math.min(minTime, timestamp)
                 maxTime = Math.max(maxTime, timestamp)
+
+                // maxCoord = Math.max(maxCoord, coordValue)
+                // minCoord = Math.min(minCoord, coordValue)
+
                 minCoord = 0
                 maxCoord = 255
+
                 validPoints++
             }
         }
@@ -99,7 +105,7 @@ export class KeypointGrapher {
         const graphWidth = 255 - 2 * this.settings.padding
         const graphHeight = 255 - 2 * this.settings.padding
 
-        // Determine downsampling factor
+        // Determine downsam    pling factor
         const downsampleFactor = Math.ceil(
             validPoints / this.settings.maxPoints,
         )

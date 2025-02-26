@@ -5,7 +5,7 @@ await esbuild.build({
     plugins: [...denoPlugins()],
     conditions: ["browser", "deno", "node"],
     entryPoints: [
-        "./clientside/clientside.ts",
+        "./clientside/init.ts",
     ],
     outfile: "./static/js/clientside.js",
     bundle: true,

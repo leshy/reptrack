@@ -1,4 +1,5 @@
 import Stats from "npm:stats.js"
+import * as poseDetection from "npm:@tensorflow-models/pose-detection"
 
 export const STATE = {
     "runtime": "tfjs",

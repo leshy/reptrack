@@ -170,7 +170,7 @@ export class Pose {
     }
 
     *indexedKeypoints(): IterableIterator<[number, Point]> {
-        for (let i = 0; i < Pose.keypointCount; i++) {
+        for (let i = 0; i < Pose.keypointCount - 1; i++) {
             yield [i, this.getKeypoint(i)]
         }
     }
