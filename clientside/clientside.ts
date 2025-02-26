@@ -28,12 +28,13 @@ async function init() {
     //const poseEstimator = new PoseEstimator(env, video)
     //const smoother1 = new binary.Smoother(poseEstimator, 20, 0.1)
 
-    const history1 = await binary.HistoryFile.load("thundernew.bin.gz")
+    const history1 = await binary.HistoryFile.load("lightning.bin.gz")
 
+    // actually need per keypoint pure transforms as well
     const smoother1 = pt.node(
         history1,
-        pt.scoreFilter(0.2),
         pt.avg(10),
+        pt.scoreFilter(0.4),
     )
     const euclidean1 = pt.node(history1, pt.euclideanFilter(10))
 
@@ -122,7 +123,7 @@ async function init() {
     new binary.HistoryControls(svg1, player)
     new binary.HistoryDisplay(svg1, player)
 
-    player.play()
+    //player.play()
     //history2.play()
 
     //    poseEstimator.on("pose", console.log)

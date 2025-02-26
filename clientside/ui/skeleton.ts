@@ -1,5 +1,5 @@
 import * as poseDetection from "npm:@tensorflow-models/pose-detection"
-import { BinaryPoseEmitter, KeypointName, Pose } from "../types.ts"
+import { BinaryPoseEmitter, Pose } from "../types.ts"
 import { center } from "../pureTransform.ts"
 
 type SkeletonDrawSettings = {
@@ -13,6 +13,7 @@ type SkeletonDrawSettings = {
     color: (score: number) => string
     keypointRadius: string
     lineWidth: string
+    interactive: boolean
 }
 
 export function colorInterpolator(
@@ -38,6 +39,59 @@ export function colorInterpolator(
         return `rgb(${r}, ${g}, ${b})`
     }
 }
+
+function quickDisplay(svg: SVGElement, event: MouseEvent, data: string) {
+    // Remove any existing display
+    removeQuickDisplay();
+
+    // Create floating display
+    const display = document.createElement("div");
+    display.className = "quick-display";
+    display.innerHTML = data.replace(/\n/g, "<br>");
+    document.body.appendChild(display);
+
+    // Position the display
+    display.style.left = `${event.clientX + 50}px`;
+    display.style.top = `${event.clientY + 50}px`;
+
+    // Create full-screen overlay SVG if it doesn't exist
+    let overlaySvg = document.getElementById("overlay-svg") as SVGSVGElement;
+    if (!overlaySvg) {
+        overlaySvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        overlaySvg.id = "overlay-svg";
+        overlaySvg.style.position = "fixed";
+        overlaySvg.style.top = "0";
+        overlaySvg.style.left = "0";
+        overlaySvg.style.width = "100%";
+        overlaySvg.style.height = "100%";
+        overlaySvg.style.pointerEvents = "none";
+        document.body.appendChild(overlaySvg);
+    }
+
+    // Draw line in the overlay SVG
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("x1", event.clientX.toString());
+    line.setAttribute("y1", event.clientY.toString());
+    line.setAttribute("x2", (event.clientX + 50).toString());
+    line.setAttribute("y2", (event.clientY + 50).toString());
+    line.setAttribute("stroke", "white");
+    line.setAttribute("stroke-width", "2");
+    line.id = "quick-display-line";
+    overlaySvg.appendChild(line);
+
+    // Set up event listener to remove display
+    document.addEventListener("mousemove", removeQuickDisplay);
+}
+
+function removeQuickDisplay() {
+    const display = document.querySelector(".quick-display");
+    const line = document.getElementById("quick-display-line");
+    if (display) display.remove();
+    if (line) line.remove();
+    document.removeEventListener("mousemove", removeQuickDisplay);
+}
+
+
 const defaultSettings: SkeletonDrawSettings = {
     relative: true,
     minScore: 0.3,
@@ -46,17 +100,18 @@ const defaultSettings: SkeletonDrawSettings = {
     skeleton: true,
     center: true,
     focus: true,
-    keypointRadius: "1.5",
-    lineWidth: "1",
-    color: colorInterpolator([255, 255, 255], [255, 0, 0]),
+    keypointRadius: "2.5",
+    lineWidth: "2",
+    color: colorInterpolator([0, 255, 0], [255, 0, 0]),
+    interactive: true,
 }
 
 export class SkeletonDraw {
     private skeletonGroup: SVGGElement
     private lineMap = new Map<string, Element>()
-    private keypointMap = new Map<number, SVGCircleElement>()
-    private centerPoint: SVGCircleElement | null = null
+    private keypointMap = new Map<number, Element>()
     private settings: SkeletonDrawSettings
+    private pose?: Pose
     constructor(
         private poseEmitter: BinaryPoseEmitter,
         private svg: SVGSVGElement,
@@ -75,9 +130,9 @@ export class SkeletonDraw {
 
     private drawPose = (pose: Pose) => {
         if (this.settings.focus) pose = center()(pose) as Pose
+        this.pose = pose
         if (this.settings.skeleton) this.drawSkeleton(pose)
         if (this.settings.keypoints) this.drawKeypoints(pose)
-        //if (this.settings.center) this.drawCenter(pose)
     }
 
     private drawSkeleton = (pose: Pose) => {
@@ -148,10 +203,8 @@ export class SkeletonDraw {
     private drawKeypoints = (pose: Pose) => {
         const namespace = "http://www.w3.org/2000/svg"
         const currentIndices = new Set<number>()
-        const minScore = this.settings.minScore
-
-        for (const [i, kp] of pose.iterKeypoints()) {
-            if (kp[2] < minScore) continue
+        for (const [i, kp] of pose.indexedKeypoints()) {
+            if (kp[2] < this.settings.minScore) continue
             currentIndices.add(i)
             let circle = this.keypointMap.get(i)
             if (!circle) {
@@ -163,24 +216,33 @@ export class SkeletonDraw {
         this.removeStaleKeypoints(currentIndices)
     }
 
-    private createCircle(namespace: string, index: number): SVGCircleElement {
+    private createCircle(namespace: string, index: number): Element {
         const circle = document.createElementNS(namespace, "circle")
         circle.setAttribute("data-index", index.toString())
         circle.setAttribute("r", this.settings.keypointRadius)
+
         this.skeletonGroup.appendChild(circle)
         this.keypointMap.set(index, circle)
+
+        if (this.settings.interactive) {
+            circle.classList.add("clickable-keypoint")
+            circle.addEventListener("click", (event) => {
+                quickDisplay(this.svg, event, this.pose.keypointStr(index))
+            })
+        }
+
         return circle
     }
 
     private setCircleAttributesFromKP(
-        circle: SVGCircleElement,
-        kp: [number, number, number],
+        circle: Element,
+        [x, y, score]: [number, number, number],
     ) {
-        this.setCircleAttributes(circle, kp, this.settings.color(kp[2]))
+        this.setCircleAttributes(circle, [x, y], this.settings.color(score))
     }
 
     private setCircleAttributes(
-        circle: SVGCircleElement,
+        circle: Element,
         kp: [number, number],
         color: string,
     ) {
@@ -219,7 +281,7 @@ export class SkeletonDraw {
     // private createCenterCircle(
     //     namespace: string,
     //     centerIndex: KeypointName,
-    // ): SVGCircleElement {
+    // ): Element {
     //     const centerPoint = document.createElementNS(namespace, "circle")
     //     centerPoint.setAttribute("data-index", centerIndex.toString())
     //     centerPoint.setAttribute("r", "0.02")
@@ -228,10 +290,10 @@ export class SkeletonDraw {
     //     return centerPoint
     // }
 
-    private removeCenterPoint() {
-        if (this.centerPoint) {
-            this.skeletonGroup.removeChild(this.centerPoint)
-            this.centerPoint = null
-        }
-    }
+    // private removeCenterPoint() {
+    //     if (this.centerPoint) {
+    //         this.skeletonGroup.removeChild(this.centerPoint)
+    //         this.centerPoint = null
+    //     }
+    // }
 }

@@ -240,7 +240,6 @@ export class KeypointGrapher {
             this.setEnd(newEnd)
         }
 
-        console.log("window", window)
         window.svg.addEventListener("wheel", handleScroll, { passive: false })
         svgZoomListeners.set(window, true)
     }

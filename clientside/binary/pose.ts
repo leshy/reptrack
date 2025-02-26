@@ -1,3 +1,5 @@
+import { aget, compose, filter, negate } from "../utils/mod.ts"
+
 import * as poseDetection from "npm:@tensorflow-models/pose-detection"
 
 export type Point = [number, number, number]
@@ -33,10 +35,20 @@ export const keypointNames: KeypointNameType[] = Object.keys(
         (key) => isNaN(Number(key)),
     ) as KeypointNameType[]
 
-export function isEmpty([x, y, score]: Point, minScore: number = 0): boolean {
+export function isEmpty(
+    point: Point | undefined,
+    minScore: number = 0,
+): boolean {
+    if (!point) return true
+    const [x, y, score] = point
     if (score < minScore) return true
     return x === 0 && y === 0 && score === 0
 }
+
+export const isEmptyIndexed: (point: [number, Point]) => boolean = compose(
+    aget(1),
+    isEmpty,
+)
 
 export class Pose {
     // 4 bytes for timestamp, 1 byte for overall score, plus 3 bytes per keypoint.
@@ -69,45 +81,6 @@ export class Pose {
     private getKeypointOffset(index: number): number {
         return 5 + index * 3
     }
-    avg(b: Pose): Pose {
-        const avg = new Pose()
-
-        // Calculate weights based on overall pose scores
-        const totalScore = this.score + b.score
-        const weightA = this.score / totalScore
-        const weightB = b.score / totalScore
-
-        // Average timestamp
-        avg.timestamp = weightA * this.timestamp + weightB * b.timestamp
-
-        // Combine scores, increasing confidence
-        avg.score = Math.min(1, Math.sqrt((this.score ** 2 + b.score ** 2) / 2))
-
-        for (let i = 0; i < Pose.keypointCount; i++) {
-            const [x1, y1, s1] = this.getKeypoint(i)
-            const [x2, y2, s2] = b.getKeypoint(i)
-
-            // Calculate weights for this specific keypoint
-            const keypointTotalScore = s1 + s2
-            const weight1 = keypointTotalScore > 0
-                ? s1 / keypointTotalScore
-                : 0.5
-            const weight2 = keypointTotalScore > 0
-                ? s2 / keypointTotalScore
-                : 0.5
-
-            // Calculate weighted average for this keypoint
-            const avgX = weight1 * x1 + weight2 * x2
-            const avgY = weight1 * y1 + weight2 * y2
-
-            // Combine keypoint scores, increasing confidence
-            const avgS = Math.min(1, Math.sqrt((s1 ** 2 + s2 ** 2) / 2))
-
-            avg.setKeypoint(i, [avgX, avgY, avgS])
-        }
-
-        return avg
-    }
 
     distance(b: Pose): number {
         let weightedSum = 0
@@ -123,7 +96,7 @@ export class Pose {
     }
 
     // Primary access: get keypoint by index.
-    getKeypoint(index: number): [number, number, number] {
+    getKeypoint(index: number): Point {
         const offset = this.getKeypointOffset(index)
         const x = this.view.getUint8(offset)
         const y = this.view.getUint8(offset + 1)
@@ -141,7 +114,7 @@ export class Pose {
     }
 
     // Primary access: set keypoint by index.
-    setKeypoint(index: number, point: [number, number, number]): void {
+    setKeypoint(index: number, point: Point): void {
         const offset = this.getKeypointOffset(index)
         const [x, y, s] = point
         this.view.setUint8(offset, Math.round(x))
@@ -152,13 +125,13 @@ export class Pose {
     // For backwards compatibility: get or set keypoints by name.
     getKeypointByName(
         name: keyof typeof KeypointName,
-    ): [number, number, number] {
+    ): Point {
         return this.getKeypoint(KeypointName[name])
     }
 
     setKeypointByName(
         name: keyof typeof KeypointName,
-        point: [number, number, number],
+        point: Point,
     ): void {
         this.setKeypoint(KeypointName[name], point)
     }
@@ -190,13 +163,29 @@ export class Pose {
         return this.buffer
     }
 
-    *iterKeypoints(): IterableIterator<[number, [number, number, number]]> {
-        for (let i = 0; i < Pose.keypointCount; i++) {
-            const kp = this.getKeypoint(i)
-            // Skip if keypoint is unset (i.e. default [0, 0, 0])
-            if (isEmpty(kp)) continue
-            yield [i, kp]
+    *iterKeypoints(): IterableIterator<Point> {
+        for (let i = 0; i < Pose.keypointCount - 1; i++) {
+            yield this.getKeypoint(i)
         }
+    }
+
+    *indexedKeypoints(): IterableIterator<[number, Point]> {
+        for (let i = 0; i < Pose.keypointCount; i++) {
+            yield [i, this.getKeypoint(i)]
+        }
+    }
+
+    // returns a multiline string, for cli debug, with nice title, coordinates,
+    // name of the keypoint etc
+    keypointStr(index: number): string {
+        const kp = this.getKeypoint(index)
+        const title = `Keypoint ${index} ${KeypointName[index]}`
+        return [
+            title,
+            "─".repeat(title.length + 4),
+            `CRD: [${kp[0]}, ${kp[1]}]`,
+            `SCR: ${Math.round(kp[2] * 1000) / 1000}`,
+        ].join("\n")
     }
 }
 
@@ -207,7 +196,7 @@ for (const key of Object.keys(KeypointName).filter((k) => isNaN(Number(k)))) {
             const index = KeypointName[key as keyof typeof KeypointName]
             return this.getKeypoint(index)
         },
-        set: function (this: Pose, point: [number, number, number]) {
+        set: function (this: Pose, point: Point) {
             const index = KeypointName[key as keyof typeof KeypointName]
             this.setKeypoint(index, point)
         },
@@ -218,21 +207,21 @@ for (const key of Object.keys(KeypointName).filter((k) => isNaN(Number(k)))) {
 
 // Declare the additional keypoint properties.
 export interface Pose {
-    nose: [number, number, number]
-    left_eye: [number, number, number]
-    right_eye: [number, number, number]
-    left_ear: [number, number, number]
-    right_ear: [number, number, number]
-    left_shoulder: [number, number, number]
-    right_shoulder: [number, number, number]
-    left_elbow: [number, number, number]
-    right_elbow: [number, number, number]
-    left_wrist: [number, number, number]
-    right_wrist: [number, number, number]
-    left_hip: [number, number, number]
-    right_hip: [number, number, number]
-    left_knee: [number, number, number]
-    right_knee: [number, number, number]
-    left_ankle: [number, number, number]
-    right_ankle: [number, number, number]
+    nose: Point
+    left_eye: Point
+    right_eye: Point
+    left_ear: Point
+    right_ear: Point
+    left_shoulder: Point
+    right_shoulder: Point
+    left_elbow: Point
+    right_elbow: Point
+    left_wrist: Point
+    right_wrist: Point
+    left_hip: Point
+    right_hip: Point
+    left_knee: Point
+    right_knee: Point
+    left_ankle: Point
+    right_ankle: Point
 }

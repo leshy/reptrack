@@ -18,7 +18,7 @@ export class Center extends EventEmitter<BinaryPoseEvent> {
         let sumScore = 0
 
         // Compute the center as a weighted average based on keypoint scores
-        for (const [i, kp] of pose.iterKeypoints()) {
+        for (const kp of pose.iterKeypoints()) {
             const [x, y, score] = kp
             sumX += x * score
             sumY += y * score

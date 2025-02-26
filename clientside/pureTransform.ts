@@ -83,7 +83,9 @@ export function attachState<T>(transform: StateTransform<T>): SimpleTransform {
 
 export function scoreFilter(score: number = 0.2): SimpleTransform {
     return (pose: Pose) => {
-        if (pose.score > score) return pose
+        if (pose.score > score) {
+            return pose
+        }
     }
 }
 
@@ -102,14 +104,14 @@ export function avg(windowSize: number = 10): WindowTransform {
 }
 
 export function center(rescale: boolean = true): SimpleTransform {
-    return (pose: Pose): Pose => {
+    return (pose: Pose): Pose | undefined => {
         // Variables for weighted average of detected keypoints
         let sumX = 0
         let sumY = 0
         let sumScore = 0
 
         // Compute the center as a weighted average based on keypoint scores
-        for (const [_, kp] of pose.iterKeypoints()) {
+        for (const kp of pose.iterKeypoints()) {
             const [x, y, score] = kp
             sumX += x * score
             sumY += y * score
@@ -133,13 +135,14 @@ export function center(rescale: boolean = true): SimpleTransform {
         // Find the maximum deviation from the center for scaling if rescale is true
         let maxDeviation = 0
         if (rescale) {
-            for (const [_, kp] of pose.iterKeypoints()) {
+            for (const kp of pose.iterKeypoints()) {
                 const [x, y, __] = kp
                 const dx = Math.abs(x - cx)
                 const dy = Math.abs(y - cy)
                 maxDeviation = Math.max(maxDeviation, dx, dy)
             }
         }
+
         // Scaling factor: aim to make the max deviation 127, but prevent division by zero
         const s = maxDeviation > 0 ? 127 / maxDeviation : 1
 

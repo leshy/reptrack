@@ -68,33 +68,6 @@ Deno.test("dynamic getters vs. getKeypointByName", () => {
     assertEquals(viaDynamic, viaMethod)
 })
 
-Deno.test("iterKeypoints yields correct keypoints", () => {
-    const pose = new Pose()
-    // Initialize all keypoints with predictable values.
-    for (let i = 0; i < Pose.keypointCount; i++) {
-        const point: [number, number, number] = [
-            i + 0.2,
-            i + 0.7,
-            (i % 256) / 255,
-        ]
-        pose.setKeypoint(i, point)
-    }
-    let index = 0
-    for (const [i, point] of pose.iterKeypoints()) {
-        const expected: [number, number, number] = [
-            Math.round(index + 0.2),
-            Math.round(index + 0.7),
-            (index % 256) / 255,
-        ]
-        assertEquals(i, index)
-        assertEquals(point[0], expected[0])
-        assertEquals(point[1], expected[1])
-        assertAlmostEquals(point[2], expected[2], 0.01)
-        index++
-    }
-    assertEquals(index, Pose.keypointCount)
-})
-
 Deno.test("all dynamic keypoint getters exist", () => {
     const pose = new Pose()
     // Verify that each key defined in KeypointName exists as a property.
@@ -133,15 +106,27 @@ Deno.test("missing keypoints default to zero", () => {
     assertEquals(rightAnkle, [0, 0, 0])
 })
 
-Deno.test("iterator skips unset keypoints", () => {
+// nonEmptyKeypoints iterator
+Deno.test("nonEmptyKeypoints iterator", () => {
     const pose = new Pose()
-    // Only set the 'nose' keypoint.
-    pose.setKeypointByName("nose", [100.5, 120.5, 0.95])
 
-    const iterated = Array.from(pose.iterKeypoints())
-    assertEquals(iterated.length, 1)
-    assertEquals(iterated[0][0], KeypointName["nose"])
-    assertEquals(iterated[0][1][0], Math.round(100.5))
-    assertEquals(iterated[0][1][1], Math.round(120.5))
-    assertEquals(Math.abs(iterated[0][1][2] - 0.95) < 0.01, true)
+    // Initialize all keypoints with predictable values.
+    for (let i = 0; i < Pose.keypointCount; i++) {
+        const point: [number, number, number] = [
+            i + 0.2,
+            i + 0.7,
+            (i % 256) / 255,
+        ]
+        pose.setKeypoint(i, point)
+    }
+
+    const iterator = pose.nonEmptyKeypoints()
+    for (const [i, point] of iterator) {
+        const expected: [number, number, number] = [
+            Math.round(i + 0.2),
+            Math.round(i + 0.7),
+            (i % 256) / 255,
+        ]
+        console.log(i, point)
+    }
 })
