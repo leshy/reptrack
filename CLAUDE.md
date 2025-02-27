@@ -3,7 +3,6 @@
 ## Commands
 
 - Build: `deno task build` (builds client-side JS)
-- Server: `deno task server` (serves static files)
 - Check: `deno task check` (runs formatter check, linter, and tests with minimal
   output)
 - Verbose check: `deno task checkverbose` (runs formatter check and linter with

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Run formatter check
-OUTPUT_FMT=$(deno fmt --check src/ 2>&1)
+OUTPUT_FMT=$(deno fmt src/ 2>&1)
 if [ $? -ne 0 ]; then
   echo "Formatting check failed:"
   echo "$OUTPUT_FMT"
@@ -16,9 +16,10 @@ if [ $? -ne 0 ]; then
 fi
 
 # Run tests using testsilent.sh
-./scripts/testsilent.sh
+OUTPUT_TEST=$(./scripts/testsilent.sh 2>&1)
 if [ $? -ne 0 ]; then
-  # testsilent.sh will handle error output
+  echo "tests failed:"
+  echo "$OUTPUT_TEST"
   exit 1
 fi
 
