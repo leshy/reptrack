@@ -15,7 +15,7 @@ type KeypointGrapherSettings = {
 }
 
 const defaultSettings: KeypointGrapherSettings = {
-    padding: 5,
+    padding: 10,
     minScore: 0.3,
     lineColors: {},
     maxPoints: 255,

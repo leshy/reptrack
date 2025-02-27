@@ -5,7 +5,7 @@ import * as binary from "../binary/mod.ts"
 import * as ui from "../ui/mod.ts"
 import * as pt from "../transform.ts"
 
-export async function euclid() {
+export async function euclidcomparison() {
     // Load both history files
     const euclidHistory = await binary.HistoryFile.load("euclid10.bin.gz")
     const lightningHistory = await binary.HistoryFile.load(
