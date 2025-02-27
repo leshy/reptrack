@@ -9,17 +9,21 @@ export class Controls {
     protected controlsMap: Map<string, HTMLElement> = new Map()
     // Map to track radio button groups
     protected radioGroups: Map<string, Set<string>> = new Map()
-  
+
     constructor(public window: Window) {
         this.container = document.createElement("div")
         this.container.className = "controls"
         this.window.element.appendChild(this.container)
     }
-  
+
     /**
      * Adds a simple button with a click handler
      */
-    addButton(id: string, label: string, onClick: () => void): HTMLButtonElement {
+    addButton(
+        id: string,
+        label: string,
+        onClick: () => void,
+    ): HTMLButtonElement {
         const button = document.createElement("button")
         button.textContent = label
         button.addEventListener("click", onClick)
@@ -27,15 +31,15 @@ export class Controls {
         this.controlsMap.set(id, button)
         return button
     }
-  
+
     /**
      * Adds a toggle button that switches between two states
      */
     addToggleButton(
-        id: string, 
-        labels: [string, string], 
+        id: string,
+        labels: [string, string],
         isActive: () => boolean,
-        onToggle: () => void
+        onToggle: () => void,
     ): HTMLButtonElement {
         const button = document.createElement("button")
         button.textContent = isActive() ? labels[1] : labels[0]
@@ -57,27 +61,27 @@ export class Controls {
         label: string,
         value: any,
         isSelected: boolean,
-        onSelect: (value: any) => void
+        onSelect: (value: any) => void,
     ): HTMLButtonElement {
         // Create the button element
         const button = document.createElement("button")
         button.textContent = label
         button.dataset.value = String(value)
-        
+
         // Set initial selected state
         if (isSelected) {
             button.classList.add("selected")
         }
-        
+
         // Add to controls map
         this.controlsMap.set(id, button)
-        
+
         // Add to radio group tracking
         if (!this.radioGroups.has(groupName)) {
             this.radioGroups.set(groupName, new Set())
         }
         this.radioGroups.get(groupName)?.add(id)
-        
+
         // Add click handler
         button.addEventListener("click", () => {
             // Deselect all other buttons in the group
@@ -88,39 +92,39 @@ export class Controls {
                     btn.classList.remove("selected")
                 }
             }
-            
+
             // Select this button
             button.classList.add("selected")
-            
+
             // Call the handler with this button's value
             onSelect(value)
         })
-        
+
         this.container.appendChild(button)
         return button
     }
-    
+
     /**
      * Creates a radio button group with multiple options
      */
     addRadioGroup(
         groupName: string,
-        options: Array<{id: string, label: string, value: any}>,
+        options: Array<{ id: string; label: string; value: any }>,
         initialValue: any,
-        onChange: (value: any) => void
+        onChange: (value: any) => void,
     ): HTMLButtonElement[] {
-        return options.map(option => 
+        return options.map((option) =>
             this.addRadioButton(
                 option.id,
                 groupName,
                 option.label,
                 option.value,
                 option.value === initialValue,
-                onChange
+                onChange,
             )
         )
     }
-  
+
     /**
      * Adds a slider control with min, max and step values
      */
@@ -130,7 +134,7 @@ export class Controls {
         max: number,
         step: number,
         initialValue: number,
-        onChange: (value: number) => void
+        onChange: (value: number) => void,
     ): HTMLInputElement {
         const slider = document.createElement("input")
         slider.type = "range"
@@ -145,14 +149,14 @@ export class Controls {
         this.controlsMap.set(id, slider)
         return slider
     }
-  
+
     /**
      * Gets a control by ID with type casting
      */
     getControl<T extends HTMLElement>(id: string): T | undefined {
         return this.controlsMap.get(id) as T | undefined
     }
-  
+
     /**
      * Updates a control's properties or state
      */
@@ -162,13 +166,13 @@ export class Controls {
             updater(control)
         }
     }
-    
+
     /**
      * Updates the selected radio button in a group
      */
     setRadioSelection(groupName: string, value: any): void {
         const groupButtons = this.radioGroups.get(groupName) || new Set()
-        
+
         for (const btnId of groupButtons) {
             const btn = this.getControl<HTMLButtonElement>(btnId)
             if (btn) {
