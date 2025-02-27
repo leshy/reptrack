@@ -19,7 +19,7 @@ const defaultSettings: KeypointGrapherSettings = {
     lineColors: {},
     maxPoints: 255,
     zoomFactor: 0.15, // 15% zoom per scroll
-    title: "graph",
+    title: "",
 }
 
 const svgZoomListeners = new WeakMap<SvgWindow, boolean>()

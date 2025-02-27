@@ -6,7 +6,7 @@ import * as ui from "../ui/mod.ts"
 import * as pt from "../pureTransform.ts"
 
 export async function replay() {
-    const history = await binary.HistoryFile.load("euclid10.bin.gz")
+    const history = await binary.HistoryFile.load("longlightning.bin.gz")
     // @ts-ignore
     globalThis.h = history
 
