@@ -105,7 +105,7 @@ const defaultSettings: SkeletonDrawSettings = {
     skeleton: true,
     center: true,
     focus: true,
-    keypointRadius: "2.5",
+    keypointRadius: "4",
     lineWidth: "2",
     color: colorInterpolator([0, 255, 0], [255, 0, 0]),
     interactive: true,
