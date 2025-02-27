@@ -90,6 +90,11 @@ button:hover {
     color: black;
 }
 
+button.selected {
+    background-color: white;
+    color: black;
+}
+
 .controls {
     position: absolute;
     bottom: 5px;
