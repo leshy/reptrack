@@ -2,10 +2,10 @@ import "npm:@tensorflow/tfjs-backend-webgl"
 import * as tf from "npm:@tensorflow/tfjs-core"
 import * as poseDetection from "npm:@tensorflow-models/pose-detection"
 import { EventEmitter } from "npm:eventemitter3"
-import { BinaryPoseEvent } from "./types.ts"
-import { Env, STATE } from "./env.ts"
+import { BinaryPoseEvent } from "../types.ts"
+import { Env, STATE } from "../env.ts"
 import { GenericVideoWindow } from "./source.ts"
-import * as binary from "./binary/mod.ts"
+import * as binary from "../binary/mod.ts"
 
 export class PoseEstimator extends EventEmitter<BinaryPoseEvent> {
     private detector?: poseDetection.PoseDetector

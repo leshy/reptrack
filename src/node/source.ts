@@ -1,5 +1,5 @@
 import { EventEmitter as _EventEmitter } from "npm:eventemitter3"
-import { SvgWindow } from "./ui/wm.ts"
+import { SvgWindow } from "../ui/wm.ts"
 
 // SvgWindow subclass
 export class GenericVideoWindow extends SvgWindow {

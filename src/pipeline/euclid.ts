@@ -3,7 +3,7 @@ import "npm:@tensorflow/tfjs-backend-webgl"
 import * as wm from "../ui/wm.ts"
 import * as binary from "../binary/mod.ts"
 import * as ui from "../ui/mod.ts"
-import * as pt from "../pureTransform.ts"
+import * as pt from "../transform.ts"
 
 export async function euclid() {
     // Load both history files
@@ -78,11 +78,17 @@ export async function euclid() {
 
     // Create X graph windows (one above the other)
     const euclidGrapherXWindow = xGraphsWindow.addWindow(
-        new wm.SvgWindow("Euclid X Positions", { preserveRatio: false }),
+        new wm.SvgWindow(
+            "Euclid X Positions",
+            { preserveRatio: false },
+        ),
     )
 
     const lightningGrapherXWindow = xGraphsWindow.addWindow(
-        new wm.SvgWindow("Lightning X Positions", { preserveRatio: false }),
+        new wm.SvgWindow(
+            "Lightning X Positions",
+            { preserveRatio: false },
+        ),
     )
 
     // Create Y graph windows (one above the other)
