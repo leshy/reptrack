@@ -22,6 +22,6 @@ export async function record() {
     const recorder = new binary.HistoryFile(50000)
     recorder.record(pose)
 
-    window.recorder = recorder
+    globalThis.recorder = recorder
     await pose.init()
 }

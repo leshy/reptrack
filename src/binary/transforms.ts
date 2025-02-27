@@ -43,8 +43,8 @@ export class Center extends EventEmitter<BinaryPoseEvent> {
         // Find the maximum deviation from the center for scaling if rescale is true
         let maxDeviation = 0
         if (this.rescale) {
-            for (const [i, kp] of pose.keypoints()) {
-                const [x, y, score] = kp
+            for (const [_i, kp] of pose.keypoints()) {
+                const [x, y, _score] = kp
                 const dx = Math.abs(x - cx)
                 const dy = Math.abs(y - cy)
                 maxDeviation = Math.max(maxDeviation, dx, dy)

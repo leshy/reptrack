@@ -1,4 +1,4 @@
-import { History, HistoryPose } from "./history.ts"
+import { History } from "./history.ts"
 import { Pose } from "./pose.ts"
 import {
     assertAlmostEquals,

@@ -46,7 +46,7 @@ function isSimple(
     t:
         | SimpleTransform
         // @ts-ignore
-        | StateTransform<any>,
+        | StateTransform<unknown>,
 ): t is SimpleTransform {
     return t.length === 1
 }
@@ -55,7 +55,7 @@ export const node = (
     poseEmitter: BinaryPoseEmitter,
     ...transforms: Array<
         // @ts-ignore
-        SimpleTransform | StateTransform<any>
+        SimpleTransform | StateTransform<unknown>
     >
 ) => new Node(
     poseEmitter,

@@ -8,7 +8,7 @@ import * as pt from "../pureTransform.ts"
 export async function replay() {
     const history = await binary.HistoryFile.load("longlightning.bin.gz")
     // @ts-ignore
-    window.h = history
+    globalThis.h = history
 
     const root = new wm.Window()
     document.getElementById("window-container")?.appendChild(root.element)

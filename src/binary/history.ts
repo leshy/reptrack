@@ -81,7 +81,7 @@ export class HistoryFile extends History {
     async download(fileName: string): Promise<void> {
         let dataToDownload: ArrayBuffer = this.getOrderedBuffer()
 
-        if ("CompressionStream" in window) {
+        if ("CompressionStream" in globalThis) {
             const cs = new CompressionStream("gzip")
             const writer = cs.writable.getWriter()
             writer.write(new Uint8Array(dataToDownload))
@@ -122,11 +122,11 @@ export class HistoryFile extends History {
         return orderedBuffer
     }
 
-    static async load(url): Promise<History> {
+    static async load(url: string): Promise<History> {
         const response = await fetch(url)
         const compressedBuffer = await response.arrayBuffer()
         let arrayBuffer: ArrayBuffer
-        if ("DecompressionStream" in window) {
+        if ("DecompressionStream" in globalThis) {
             const blob = new Blob([compressedBuffer])
             const ds = new DecompressionStream("gzip")
             const decompressedStream = blob.stream().pipeThrough(ds)

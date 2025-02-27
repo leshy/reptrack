@@ -245,9 +245,9 @@ export class Skeleton {
                 // @ts-ignore
                 console.log(this.pose, this.pose.getKeypoint(index))
                 // @ts-ignore
-                window.pose = this.pose
+                globalThis.pose = this.pose
                 // @ts-ignore
-                window.kp = this.pose.getKeypoint(index)
+                globalThis.kp = this.pose.getKeypoint(index)
             })
         }
 

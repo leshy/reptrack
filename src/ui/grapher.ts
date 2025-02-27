@@ -78,13 +78,13 @@ export class KeypointGrapher {
         let validPoints = 0
         for (let i = 0; i < effectiveRange; i++) {
             const pose = this.history.getPoseAt(start + i)
-            const [keypointCoords, score] = pose.getKeypointCoords(
+            const [keypointCoords, _score] = pose.getKeypointCoords(
                 keypointIndex,
                 this.settings.minScore,
             )
             if (keypointCoords) {
                 const timestamp = pose.timestamp
-                const coordValue = keypointCoords[coordIndex]
+                const _coordValue = keypointCoords[coordIndex]
                 minTime = Math.min(minTime, timestamp)
                 maxTime = Math.max(maxTime, timestamp)
 
@@ -119,7 +119,7 @@ export class KeypointGrapher {
         // Second pass: generate downsampled path data
         for (let i = 0; i < effectiveRange; i++) {
             const pose = this.history.getPoseAt(start + i)
-            const [keypointCoords, score] = pose.getKeypointCoords(
+            const [keypointCoords, _score] = pose.getKeypointCoords(
                 keypointIndex,
                 this.settings.minScore,
             )

@@ -1,4 +1,4 @@
-import { EventEmitter } from "npm:eventemitter3"
+import { EventEmitter as _EventEmitter } from "npm:eventemitter3"
 import { SvgWindow } from "./ui/wm.ts"
 
 // SvgWindow subclass
@@ -64,7 +64,7 @@ export class GenericVideo {
 
         video.addEventListener("loadedmetadata", resize)
         video.addEventListener("resize", resize)
-        window.addEventListener("resize", resize)
+        globalThis.addEventListener("resize", resize)
 
         //createWindow([video, svgOverlay], "auto", "source")
 

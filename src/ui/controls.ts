@@ -59,9 +59,9 @@ export class Controls {
         id: string,
         groupName: string,
         label: string,
-        value: any,
+        value: unknown,
         isSelected: boolean,
-        onSelect: (value: any) => void,
+        onSelect: (value: unknown) => void,
     ): HTMLButtonElement {
         // Create the button element
         const button = document.createElement("button")
@@ -109,9 +109,9 @@ export class Controls {
      */
     addRadioGroup(
         groupName: string,
-        options: Array<{ id: string; label: string; value: any }>,
-        initialValue: any,
-        onChange: (value: any) => void,
+        options: Array<{ id: string; label: string; value: unknown }>,
+        initialValue: unknown,
+        onChange: (value: unknown) => void,
     ): HTMLButtonElement[] {
         return options.map((option) =>
             this.addRadioButton(
@@ -170,7 +170,7 @@ export class Controls {
     /**
      * Updates the selected radio button in a group
      */
-    setRadioSelection(groupName: string, value: any): void {
+    setRadioSelection(groupName: string, value: unknown): void {
         const groupButtons = this.radioGroups.get(groupName) || new Set()
 
         for (const btnId of groupButtons) {

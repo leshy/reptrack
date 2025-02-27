@@ -1,4 +1,4 @@
-import webfft from "npm:webfft"
+import _webfft from "npm:webfft"
 import "npm:@tensorflow/tfjs-backend-webgl"
 import * as wm from "../ui/wm.ts"
 import * as binary from "../binary/mod.ts"
@@ -8,7 +8,7 @@ import * as pt from "../pureTransform.ts"
 export async function replay() {
     const history = await binary.HistoryFile.load("euclid10.bin.gz")
     // @ts-ignore
-    window.h = history
+    globalThis.h = history
 
     const root = new wm.Window()
     document.getElementById("window-container")?.appendChild(root.element)
@@ -44,7 +44,7 @@ export async function replay() {
 
     const recorder = new binary.HistoryFile(50000)
     recorder.record(euclidean2)
-    window.recorder = recorder
+    globalThis.recorder = recorder
 
     const graphWindow = root.addWindow(new wm.Window())
 

@@ -106,8 +106,8 @@ Deno.test("missing keypoints default to zero", () => {
     assertEquals(rightAnkle, [0, 0, 0])
 })
 
-// nonEmptyKeypoints iterator
-Deno.test("nonEmptyKeypoints iterator", () => {
+// Test keypoints iterator
+Deno.test("keypoints iterator", () => {
     const pose = new Pose()
 
     // Initialize all keypoints with predictable values.
@@ -120,13 +120,46 @@ Deno.test("nonEmptyKeypoints iterator", () => {
         pose.setKeypoint(i, point)
     }
 
-    const iterator = pose.nonEmptyKeypoints()
-    for (const [i, point] of iterator) {
-        const expected: [number, number, number] = [
-            Math.round(i + 0.2),
-            Math.round(i + 0.7),
+    // Collect points from the iterator
+    const points = Array.from(pose.keypoints())
+
+    // Should have the same number of keypoints
+    assertEquals(points.length, Pose.KEYPOINT_COUNT - 1)
+
+    // Verify each point matches what we set
+    for (let i = 0; i < points.length; i++) {
+        const [x, y, score] = points[i]
+        assertEquals(x, Math.round(i + 0.2))
+        assertEquals(y, Math.round(i + 0.7))
+        assertAlmostEquals(score, (i % 256) / 255, 0.01)
+    }
+})
+
+// Test indexedKeypoints iterator
+Deno.test("indexedKeypoints iterator", () => {
+    const pose = new Pose()
+
+    // Initialize all keypoints with predictable values.
+    for (let i = 0; i < Pose.KEYPOINT_COUNT - 1; i++) {
+        const point: [number, number, number] = [
+            i + 0.2,
+            i + 0.7,
             (i % 256) / 255,
         ]
-        console.log(i, point)
+        pose.setKeypoint(i, point)
+    }
+
+    // Collect points with their indices from the iterator
+    const indexedPoints = Array.from(pose.indexedKeypoints())
+
+    // Should have the same number of keypoints
+    assertEquals(indexedPoints.length, Pose.KEYPOINT_COUNT - 1)
+
+    // Verify each indexed point matches what we set
+    for (const [index, point] of indexedPoints) {
+        const [x, y, score] = point
+        assertEquals(x, Math.round(index + 0.2))
+        assertEquals(y, Math.round(index + 0.7))
+        assertAlmostEquals(score, (index % 256) / 255, 0.01)
     }
 })

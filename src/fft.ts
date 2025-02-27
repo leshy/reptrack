@@ -1,5 +1,5 @@
 import FFT from "https://esm.sh/fft.js"
-import { Pose, PoseEmitter, STATE } from "./types.ts"
+import { Pose as _Pose, PoseEmitter, STATE as _STATE } from "./types.ts"
 import Plotly from "https://cdn.plot.ly/plotly-latest.min.js"
 import { createWindow } from "./wm.ts"
 
