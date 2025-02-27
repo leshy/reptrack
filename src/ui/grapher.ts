@@ -3,6 +3,7 @@ import { KeypointName } from "../binary/pose.ts"
 import { SvgWindow } from "./wm.ts"
 import { AnnotationManager } from "./annotations/manager.ts"
 import { AnnotationOptions } from "./annotations/types.ts"
+import { EventEmitter } from "npm:eventemitter3"
 
 type KeypointGrapherSettings = {
     padding: number
@@ -40,18 +41,30 @@ const svgPaths = new WeakMap<
 // Re-export annotation types from the annotations module
 export * from "./annotations/types.ts"
 
-export class KeypointGrapher {
+// Window selection event types
+export type WindowSelectionEvent = {
+    startIndex: number
+    endIndex: number
+    history: History
+    window: SvgWindow
+}
+
+export class KeypointGrapher extends EventEmitter {
     private history: History
     private settings: KeypointGrapherSettings
     private start: number
     private end: number
     private windows: Set<SvgWindow> = new Set()
     private annotationManager: AnnotationManager
+    private selectionActive = false
+    private selectionStart: number | null = null
+    private selectionElement: SVGRectElement | null = null
 
     constructor(
         history: History,
         settings: Partial<KeypointGrapherSettings> = {},
     ) {
+        super()
         this.history = history
         this.settings = { ...defaultSettings, ...settings }
         this.start = 0
@@ -240,6 +253,23 @@ export class KeypointGrapher {
         }
     }
 
+    /**
+     * Convert mouse X coordinate to history index
+     */
+    private xToIndex(window: SvgWindow, x: number): number {
+        const rect = window.svg.getBoundingClientRect()
+        const graphWidth = rect.width - 2 * this.settings.padding
+        const normalizedX = Math.max(
+            0,
+            Math.min(1, (x - this.settings.padding) / graphWidth),
+        )
+
+        const currentRange = this.end - this.start
+        const index = Math.floor(this.start + normalizedX * currentRange)
+
+        return Math.max(this.start, Math.min(this.end - 1, index))
+    }
+
     private setupZoom(window: SvgWindow) {
         if (svgZoomListeners.has(window)) return
 
@@ -275,6 +305,129 @@ export class KeypointGrapher {
 
         // Handle zoom via wheel events
         window.svg.addEventListener("wheel", handleScroll, { passive: false })
+
+        // Set up selection interaction
+        const handleMouseDown = (event: MouseEvent) => {
+            if (event.button !== 0) return // Only respond to left mouse button
+
+            // Start the selection
+            this.selectionActive = true
+            this.selectionStart = this.xToIndex(
+                window,
+                event.clientX - window.svg.getBoundingClientRect().left,
+            )
+
+            // Create or update selection rectangle
+            if (!this.selectionElement) {
+                this.selectionElement = document.createElementNS(
+                    "http://www.w3.org/2000/svg",
+                    "rect",
+                )
+                this.selectionElement.setAttribute("class", "selection-area")
+                this.selectionElement.setAttribute(
+                    "fill",
+                    "rgba(0, 123, 255, 0.2)",
+                )
+                this.selectionElement.setAttribute(
+                    "stroke",
+                    "rgba(0, 123, 255, 0.5)",
+                )
+                this.selectionElement.setAttribute("stroke-width", "1")
+                this.selectionElement.setAttribute("pointer-events", "none")
+                window.svg.appendChild(this.selectionElement)
+            }
+
+            const rect = window.svg.getBoundingClientRect()
+            const y = this.settings.padding
+            const height = rect.height - 2 * this.settings.padding
+
+            // Position the rectangle at the initial position with zero width
+            this.selectionElement.setAttribute(
+                "x",
+                `${event.clientX - rect.left}`,
+            )
+            this.selectionElement.setAttribute("y", `${y}`)
+            this.selectionElement.setAttribute("width", "0")
+            this.selectionElement.setAttribute("height", `${height}`)
+            this.selectionElement.style.display = "block"
+        }
+
+        const handleMouseMove = (event: MouseEvent) => {
+            if (
+                !this.selectionActive || this.selectionStart === null ||
+                !this.selectionElement
+            ) return
+
+            const rect = window.svg.getBoundingClientRect()
+            const startX = this.selectionStart >= this.start
+                ? this.settings.padding +
+                    ((this.selectionStart - this.start) /
+                            (this.end - this.start)) *
+                        (rect.width - 2 * this.settings.padding)
+                : this.settings.padding
+            const currentX = event.clientX - rect.left
+
+            // Calculate rectangle position and dimension
+            const x = Math.min(startX, currentX)
+            const width = Math.abs(startX - currentX)
+
+            // Update rectangle
+            this.selectionElement.setAttribute("x", `${x}`)
+            this.selectionElement.setAttribute("width", `${width}`)
+        }
+
+        const handleMouseUp = (event: MouseEvent) => {
+            if (!this.selectionActive || this.selectionStart === null) return
+
+            // Get the current index where the mouse was released
+            const currentIndex = this.xToIndex(
+                window,
+                event.clientX - window.svg.getBoundingClientRect().left,
+            )
+
+            // Hide the selection rectangle
+            if (this.selectionElement) {
+                this.selectionElement.style.display = "none"
+            }
+
+            // Finish selection only if we've moved at least 5 pixels
+            const rect = window.svg.getBoundingClientRect()
+            const startX = this.settings.padding +
+                ((this.selectionStart - this.start) / (this.end - this.start)) *
+                    (rect.width - 2 * this.settings.padding)
+            const currentX = event.clientX - rect.left
+
+            if (Math.abs(startX - currentX) >= 5) {
+                // Sort indices to ensure start is always less than end
+                const startIndex = Math.min(this.selectionStart, currentIndex)
+                const endIndex = Math.max(this.selectionStart, currentIndex)
+
+                // Emit the window selection event
+                this.emit("window-selected", {
+                    startIndex,
+                    endIndex,
+                    history: this.history,
+                    window,
+                })
+            }
+
+            // Reset selection state
+            this.selectionActive = false
+            this.selectionStart = null
+        }
+
+        // Add mouse event listeners for selection
+        window.svg.addEventListener("mousedown", handleMouseDown)
+        window.svg.addEventListener("mousemove", handleMouseMove)
+        window.svg.addEventListener("mouseup", handleMouseUp)
+        window.svg.addEventListener("mouseleave", () => {
+            // Cancel selection if mouse leaves the SVG area
+            if (this.selectionActive && this.selectionElement) {
+                this.selectionElement.style.display = "none"
+                this.selectionActive = false
+                this.selectionStart = null
+            }
+        })
 
         // Handle window resize to redraw graphs
         const handleResize = () => {
@@ -353,5 +506,20 @@ export class KeypointGrapher {
 
     clearAnnotations(window: SvgWindow): void {
         this.annotationManager.clearAnnotations(window)
+    }
+
+    /**
+     * Add a listener for window selection events
+     * @param callback Function that receives selection details when user selects a window
+     */
+    onWindowSelected(callback: (event: WindowSelectionEvent) => void): void {
+        this.on("window-selected", callback)
+    }
+
+    /**
+     * Remove a listener for window selection events
+     */
+    offWindowSelected(callback: (event: WindowSelectionEvent) => void): void {
+        this.off("window-selected", callback)
     }
 }

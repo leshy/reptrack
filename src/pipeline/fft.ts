@@ -3,6 +3,8 @@ import "npm:@tensorflow/tfjs-backend-webgl"
 import * as wm from "../ui/wm.ts"
 import * as binary from "../binary/mod.ts"
 import * as ui from "../ui/mod.ts"
+import { DataSeries, Grapher } from "../ui/grapher2.ts"
+import { runFFT } from "../fft.ts"
 
 export async function fft() {
     // Load the history file
@@ -73,6 +75,88 @@ export async function fft() {
         opacity: 0.8,
         zIndex: 100,
     })
+
+    // Add FFT analysis and visualization using the new Grapher2 component
+    const fftWindow = root.addWindow(new wm.Window("FFT Analysis"))
+
+    // Create windows for FFT graphs
+    const timeSeriesWindow = fftWindow.addWindow(
+        new wm.SvgWindow("Time Series Data", { preserveRatio: false }),
+    )
+
+    const fftResultsWindow = fftWindow.addWindow(
+        new wm.SvgWindow("FFT Results", { preserveRatio: false }),
+    )
+
+    // Create new Grapher2 instances for plotting
+    const timeSeriesGrapher = new Grapher("Time Series", {
+        autoScale: true,
+        enableZoom: true,
+    })
+    timeSeriesGrapher.appendTo(timeSeriesWindow.contentElement)
+
+    const fftGrapher = new Grapher("FFT Magnitude", {
+        autoScale: true,
+        enableZoom: true,
+    })
+    fftGrapher.appendTo(fftResultsWindow.contentElement)
+
+    // Run FFT analysis on keypoint data
+    const keypointIndex = binary.KeypointName.right_wrist
+    const fftResult = await runFFT(keypointIndex, "x", 1024)
+
+    // Extract time series data for plotting
+    const timeSeriesData: number[] = []
+    for (let i = 0; i < fftResult.windowSize; i++) {
+        timeSeriesData.push(fftResult.keypointData[i][0]) // x-coordinate
+    }
+
+    // Calculate FFT magnitudes
+    const fftMagnitudes: number[] = []
+    for (let i = 0; i < fftResult.windowSize / 2; i++) {
+        const real = fftResult.fftOutput[i * 2]
+        const imag = fftResult.fftOutput[i * 2 + 1]
+        const magnitude = Math.sqrt(real * real + imag * imag)
+        fftMagnitudes.push(magnitude)
+    }
+
+    // Create data series for time series graph
+    const timeSeriesDataSeries: { [key: string]: DataSeries } = {
+        "right_wrist_x": {
+            points: timeSeriesData,
+            options: {
+                color: "#2196F3",
+                width: 2,
+                label: "Right Wrist X Position",
+            },
+        },
+    }
+
+    // Create data series for FFT magnitude graph
+    const fftDataSeries: { [key: string]: DataSeries } = {
+        "fft_magnitude": {
+            points: fftMagnitudes,
+            options: {
+                color: "#E91E63",
+                width: 2,
+                label: "FFT Magnitude",
+            },
+        },
+    }
+
+    // Set data ranges
+    timeSeriesGrapher.xRange = [0, timeSeriesData.length - 1]
+    timeSeriesGrapher.yRange = [
+        Math.min(...timeSeriesData) - 10,
+        Math.max(...timeSeriesData) + 10,
+    ]
+
+    fftGrapher.xRange = [0, fftMagnitudes.length - 1]
+    fftGrapher.yRange = [0, Math.max(...fftMagnitudes) * 1.1]
+
+    // Update the graphs with data
+    timeSeriesGrapher.data = timeSeriesDataSeries
+    fftGrapher.data = fftDataSeries
 
     const euclidPlayer = new ui.HistoryControls(euclidHistory, euclidInputSvg)
 

@@ -70,6 +70,7 @@ export class HistoryPose extends Pose {
         this.view = new DataView(buffer, offset, Pose.RECORD_SIZE)
     }
 }
+
 export class HistoryFile extends History {
     override name: string
 

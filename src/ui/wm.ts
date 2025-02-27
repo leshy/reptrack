@@ -1,10 +1,13 @@
-export class Window {
+import { EventEmitter } from "npm:eventemitter3"
+
+export class Window extends EventEmitter {
     public element: HTMLDivElement
     protected titleElement?: HTMLDivElement
     protected contentElement: HTMLDivElement
     protected subWindows: Window[] = []
 
     constructor(title: string = "") {
+        super()
         this.element = document.createElement("div")
         this.element.className = "window"
 

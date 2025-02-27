@@ -13,6 +13,7 @@ await esbuild.build({
     target: ["es2020"],
     define: {
         "import.meta.url": '""',
+        "import.meta": "false",
     },
 })
 
