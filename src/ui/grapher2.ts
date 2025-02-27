@@ -12,6 +12,7 @@ export interface LineOptions {
     style?: "solid" | "dashed" | "dotted"
     label?: string
     visible?: boolean
+    opacity?: number
 }
 
 export interface GrapherSettings {
@@ -167,6 +168,10 @@ export class Grapher extends SvgWindow {
             "stroke",
             series.options?.color || this.getRandomColor(key),
         )
+
+        if (series.options?.opacity) {
+            path.setAttribute("opacity", series.options.opacity.toString())
+        }
 
         if (series.options?.style === "dashed") {
             path.setAttribute("stroke-dasharray", "5,5")

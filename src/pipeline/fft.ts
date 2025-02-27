@@ -140,25 +140,27 @@ export async function fft() {
     }
 
     // Apply averaging smoother to FFT magnitudes
-    const windowSize = 10 // Adjust window size as needed
-
-    const fftSmootherTransform = attachState(avg<number>(windowSize))
-    const smoothedMagnitudes = fftMagnitudes.map(fftSmootherTransform)
+    const smoothedMagnitudes = fftMagnitudes.map(
+        attachState(avg(5)),
+    ) as number[]
 
     // Create data series for both full and filtered FFT magnitude graphs
     const fftDataSeries: { [key: string]: DataSeries } = {
-        // "fft_magnitude": {
-        //     points: fftMagnitudes,
-        //     options: {
-        //         color: "#E91E63",
-        //         label: "FFT Magnitude (Raw)",
-        //     },
-        // },
+        "fft_magnitude": {
+            points: fftMagnitudes,
+            options: {
+                color: "#E91E63",
+                label: "FFT Magnitude (Raw)",
+                opacity: 0.5,
+                width: 2,
+            },
+        },
         "fft_magnitude_smoothed": {
             points: smoothedMagnitudes,
             options: {
                 color: "#E91E63",
                 label: "FFT Magnitude (Smoothed)",
+                width: 3,
             },
         },
     }
