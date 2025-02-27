@@ -124,11 +124,27 @@ export class HistoryFile extends History {
 
     static async load(urlInput: string | URL): Promise<History> {
         // Convert to URL object if needed, handling both string paths and URL objects
-        const url =
-            typeof urlInput === "string" && !urlInput.startsWith("http") &&
-                !urlInput.startsWith("file:")
-                ? new URL(urlInput, import.meta.url).toString()
-                : urlInput.toString()
+        console.log("LOAD", urlInput)
+        let url: string
+
+        if (typeof urlInput === "string") {
+            if (urlInput.startsWith("http") || urlInput.startsWith("file:")) {
+                url = urlInput
+            } else if (urlInput.startsWith("/")) {
+                url = urlInput
+            } else {
+                // Handle relative paths - in browser add leading slash, in Deno use import.meta.url
+                if (typeof document !== "undefined") {
+                    // Browser environment
+                    url = "/" + urlInput
+                } else {
+                    // Deno environment
+                    url = new URL(urlInput, import.meta.url).toString()
+                }
+            }
+        } else {
+            url = urlInput.toString()
+        }
 
         const response = await fetch(url)
         const compressedBuffer = await response.arrayBuffer()
