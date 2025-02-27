@@ -5,17 +5,16 @@ import { SvgWindow } from "./wm.ts"
 type KeypointGrapherSettings = {
     padding: number
     minScore: number
-    lineWidth: number
     lineColors: { [key in keyof typeof KeypointName]?: string }
     maxPoints: number
     zoomFactor: number
     title: string
+    // We don't hardcode width/height anymore - use client dimensions
 }
 
 const defaultSettings: KeypointGrapherSettings = {
-    padding: 0,
+    padding: 10,
     minScore: 0.3,
-    lineWidth: 0.5,
     lineColors: {},
     maxPoints: 255,
     zoomFactor: 0.15, // 15% zoom per scroll
@@ -90,6 +89,7 @@ export class KeypointGrapher {
     }
 
     private getPathData(
+        window: SvgWindow,
         keypoint: keyof typeof KeypointName,
         coord: "x" | "y",
         start: number,
@@ -110,6 +110,11 @@ export class KeypointGrapher {
         let minCoord = Infinity
         let maxCoord = -Infinity
 
+        // Get client dimensions of the SVG
+        const rect = window.svg.getBoundingClientRect()
+        const graphWidth = rect.width - 2 * this.settings.padding
+        const graphHeight = rect.height - 2 * this.settings.padding
+
         // First pass: find min and max values and count valid points
         let validPoints = 0
         for (let i = 0; i < effectiveRange; i++) {
@@ -120,15 +125,13 @@ export class KeypointGrapher {
             )
             if (keypointCoords) {
                 const timestamp = pose.timestamp
-                const _coordValue = keypointCoords[coordIndex]
+                const coordValue = keypointCoords[coordIndex]
                 minTime = Math.min(minTime, timestamp)
                 maxTime = Math.max(maxTime, timestamp)
 
-                // maxCoord = Math.max(maxCoord, coordValue)
-                // minCoord = Math.min(minCoord, coordValue)
-
-                minCoord = 0
-                maxCoord = 255
+                // Auto-scale the data values
+                minCoord = Math.min(minCoord, coordValue)
+                maxCoord = Math.max(maxCoord, coordValue)
 
                 validPoints++
             }
@@ -136,12 +139,16 @@ export class KeypointGrapher {
 
         if (validPoints === 0) return ""
 
+        // If insufficient range in data, set default range
+        if (minCoord === maxCoord) {
+            minCoord = 0
+            maxCoord = 255
+        }
+
         const timeDelta = maxTime - minTime
         const coordDelta = maxCoord - minCoord
-        const graphWidth = 255 - 2 * this.settings.padding
-        const graphHeight = 255 - 2 * this.settings.padding
 
-        // Determine downsam    pling factor
+        // Determine downsampling factor
         const downsampleFactor = Math.ceil(
             validPoints / this.settings.maxPoints,
         )
@@ -169,7 +176,7 @@ export class KeypointGrapher {
                         ((timestamp - minTime) / timeDelta) * graphWidth
                 const y = coordDelta === 0
                     ? this.settings.padding + graphHeight / 2
-                    : 255 - this.settings.padding -
+                    : graphHeight + this.settings.padding -
                         ((coordValue - minCoord) / coordDelta) * graphHeight
 
                 accumulatedX += x
@@ -226,6 +233,7 @@ export class KeypointGrapher {
 
         for (const [_, { path, keypoint, coord }] of paths) {
             const pathData = this.getPathData(
+                window,
                 keypoint,
                 coord,
                 this.start,
@@ -282,7 +290,33 @@ export class KeypointGrapher {
             this.setEnd(newEnd)
         }
 
+        // Handle zoom via wheel events
         window.svg.addEventListener("wheel", handleScroll, { passive: false })
+
+        // Handle window resize to redraw graphs and annotations
+        const handleResize = () => {
+            this.updatePaths(window)
+            // Also redraw annotations
+            const annotations = svgAnnotations.get(window)
+            if (annotations) {
+                // Create a copy of annotation entries to avoid mutation issues
+                const entries = Array.from(annotations.entries())
+                for (const [id, _] of entries) {
+                    this.updateAnnotation(window, id, {}) // Update with same values to redraw
+                }
+            }
+        }
+
+        // No need to add a resize listener to window - we'll use ResizeObserver
+
+        // Add resize event listener to window if ResizeObserver exists (doesn't in tests)
+        if (typeof ResizeObserver !== "undefined") {
+            const resizeObserver = new ResizeObserver(() => {
+                handleResize()
+            })
+            resizeObserver.observe(window.svg)
+        }
+
         svgZoomListeners.set(window, true)
     }
 
@@ -298,11 +332,18 @@ export class KeypointGrapher {
             "http://www.w3.org/2000/svg",
             "path",
         )
-        path.setAttribute("fill", "none")
+        // Use CSS class for styling
+        path.setAttribute("class", "keypoint-path")
+
+        // Set color as an attribute (will override the stroke in CSS)
         const color = this.settings.lineColors[keypoint] ||
             this.getRandomColor(keypoint)
         path.setAttribute("stroke", color)
-        path.setAttribute("stroke-width", String(this.settings.lineWidth))
+
+        // Add data attributes for potential future styling
+        path.setAttribute("data-keypoint", keypoint)
+        path.setAttribute("data-coord", coord)
+
         window.svg.appendChild(path)
 
         if (!svgPaths.has(window)) {
@@ -360,6 +401,11 @@ export class KeypointGrapher {
                     "line",
                 )
 
+                // Get actual SVG dimensions
+                const rect = window.svg.getBoundingClientRect()
+                const svgWidth = rect.width
+                const svgHeight = rect.height
+
                 // Position the line based on orientation
                 if (annotation.orientation === "vertical") {
                     const x = this.mapTimeToX(annotation.value, window)
@@ -368,7 +414,7 @@ export class KeypointGrapher {
                     line.setAttribute("x2", x.toString())
                     line.setAttribute(
                         "y2",
-                        (255 - this.settings.padding).toString(),
+                        (svgHeight - this.settings.padding).toString(),
                     )
                 } else {
                     // Horizontal line
@@ -377,20 +423,27 @@ export class KeypointGrapher {
                     line.setAttribute("y1", y.toString())
                     line.setAttribute(
                         "x2",
-                        (255 - this.settings.padding).toString(),
+                        (svgWidth - this.settings.padding).toString(),
                     )
                     line.setAttribute("y2", y.toString())
                 }
 
+                // Use CSS class for styling
+                line.setAttribute(
+                    "class",
+                    `annotation-line ${annotation.orientation || ""}`,
+                )
+
+                // Set color and dashArray as attributes (will override CSS)
                 line.setAttribute("stroke", annotation.color)
-                line.setAttribute("stroke-width", "1")
+
                 if (annotation.dashArray) {
                     line.setAttribute("stroke-dasharray", annotation.dashArray)
                 }
-                line.setAttribute(
-                    "opacity",
-                    annotation.opacity?.toString() || "1",
-                )
+
+                if (annotation.opacity !== undefined) {
+                    line.setAttribute("opacity", annotation.opacity.toString())
+                }
 
                 elements.push(line)
                 window.svg.appendChild(line)
@@ -420,8 +473,11 @@ export class KeypointGrapher {
                         text.setAttribute("text-anchor", "start")
                     }
 
+                    // Use CSS class for styling
+                    text.setAttribute("class", "annotation-text")
+
+                    // Set color as attribute (will override CSS)
                     text.setAttribute("fill", annotation.color)
-                    text.setAttribute("font-size", "10")
                     text.textContent = annotation.label
 
                     elements.push(text)
@@ -440,6 +496,10 @@ export class KeypointGrapher {
                     "rect",
                 )
 
+                // Get actual SVG dimensions
+                const svgRect = window.svg.getBoundingClientRect()
+                const svgHeight = svgRect.height
+
                 const x1 = this.mapTimeToX(annotation.value, window)
                 const x2 = this.mapTimeToX(annotation.endValue, window)
 
@@ -448,13 +508,18 @@ export class KeypointGrapher {
                 rect.setAttribute("width", Math.abs(x2 - x1).toString())
                 rect.setAttribute(
                     "height",
-                    (255 - 2 * this.settings.padding).toString(),
+                    (svgHeight - 2 * this.settings.padding).toString(),
                 )
+                // Use CSS class for styling
+                rect.setAttribute("class", "annotation-region")
+
+                // Set color as attribute (will override CSS)
                 rect.setAttribute("fill", annotation.color)
-                rect.setAttribute(
-                    "opacity",
-                    annotation.opacity?.toString() || "0.3",
-                )
+
+                // Set custom opacity if provided
+                if (annotation.opacity !== undefined) {
+                    rect.setAttribute("opacity", annotation.opacity.toString())
+                }
 
                 elements.push(rect)
                 window.svg.appendChild(rect)
@@ -471,8 +536,12 @@ export class KeypointGrapher {
                         (15 + this.settings.padding).toString(),
                     )
                     text.setAttribute("text-anchor", "middle")
+
+                    // Use CSS class for styling
+                    text.setAttribute("class", "annotation-text")
+
+                    // Set color as attribute (will override CSS)
                     text.setAttribute("fill", annotation.color)
-                    text.setAttribute("font-size", "10")
                     text.textContent = annotation.label
 
                     elements.push(text)
@@ -493,12 +562,19 @@ export class KeypointGrapher {
 
                 circle.setAttribute("cx", x.toString())
                 circle.setAttribute("cy", y.toString())
-                circle.setAttribute("r", "4")
+                // Use CSS class for styling
+                circle.setAttribute("class", "annotation-point")
+
+                // Set color as attribute (will override CSS)
                 circle.setAttribute("fill", annotation.color)
-                circle.setAttribute(
-                    "opacity",
-                    annotation.opacity?.toString() || "1",
-                )
+
+                // Set custom opacity if provided
+                if (annotation.opacity !== undefined) {
+                    circle.setAttribute(
+                        "opacity",
+                        annotation.opacity.toString(),
+                    )
+                }
 
                 elements.push(circle)
                 window.svg.appendChild(circle)
@@ -512,8 +588,12 @@ export class KeypointGrapher {
                     text.setAttribute("x", (x + 6).toString())
                     text.setAttribute("y", (y - 6).toString())
                     text.setAttribute("text-anchor", "start")
+
+                    // Use CSS class for styling
+                    text.setAttribute("class", "annotation-text")
+
+                    // Set color as attribute (will override CSS)
                     text.setAttribute("fill", annotation.color)
-                    text.setAttribute("font-size", "10")
                     text.textContent = annotation.label
 
                     elements.push(text)
@@ -540,8 +620,13 @@ export class KeypointGrapher {
                 text.setAttribute("x", x.toString())
                 text.setAttribute("y", y.toString())
                 text.setAttribute("text-anchor", "middle")
+
+                // Use CSS class for styling
+                text.setAttribute("class", "annotation-text")
+
+                // Set color as attribute (will override CSS)
                 text.setAttribute("fill", annotation.color)
-                text.setAttribute("font-size", "12")
+
                 text.textContent = annotation.label
 
                 elements.push(text)
@@ -639,8 +724,12 @@ export class KeypointGrapher {
     /**
      * Maps a timestamp to an X coordinate in the SVG
      */
-    private mapTimeToX(timestamp: number, _window: SvgWindow): number {
+    private mapTimeToX(timestamp: number, window: SvgWindow): number {
         if (this.history.count === 0) return this.settings.padding
+
+        // Get actual SVG dimensions
+        const rect = window.svg.getBoundingClientRect()
+        const svgWidth = rect.width
 
         const startTime = this.history.getPoseAt(this.start).timestamp
         const endTime = this.history.getPoseAt(
@@ -649,24 +738,29 @@ export class KeypointGrapher {
 
         const timeDelta = endTime - startTime
         if (timeDelta === 0) {
-            return this.settings.padding + (255 - 2 * this.settings.padding) / 2
+            return this.settings.padding +
+                (svgWidth - 2 * this.settings.padding) / 2
         }
 
         return this.settings.padding +
             ((timestamp - startTime) / timeDelta) *
-                (255 - 2 * this.settings.padding)
+                (svgWidth - 2 * this.settings.padding)
     }
 
     /**
      * Maps a value to a Y coordinate in the SVG (inverted, as SVG y-axis is top-down)
      */
-    private mapValueToY(value: number, _window: SvgWindow): number {
-        // Assuming values typically range from 0-255
+    private mapValueToY(value: number, window: SvgWindow): number {
+        // Get actual SVG dimensions
+        const rect = window.svg.getBoundingClientRect()
+        const svgHeight = rect.height
+
+        // Use auto-scaled values
         const minValue = 0
         const maxValue = 255
 
-        return 255 - this.settings.padding -
+        return svgHeight - this.settings.padding -
             ((value - minValue) / (maxValue - minValue)) *
-                (255 - 2 * this.settings.padding)
+                (svgHeight - 2 * this.settings.padding)
     }
 }

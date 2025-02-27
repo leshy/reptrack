@@ -152,29 +152,29 @@ Deno.test("SvgWindow constructor", () => {
 
     const svgEl = contentEl.children[0]
     assertEquals(svgEl.tagName, "svg", "SVG element should be created")
+    // No viewBox in new implementation
     assertEquals(
         svgEl.getAttribute("viewBox"),
-        SvgWindow.defaultConfig.viewbox,
-        "Default viewBox should be set",
+        undefined,
+        "No viewBox should be set by default",
     )
 })
 
 Deno.test("SvgWindow custom config", () => {
-    const customViewbox = "0 0 800 600"
     const preserveRatio = false
 
     const svgWin = new SvgWindow("Custom SVG", {
-        viewbox: customViewbox,
         preserveRatio,
     })
 
     const contentEl = svgWin.element.children[1]
     const svgEl = contentEl.children[0]
 
+    // ViewBox is no longer part of the config
     assertEquals(
         svgEl.getAttribute("viewBox"),
-        customViewbox,
-        "Custom viewBox should be set",
+        undefined,
+        "No viewBox should be set",
     )
     assertEquals(
         svgEl.getAttribute("preserveAspectRatio"),

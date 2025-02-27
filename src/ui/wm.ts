@@ -59,7 +59,6 @@ export class Window {
 }
 
 type SvgWindowConfig = {
-    viewbox: string
     preserveRatio: boolean
 }
 
@@ -67,7 +66,6 @@ export class SvgWindow extends Window {
     private svgElement: SVGSVGElement
 
     static defaultConfig: SvgWindowConfig = {
-        viewbox: "0 0 255 255",
         preserveRatio: true,
     }
 
@@ -86,10 +84,12 @@ export class SvgWindow extends Window {
             "http://www.w3.org/2000/svg",
             "svg",
         )
-        this.svgElement.setAttribute("viewBox", fullConfig.viewbox)
+
+        // No viewBox - we'll use client coordinates directly
         if (!fullConfig.preserveRatio) {
             this.svgElement.setAttribute("preserveAspectRatio", "none")
         }
+
         this.svgElement.style.width = "100%"
         this.svgElement.style.height = "100%"
         this.svgElement.style.position = "absolute"

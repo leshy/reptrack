@@ -149,12 +149,21 @@ Deno.test("KeypointGrapher drawKeypointGraph", () => {
     const path = grapher.drawKeypointGraph(svgWindow, "nose", "x")
 
     assertExists(path, "Path should be created")
-    assertEquals(path.getAttribute("fill"), "none", "Path fill should be none")
-    assert(path.getAttribute("stroke"), "Path stroke should be set")
+    // Check for CSS class instead of direct attributes
     assertEquals(
-        path.getAttribute("stroke-width"),
-        "0.5",
-        "Path stroke width should be correct",
+        path.getAttribute("class"),
+        "keypoint-path",
+        "Path should have keypoint-path class",
+    )
+    assert(path.getAttribute("stroke"), "Path stroke should be set")
+    // Stroke width now comes from CSS
+    assert(
+        path.getAttribute("data-keypoint"),
+        "Path should have data-keypoint attribute",
+    )
+    assert(
+        path.getAttribute("data-coord"),
+        "Path should have data-coord attribute",
     )
 
     // SVG should have a path element

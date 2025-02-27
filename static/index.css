@@ -191,6 +191,39 @@ svg {
     left: 0;
 }
 
+/* Graph styling */
+.keypoint-path {
+    fill: none;
+    stroke-width: 1.5px;
+    vector-effect: non-scaling-stroke;
+}
+
+.annotation-line {
+    stroke-width: 1px;
+    vector-effect: non-scaling-stroke;
+}
+
+.annotation-line.vertical {
+    stroke-dasharray: none;
+}
+
+.annotation-line.horizontal {
+    stroke-dasharray: none;
+}
+
+.annotation-region {
+    opacity: 0.3;
+}
+
+.annotation-point {
+    r: 4px;
+}
+
+.annotation-text {
+    font-size: 12px;
+    font-weight: normal;
+}
+
 .window:has(.window) {
     border: 0px;
 }
