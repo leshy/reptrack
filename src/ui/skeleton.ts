@@ -191,10 +191,20 @@ export class Skeleton {
         kp2: [number, number],
         color: string = "white",
     ) {
-        line.setAttribute("x1", String(kp1[0]))
-        line.setAttribute("y1", String(kp1[1]))
-        line.setAttribute("x2", String(kp2[0]))
-        line.setAttribute("y2", String(kp2[1]))
+        // Scale coordinates to SVG client dimensions
+        const width = this.svgWindow.svg.clientWidth
+        const height = this.svgWindow.svg.clientHeight
+
+        // Scale from normalized 0-255 range to actual SVG dimensions
+        const x1 = (kp1[0] / 255) * width
+        const y1 = (kp1[1] / 255) * height
+        const x2 = (kp2[0] / 255) * width
+        const y2 = (kp2[1] / 255) * height
+
+        line.setAttribute("x1", String(x1))
+        line.setAttribute("y1", String(y1))
+        line.setAttribute("x2", String(x2))
+        line.setAttribute("y2", String(y2))
         line.setAttribute("stroke", color)
     }
 
@@ -266,8 +276,16 @@ export class Skeleton {
         kp: [number, number],
         color: string,
     ) {
-        circle.setAttribute("cx", String(kp[0]))
-        circle.setAttribute("cy", String(kp[1]))
+        // Scale coordinates to SVG client dimensions
+        const width = this.svgWindow.svg.clientWidth
+        const height = this.svgWindow.svg.clientHeight
+
+        // Scale from normalized 0-255 range to actual SVG dimensions
+        const cx = (kp[0] / 255) * width
+        const cy = (kp[1] / 255) * height
+
+        circle.setAttribute("cx", String(cx))
+        circle.setAttribute("cy", String(cy))
         circle.setAttribute("fill", color)
     }
 
