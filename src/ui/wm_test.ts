@@ -85,23 +85,6 @@ Deno.test("Window title setter", () => {
     assertEquals(win.title, newTitle, "Window title should be updated")
 })
 
-Deno.test("Window appendTo", () => {
-    const win = new Window("Test Window")
-    const parentMock = new MockElement("div")
-
-    win.appendTo(parentMock as unknown as HTMLElement)
-
-    assertEquals(
-        parentMock.children.length,
-        1,
-        "Window should be appended to parent",
-    )
-    assert(
-        parentMock.children.includes(win.element as unknown as MockElement),
-        "Window element should be appended",
-    )
-})
-
 Deno.test("Window add and remove subwindow", () => {
     const parentWin = new Window("Parent")
     const childWin = new Window("Child")

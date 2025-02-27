@@ -5,6 +5,7 @@ import * as binary from "../binary/mod.ts"
 import * as ui from "../ui/mod.ts"
 import { DataSeries, Grapher } from "../ui/grapher2.ts"
 import { runFFT } from "../fft.ts"
+import { attachState, avg } from "../transform/transform.ts"
 
 export async function fft() {
     // Load the history file
@@ -76,30 +77,21 @@ export async function fft() {
         zIndex: 100,
     })
 
-    // Add FFT analysis and visualization using the new Grapher2 component
-    const fftWindow = root.addWindow(new wm.Window("FFT Analysis"))
+    const fftWindow = root.addWindow(new wm.Window("FFT"))
 
-    // Create windows for FFT graphs
-    const timeSeriesWindow = fftWindow.addWindow(
-        new wm.SvgWindow("Time Series Data", { preserveRatio: false }),
+    const timeSeriesGrapher = fftWindow.addWindow(
+        new Grapher("Source Series", {
+            autoScale: true,
+            enableZoom: true,
+        }),
     )
 
-    const fftResultsWindow = fftWindow.addWindow(
-        new wm.SvgWindow("FFT Results", { preserveRatio: false }),
+    const fftGrapher = fftWindow.addWindow(
+        new Grapher("Output", {
+            autoScale: true,
+            enableZoom: true,
+        }),
     )
-
-    // Create new Grapher2 instances for plotting
-    const timeSeriesGrapher = new Grapher("Time Series", {
-        autoScale: true,
-        enableZoom: true,
-    })
-    timeSeriesGrapher.appendTo(timeSeriesWindow.contentElement)
-
-    const fftGrapher = new Grapher("FFT Magnitude", {
-        autoScale: true,
-        enableZoom: true,
-    })
-    fftGrapher.appendTo(fftResultsWindow.contentElement)
 
     // Run FFT analysis on keypoint data
     const keypointIndex = binary.KeypointName.right_wrist
@@ -135,13 +127,26 @@ export async function fft() {
         },
     }
 
+    // Apply averaging smoother to FFT magnitudes
+    const windowSize = 10 // Adjust window size as needed
+
+    const fftSmootherTransform = attachState(avg<number>(windowSize))
+    const smoothedMagnitudes = fftMagnitudes.map(fftSmootherTransform)
+
     // Create data series for both full and filtered FFT magnitude graphs
     const fftDataSeries: { [key: string]: DataSeries } = {
-        "fft_magnitude": {
-            points: fftMagnitudes,
+        // "fft_magnitude": {
+        //     points: fftMagnitudes,
+        //     options: {
+        //         color: "#E91E63",
+        //         label: "FFT Magnitude (Raw)",
+        //     },
+        // },
+        "fft_magnitude_smoothed": {
+            points: smoothedMagnitudes,
             options: {
                 color: "#E91E63",
-                label: "FFT Magnitude (Full)",
+                label: "FFT Magnitude (Smoothed)",
             },
         },
     }

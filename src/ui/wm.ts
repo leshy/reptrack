@@ -35,13 +35,9 @@ export class Window extends EventEmitter {
         }
     }
 
-    appendTo(parent: HTMLElement) {
-        parent.appendChild(this.element)
-    }
-
     addWindow<W extends Window>(window: W): W {
         this.subWindows.push(window)
-        window.appendTo(this.contentElement)
+        this.contentElement.appendChild(window.element)
         return window
     }
 
