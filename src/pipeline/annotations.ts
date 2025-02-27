@@ -70,7 +70,7 @@ export async function annotationsDemo() {
     grapher.addAnnotation(grapherYWindow, {
         type: "line",
         orientation: "horizontal",
-        value: 100,
+        value: 0.5,
         color: "#ff3333",
         label: "Upper Threshold",
         dashArray: "5,5",
@@ -79,7 +79,7 @@ export async function annotationsDemo() {
     grapher.addAnnotation(grapherYWindow, {
         type: "line",
         orientation: "horizontal",
-        value: 0.5,
+        value: 0.75,
         color: "#3333ff",
         label: "Lower Threshold",
         dashArray: "5,5",
@@ -116,7 +116,7 @@ export async function annotationsDemo() {
         type: "region",
         value: eventStart,
         endValue: eventEnd,
-        color: "rgba(255, 165, 0, 0.3)",
+        color: "rgba(0, 200, 0, 0.5)",
         label: "Detected Movement",
     })
 
