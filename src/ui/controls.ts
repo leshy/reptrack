@@ -1,16 +1,18 @@
 import { Window } from "./wm.ts"
+import EventEmitter from "npm:eventemitter3"
 
 /**
  * A generic UI controls class for creating interactive elements
  * like buttons, toggles, and sliders.
  */
-export class Controls {
+export class Controls extends EventEmitter {
     protected container: HTMLDivElement
     protected controlsMap: Map<string, HTMLElement> = new Map()
     // Map to track radio button groups
     protected radioGroups: Map<string, Set<string>> = new Map()
 
     constructor(public window: Window) {
+        super()
         this.container = document.createElement("div")
         this.container.className = "controls"
         this.window.element.appendChild(this.container)

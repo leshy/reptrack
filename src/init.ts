@@ -1,3 +1,5 @@
 import * as pipelines from "./pipeline/mod.ts"
 
-pipelines.euclid()
+// Change which pipeline runs on startup
+// pipelines.euclid()
+pipelines.annotationsDemo()

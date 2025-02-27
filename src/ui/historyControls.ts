@@ -20,10 +20,15 @@ export class HistoryControls extends Controls {
         return this.history.count
     }
 
+    // Type declarations to improve type safety
+    on(event: "frameChanged", listener: (frame: number) => void): this
+    off(event: "frameChanged", listener: (frame: number) => void): this
+
     nextFrame() {
         if (this.frame < this.total - 1) {
             this.frame++
             this.history.emit("pose", this.history.getPoseAt(this.frame))
+            this.emit("frameChanged", this.frame)
         }
     }
 
@@ -31,6 +36,7 @@ export class HistoryControls extends Controls {
         if (this.frame > 0) {
             this.frame--
             this.history.emit("pose", this.history.getPoseAt(this.frame))
+            this.emit("frameChanged", this.frame)
         }
     }
 
@@ -39,6 +45,7 @@ export class HistoryControls extends Controls {
         if (i >= this.total) i = this.total - 1
         this.frame = i
         this.history.emit("pose", this.history.getPoseAt(this.frame))
+        this.emit("frameChanged", this.frame)
     }
 
     async play() {
@@ -54,6 +61,7 @@ export class HistoryControls extends Controls {
             }
             this.history.emit("pose", pose)
             this.frame++
+            this.emit("frameChanged", this.frame)
             if (delay > 0) {
                 await new Promise((r) => setTimeout(r, delay / this.speed))
             }

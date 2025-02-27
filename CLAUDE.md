@@ -4,15 +4,18 @@
 
 - Build: `deno task build` (builds client-side JS)
 - Server: `deno task server` (serves static files)
-- Check: `deno task check` (runs formatter check, linter, and tests with minimal output)
-- Verbose check: `deno task checkverbose` (runs formatter check and linter with full output)
+- Check: `deno task check` (runs formatter check, linter, and tests with minimal
+  output)
+- Verbose check: `deno task checkverbose` (runs formatter check and linter with
+  full output)
 - Format: `deno fmt` (auto-format code)
 - Lint: `deno lint` (lint code)
 - Test: `deno task test` (runs tests with minimal output)
 - Verbose test: `deno task testverbose` (runs tests with full output)
 - Run specific test: `deno test src/binary/pose_test.ts`
 
-After completing a task, always run `deno task check` to verify the changes pass all checks.
+After completing a task, always run `deno task check` to verify the changes pass
+all checks.
 
 ## Code Style
 
