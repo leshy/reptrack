@@ -167,6 +167,7 @@ input[type="range"]::-moz-range-thumb:hover {
     color: white;
     padding: 5px;
     border: 1px solid white;
+    z-index: 100;
 }
 
 .window:has(.window) > .window-title {

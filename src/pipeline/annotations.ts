@@ -79,7 +79,7 @@ export async function annotationsDemo() {
     grapher.addAnnotation(grapherYWindow, {
         type: "line",
         orientation: "horizontal",
-        value: 200,
+        value: 0.5,
         color: "#3333ff",
         label: "Lower Threshold",
         dashArray: "5,5",
@@ -93,7 +93,7 @@ export async function annotationsDemo() {
         orientation: "vertical",
         value: history.getPoseAt(0).timestamp,
         color: "#33cc33",
-        label: "Playhead",
+        //        label: "Playhead",
     })
 
     // Copy playhead to X graph too
@@ -103,7 +103,7 @@ export async function annotationsDemo() {
         orientation: "vertical",
         value: history.getPoseAt(0).timestamp,
         color: "#33cc33",
-        label: "Playhead",
+        //        label: "Playhead",
     })
 
     // 3. Region annotation (simulating detected event)

@@ -139,10 +139,11 @@ export class KeypointGrapher {
 
         if (validPoints === 0) return ""
 
-        // If insufficient range in data, set default range
+        // If insufficient range in data, throw an error
         if (minCoord === maxCoord) {
-            minCoord = 0
-            maxCoord = 255
+            throw new Error(
+                `Insufficient data range for ${keypoint}-${coord} graph - all values are ${minCoord}`,
+            )
         }
 
         const timeDelta = maxTime - minTime
@@ -558,7 +559,7 @@ export class KeypointGrapher {
                 const x = this.mapTimeToX(annotation.value, window)
                 const y = annotation.endValue !== undefined
                     ? this.mapValueToY(annotation.endValue, window)
-                    : 127.5 // Center of graph
+                    : window.svg.clientHeight / 2 // Center of graph
 
                 circle.setAttribute("cx", x.toString())
                 circle.setAttribute("cy", y.toString())
@@ -755,9 +756,11 @@ export class KeypointGrapher {
         const rect = window.svg.getBoundingClientRect()
         const svgHeight = rect.height
 
-        // Use auto-scaled values
+        // For now, we'll use a standard 0-1 normalization for values
+        // NOTE: Values are expected to be pre-normalized between 0-1
+        // or explicitly converted by the caller
         const minValue = 0
-        const maxValue = 255
+        const maxValue = 1
 
         return svgHeight - this.settings.padding -
             ((value - minValue) / (maxValue - minValue)) *
