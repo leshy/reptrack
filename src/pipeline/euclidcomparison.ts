@@ -3,7 +3,7 @@ import "npm:@tensorflow/tfjs-backend-webgl"
 import * as wm from "../ui/wm.ts"
 import * as binary from "../binary/mod.ts"
 import * as ui from "../ui/mod.ts"
-import * as pt from "../transform.ts"
+import * as pt from "../transform/mod.ts"
 
 export async function euclidcomparison() {
     // Load both history files

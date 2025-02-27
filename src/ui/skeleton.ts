@@ -1,6 +1,6 @@
 import * as poseDetection from "npm:@tensorflow-models/pose-detection"
 import { BinaryPoseEmitter, Pose } from "../types.ts"
-import { center } from "../transform.ts"
+import { center } from "../transform/mod.ts"
 import { SvgWindow } from "./wm.ts"
 
 type SkeletonDrawSettings = {
