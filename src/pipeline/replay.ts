@@ -6,7 +6,7 @@ import * as ui from "../ui/mod.ts"
 import * as pt from "../pureTransform.ts"
 
 export async function replay() {
-    const history = await binary.HistoryFile.load("longlightning.bin.gz")
+    const history = await binary.HistoryFile.load("euclid10.bin.gz")
     // @ts-ignore
     window.h = history
 
@@ -14,42 +14,46 @@ export async function replay() {
     document.getElementById("window-container")?.appendChild(root.element)
 
     const inputSvg = root.addWindow(
-        new wm.SvgWindow("history", "0 0 255 255", true),
+        new wm.SvgWindow("history"),
     )
-    const fpspegSvg = root.addWindow(
-        new wm.SvgWindow("fpspeg", "0 0 255 255", true),
+    const smootherSvg = root.addWindow(
+        new wm.SvgWindow("smoother"),
     )
     const euclideanSvg = root.addWindow(
-        new wm.SvgWindow("euclidean", "0 0 255 255", true),
+        new wm.SvgWindow("euclidean"),
     )
 
-    const fpsPegSpy = (state: pt.FPState | undefined) => {
-        if (!state) return
-        else fpspegSvg.title = `fps [15] frm [${state[0]}] win [${state[2]}]`
-    }
-
     // actually need per keypoint pure transforms as well
-    const fpspeg = pt.node(
+    const smoother = pt.node(
         history,
-        pt.spyStateEmit(pt.fpsPeg(15), fpsPegSpy),
+        pt.avg(10),
         pt.scoreFilter(0.4),
     )
 
     //const euclidean1 = pt.node(history, pt.euclideanFilter(10))
 
+    const euclideanSpy = (state: pt.ConfidentEuclideanState | undefined) => {
+        if (!state) return
+        else euclideanSvg.title = `euclidean [${state.frame}]`
+    }
+
     const euclidean2 = pt.node(
-        fpspeg,
-        pt.confidentEuclideanFilter(10),
+        smoother,
+        pt.spyStateEmit(pt.confidentEuclideanFilter(10), euclideanSpy),
     )
+
+    const recorder = new binary.HistoryFile(50000)
+    recorder.record(euclidean2)
+    window.recorder = recorder
 
     const graphWindow = root.addWindow(new wm.Window())
 
     const grapherXWindow = graphWindow.addWindow(
-        new wm.SvgWindow("grapher X", "0 0 255 255", false),
+        new wm.SvgWindow("grapher X", { preserveRatio: false }),
     )
 
     const grapherYWindow = graphWindow.addWindow(
-        new wm.SvgWindow("grapher Y", "0 0 255 255", false),
+        new wm.SvgWindow("grapher Y", { preserveRatio: false }),
     )
 
     const grapher = new ui.KeypointGrapher(history, {
@@ -80,20 +84,10 @@ export async function replay() {
     }
 
     new ui.Skeleton(history, inputSvg, { minScore: 0 })
-    new ui.Skeleton(fpspeg, fpspegSvg, { minScore: 0.2 })
+    new ui.Skeleton(smoother, smootherSvg, { minScore: 0.2 })
     new ui.Skeleton(euclidean2, euclideanSvg, { minScore: 0.2 })
 
     const player = new ui.HistoryControls(history, inputSvg)
 
     player.nextFrame()
-
-    const fftsize = 1024 // must be power of 2
-    const fft = new webfft(fftsize)
-
-    fft.profile()
-
-    const target = Array.from(history.keypoints(5)).slice(0, 1024 * 2)
-    console.log(target)
-    console.log(fft.fft(target.map((x) => x[1][1])))
-    // Profile
 }

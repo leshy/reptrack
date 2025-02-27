@@ -1,151 +1,141 @@
 :root,
 svg {
-  --color-red: #fd5548;
-  --color-green: #73e3bb;
-  --color-blue: #555;
-  --color-lightblue: #adf7f6;
-  --color-orange: #ffa500;
-  --color-bgblue: #141d22;
-  
-  --text-color: #fff;
-  --text-color-alt: #aaa;
-  --text-color-p: #ccc;
-  --background-color: #000;
-  --background-color-alt: #111;
+    --color-red: #fd5548;
+    --color-green: #73e3bb;
+    --color-blue: #555;
+    --color-lightblue: #adf7f6;
+    --color-orange: #ffa500;
+    --color-bgblue: #141d22;
 
-  --font-family: "JetBrains Mono", monospace;
-  --line-height: 1.2rem;
-  --border-thickness: 1px;
+    --text-color: #fff;
+    --text-color-alt: #aaa;
+    --text-color-p: #ccc;
+    --background-color: #000;
+    --background-color-alt: #111;
 
-  --font-weight-normal: 500;
-  --font-weight-medium: 600;
-  --font-weight-bold: 800;
+    --font-family: "JetBrains Mono", monospace;
+    --line-height: 1.2rem;
+    --border-thickness: 1px;
 
-  fill: var(--text-color);
-  font-family: var(--font-family);
-  font-optical-sizing: auto;
-  font-weight: var(--font-weight-normal);
-  font-style: normal;
-  font-variant-numeric: tabular-nums lining-nums;
-  font-size: 16px;
-  width: 100%;
+    --font-weight-normal: 500;
+    --font-weight-medium: 600;
+    --font-weight-bold: 800;
+
+    fill: var(--text-color);
+    font-family: var(--font-family);
+    font-optical-sizing: auto;
+    font-weight: var(--font-weight-normal);
+    font-style: normal;
+    font-variant-numeric: tabular-nums lining-nums;
+    font-size: 16px;
+    width: 100%;
 }
 
 body {
-  position: relative;
-  width: 100%;
-  margin: 0;
-  padding: 0;
-  max-width: calc(min(100ch, round(down, 100%, 1ch)));
-  line-height: var(--line-height);
-  overflow-x: hidden;
-  background-color: black;
+    position: relative;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    max-width: calc(min(100ch, round(down, 100%, 1ch)));
+    line-height: var(--line-height);
+    overflow-x: hidden;
+    background-color: black;
 }
 
-
-
 canvas {
-    background-color: rgba(0,0,0,1);
+    background-color: rgba(0, 0, 0, 1);
     width: 100%;
     height: auto;
 }
 
 .left-section {
-  flex: 1; /* Takes up 50% of the container width */
+    flex: 1; /* Takes up 50% of the container width */
 }
 
 .right-section {
-  flex: 1; /* Takes up 50% of the container width */
+    flex: 1; /* Takes up 50% of the container width */
 }
 
-
 .skelesvg {
-  background-color: #000000;
-  width: 100%;
-  height: auto;
-  border: 1px solid white;
+    background-color: #000000;
+    width: 100%;
+    height: auto;
+    border: 1px solid white;
 }
 
 video {
-  width: 100%;
-  height: auto;
+    width: 100%;
+    height: auto;
 }
 
 #plotly_container {
     filter: invert(100%) hue-rotate(180deg);
 }
 
-
-
 button {
-  font-family: var(--font-family);
-  white-space: nowrap;
-  border: none;
-  padding: 5px;
-  cursor: pointer;
-  margin: 0;
-  background-color: black;
-  color: white;
-  height: 2em;
-  border: 1px solid white;
+    font-family: var(--font-family);
+    white-space: nowrap;
+    border: none;
+    padding: 5px;
+    cursor: pointer;
+    margin: 0;
+    background-color: black;
+    color: white;
+    height: 2em;
+    border: 1px solid white;
 }
 
 button:hover {
-  background-color: white;
-  color: black;
+    background-color: white;
+    color: black;
 }
-
 
 .controls {
-  position: absolute;
-  bottom: 5px;
-  left: 5px;
-  width: 100%;
-  display: flex;
-  gap: 5px;
-  padding: 0;
-  padding-right: 5px;
+    position: absolute;
+    bottom: 5px;
+    left: 5px;
+    width: 100%;
+    display: flex;
+    gap: 5px;
+    padding: 0;
+    padding-right: 5px;
 }
 
-
 input[type="range"] {
-  -webkit-appearance: none;
-  width: 100%;
-  background: black;
-  outline: 1px solid white;
-  padding-left: 5px;
-  padding-right: 5px;
-  margin-right: 12px;
-  
-
+    -webkit-appearance: none;
+    width: 100%;
+    background: black;
+    outline: 1px solid white;
+    padding-left: 5px;
+    padding-right: 5px;
+    margin-right: 12px;
 }
 
 input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 1.5em;
-  height: 1em;
-  background: black;
-  cursor: pointer;
-  border: 1px solid white;
+    -webkit-appearance: none;
+    appearance: none;
+    width: 1.5em;
+    height: 1em;
+    background: black;
+    cursor: pointer;
+    border: 1px solid white;
 }
 
 input[type="range"]::-moz-range-thumb {
-  width: 1.5em;
-  height: 1em;
-  background: black;
-  cursor: pointer;
-  border: 1px solid white;
+    width: 1.5em;
+    height: 1em;
+    background: black;
+    cursor: pointer;
+    border: 1px solid white;
 }
 
 input[type="range"]::-webkit-slider-thumb:hover {
-  background: white;
+    background: white;
 }
 
 input[type="range"]::-moz-range-thumb:hover {
-  background: white;
+    background: white;
 }
-
 
 #window-container {
     display: flex;
@@ -154,26 +144,25 @@ input[type="range"]::-moz-range-thumb:hover {
 }
 
 .window {
-  position:relative;
-  border: 1px solid #ccc;
-  box-sizing: border-box;
-  min-width: 33vw;
-  flex: 1 1 33vh;
-  min-height: 33vh;
-  display: flex;
-  flex-direction: column;
+    position: relative;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+    min-width: 33vw;
+    flex: 1 1 33vh;
+    min-height: 33vh;
+    display: flex;
+    flex-direction: column;
 }
 
 .window-title {
-  position: absolute;
-  top: 5px;
-  right: 5px;
-  background-color: black;;
-  color: white;
-  padding: 5px;
-  border: 1px solid white;
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background-color: black;
+    color: white;
+    padding: 5px;
+    border: 1px solid white;
 }
-
 
 .window-content {
     flex: 1;
@@ -191,29 +180,26 @@ svg {
     left: 0;
 }
 
-
 .window:has(.window) {
-  border: 0px;
+    border: 0px;
 }
-
 
 .clickable-keypoint {
     cursor: pointer; /* Indicates clickability */
-    transition: stroke,r 0.5s; /* Smooth hover transition */
+    transition: stroke, r 0.5s; /* Smooth hover transition */
 }
 
 .clickable-keypoint:hover {
-  r: 5px;
-  stroke-width: 1;
-  stroke: white;
+    r: 5px;
+    stroke-width: 1;
+    stroke: white;
 }
 
-
 .quick-display {
-  position: absolute;
-  background-color: black;
-  border: 1px solid white;
-  color: white;
-  padding: 5px;
-  z-index: 1000;
+    position: absolute;
+    background-color: black;
+    border: 1px solid white;
+    color: white;
+    padding: 5px;
+    z-index: 1000;
 }

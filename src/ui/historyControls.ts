@@ -7,6 +7,7 @@ export class HistoryControls {
     private stopFlag = false
     public display: HistoryDisplay
     public buttons: HistoryButtons
+    public speed = 1
 
     constructor(public history: History, public window: Window) {
         this.display = new HistoryDisplay(window, this)
@@ -49,7 +50,7 @@ export class HistoryControls {
             this.history.emit("pose", pose)
             this.frame++
             if (delay > 0) {
-                await new Promise((r) => setTimeout(r, delay))
+                await new Promise((r) => setTimeout(r, delay / this.speed))
             }
         }
         this.isPlaying = false
@@ -86,6 +87,7 @@ export class HistoryButtons {
             this.updateUI()
         })
         c.appendChild(this.prevBtn)
+
         this.nextBtn = document.createElement("button")
         this.nextBtn.textContent = "Next Frm"
         this.nextBtn.addEventListener("click", () => {
@@ -93,6 +95,35 @@ export class HistoryButtons {
             this.updateUI()
         })
         c.appendChild(this.nextBtn)
+
+        const slow = document.createElement("button")
+        slow.textContent = "slo"
+        slow.addEventListener("click", () => {
+            this.controls.speed = 0.01
+        })
+        c.appendChild(slow)
+
+        const onex = document.createElement("button")
+        onex.textContent = "1x"
+        onex.addEventListener("click", () => {
+            this.controls.speed = 1
+        })
+        c.appendChild(onex)
+
+        const tenx = document.createElement("button")
+        tenx.textContent = "10x"
+        tenx.addEventListener("click", () => {
+            this.controls.speed = 10
+        })
+        c.appendChild(tenx)
+
+        const hundredx = document.createElement("button")
+        hundredx.textContent = "100x"
+        hundredx.addEventListener("click", () => {
+            this.controls.speed = 100
+        })
+        c.appendChild(hundredx)
+
         this.seekBar = document.createElement("input")
         this.seekBar.type = "range"
         this.seekBar.min = "0"

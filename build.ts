@@ -5,7 +5,7 @@ await esbuild.build({
     plugins: [...denoPlugins()],
     conditions: ["browser", "deno", "node"],
     entryPoints: [
-        "./clientside/init.ts",
+        "./src/init.ts",
     ],
     outfile: "./static/js/clientside.js",
     bundle: true,
@@ -15,23 +15,5 @@ await esbuild.build({
         "import.meta.url": '""',
     },
 })
-
-// await esbuild.build({
-//     plugins: [...denoPlugins()],
-//     entryPoints: ["./clientside/test.ts"],
-//     outfile: "./static/js/test.js",
-//     bundle: true,
-//     format: "esm",
-//     conditions: ["browser"],
-// })
-
-// await esbuild.build({
-//     plugins: [...denoPlugins()],
-//     entryPoints: ["./clientside/clientside_old.ts"],
-//     outfile: "./static/js/clientside_old.js",
-//     bundle: true,
-//     format: "esm",
-//     conditions: ["browser"],
-// })
 
 esbuild.stop()

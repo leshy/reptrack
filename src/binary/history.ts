@@ -73,7 +73,7 @@ export class HistoryPose extends Pose {
 export class HistoryFile extends History {
     override name: string
 
-    constructor(capacity: number = 10000, url: string) {
+    constructor(capacity: number = 10000, url: string = "local") {
         super(capacity)
         this.name = url
     }

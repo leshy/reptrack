@@ -154,6 +154,7 @@ export function fpsPeg(fps: number = 10): StateTransform<FPState> {
         if (frame === bucketFrame) {
             return [undefined, [frame, [pose, ...bucket], 0]]
         }
+
         return [
             poseTools.weightedAverage(bucket),
             [frame, [pose], bucket.length],
@@ -278,6 +279,7 @@ export function confidentEuclideanFilter(
                     ? poseTools.weightedAverage(state.previously)
                     : undefined
                 // Output the average (if exists), update state
+                if (average) average.timestamp = state.frame
                 return [average, {
                     lastPose: pose,
                     previously: [],
