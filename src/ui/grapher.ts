@@ -325,7 +325,7 @@ export class KeypointGrapher {
      */
     addAnnotation(
         window: SvgWindow,
-        options: AnnotationOptions,
+        options: AnnotationOptions & { id?: string },
     ): string {
         this.setupZoom(window)
         this.windows.add(window)
