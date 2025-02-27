@@ -161,7 +161,7 @@ export class Grapher extends SvgWindow {
         path.setAttribute("fill", "none")
         path.setAttribute(
             "stroke-width",
-            series.options?.width?.toString() || "2",
+            series.options?.width?.toString() || "1",
         )
         path.setAttribute(
             "stroke",

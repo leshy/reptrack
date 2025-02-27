@@ -120,26 +120,28 @@ export async function fft() {
         fftMagnitudes.push(magnitude)
     }
 
+    // Filter out DC component (first value) and create filtered data series
+    const dcComponentCutoff = 5 // Skip the first few frequencies, including DC component
+    const filteredMagnitudes = fftMagnitudes.slice(dcComponentCutoff)
+
     // Create data series for time series graph
     const timeSeriesDataSeries: { [key: string]: DataSeries } = {
         "right_wrist_x": {
             points: timeSeriesData,
             options: {
                 color: "#2196F3",
-                width: 2,
                 label: "Right Wrist X Position",
             },
         },
     }
 
-    // Create data series for FFT magnitude graph
+    // Create data series for both full and filtered FFT magnitude graphs
     const fftDataSeries: { [key: string]: DataSeries } = {
         "fft_magnitude": {
             points: fftMagnitudes,
             options: {
                 color: "#E91E63",
-                width: 2,
-                label: "FFT Magnitude",
+                label: "FFT Magnitude (Full)",
             },
         },
     }
@@ -152,7 +154,7 @@ export async function fft() {
     ]
 
     fftGrapher.xRange = [0, fftMagnitudes.length - 1]
-    fftGrapher.yRange = [0, Math.max(...fftMagnitudes) * 1.1]
+    fftGrapher.yRange = [0, Math.max(...filteredMagnitudes) * 1.1]
 
     // Update the graphs with data
     timeSeriesGrapher.data = timeSeriesDataSeries
