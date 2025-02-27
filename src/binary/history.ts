@@ -122,7 +122,14 @@ export class HistoryFile extends History {
         return orderedBuffer
     }
 
-    static async load(url: string): Promise<History> {
+    static async load(urlInput: string | URL): Promise<History> {
+        // Convert to URL object if needed, handling both string paths and URL objects
+        const url =
+            typeof urlInput === "string" && !urlInput.startsWith("http") &&
+                !urlInput.startsWith("file:")
+                ? new URL(urlInput, import.meta.url).toString()
+                : urlInput.toString()
+
         const response = await fetch(url)
         const compressedBuffer = await response.arrayBuffer()
         let arrayBuffer: ArrayBuffer

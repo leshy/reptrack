@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-OUTPUT_TEST=$(deno test src/ 2>&1)
+OUTPUT_TEST=$(deno test -A src/ 2>&1)
 if [ $? -eq 0 ]; then
   echo "All tests passed"
 else

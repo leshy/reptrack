@@ -55,6 +55,42 @@ export async function fft() {
 
     new ui.Skeleton(euclidHistory, euclidInputSvg, { minScore: 0 })
 
+    // Add playhead annotations to the graphs
+    const playheadIdX = euclidGrapher.addAnnotation(euclidGrapherXWindow, {
+        type: "line",
+        orientation: "vertical",
+        value: 0,
+        color: "#ff0000",
+        opacity: 0.8,
+        zIndex: 100,
+    })
+
+    const playheadIdY = euclidGrapher.addAnnotation(euclidGrapherYWindow, {
+        type: "line",
+        orientation: "vertical",
+        value: 0,
+        color: "#ff0000",
+        opacity: 0.8,
+        zIndex: 100,
+    })
+
     const euclidPlayer = new ui.HistoryControls(euclidHistory, euclidInputSvg)
+
+    // Update playhead position when frame changes
+    euclidPlayer.on("frameChanged", (frame) => {
+        // Get the timestamp for the current frame
+        const pose = euclidHistory.getPoseAt(frame)
+        const timestamp = pose.timestamp
+
+        // Update playhead position in both graphs
+        euclidGrapher.updateAnnotation(euclidGrapherXWindow, playheadIdX, {
+            value: timestamp,
+        })
+
+        euclidGrapher.updateAnnotation(euclidGrapherYWindow, playheadIdY, {
+            value: timestamp,
+        })
+    })
+
     euclidPlayer.nextFrame()
 }

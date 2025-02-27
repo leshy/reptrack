@@ -3,7 +3,7 @@
     "tasks": {
         "server": "deno run --allow-net --allow-read --allow-sys https://deno.land/std/http/file_server.ts static",
         "checkverbose": "deno fmt --check src/ && deno lint src/",
-        "testverbose": "deno test src/",
+        "testverbose": "deno test --allow-read src/",
         "test": "./scripts/testsilent.sh",
         "check": "./scripts/checksilent.sh",
         "build": "deno run -A build.ts"

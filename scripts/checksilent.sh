@@ -15,11 +15,10 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-# Run tests
-OUTPUT_TEST=$(deno test src/ 2>&1)
+# Run tests using testsilent.sh
+./scripts/testsilent.sh
 if [ $? -ne 0 ]; then
-  echo "Tests failed:"
-  echo "$OUTPUT_TEST"
+  # testsilent.sh will handle error output
   exit 1
 fi
 
