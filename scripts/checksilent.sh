@@ -1,23 +1,26 @@
 #!/usr/bin/env bash
 # Run formatter check
-deno fmt --check src/ > /dev/null 2>&1
+OUTPUT_FMT=$(deno fmt --check src/ 2>&1)
 if [ $? -ne 0 ]; then
-  echo "Formatting check failed"
+  echo "Formatting check failed:"
+  echo "$OUTPUT_FMT"
   exit 1
 fi
 
 # Run linter
-deno lint src/ > /dev/null 2>&1
+OUTPUT_LINT=$(deno lint src/ 2>&1)
 if [ $? -ne 0 ]; then
-  echo "Linting failed"
+  echo "Linting failed:"
+  echo "$OUTPUT_LINT"
   exit 1
 fi
 
 # Run tests
-deno test src/ > /dev/null 2>&1
+OUTPUT_TEST=$(deno test src/ 2>&1)
 if [ $? -ne 0 ]; then
-  echo "Tests failed"
+  echo "Tests failed:"
+  echo "$OUTPUT_TEST"
   exit 1
 fi
 
-echo "All checks passed successfully"
+echo "ok"
