@@ -38,3 +38,14 @@ export function compose<T, U, V>(
 ): (item: T) => V {
     return (item: T) => fn2(fn1(item))
 }
+
+export function* takeN<T>(
+    n: number,
+    iterator: IterableIterator<T>,
+): IterableIterator<T> {
+    for (const item of iterator) {
+        if (n <= 0) break
+        yield item
+        n--
+    }
+}

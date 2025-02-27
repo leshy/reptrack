@@ -6,6 +6,7 @@ import * as ui from "../ui/mod.ts"
 import { DataSeries, Grapher } from "../ui/grapher2.ts"
 import { runFFT } from "../fft.ts"
 import { attachState, avg } from "../transform/transform.ts"
+import * as utils from "../utils/mod.ts"
 
 export async function fft() {
     // Load the history file
@@ -93,21 +94,32 @@ export async function fft() {
         }),
     )
 
-    // Run FFT analysis on keypoint data
-    const keypointIndex = binary.KeypointName.right_wrist
-    const fftResult = await runFFT(keypointIndex, "x", 1024)
+    const timeSeriesData: number[] = Array.from(
+        utils.takeN(
+            1024,
+            euclidHistory.keypoints(binary.KeypointName.right_wrist),
+        ).map((point: binary.Point) => point[1][0]),
+    )
 
-    // Extract time series data for plotting
-    const timeSeriesData: number[] = []
-    for (let i = 0; i < fftResult.windowSize; i++) {
-        timeSeriesData.push(fftResult.keypointData[i][0]) // x-coordinate
-    }
+    console.log(timeSeriesData)
+    const fftResult = await runFFT(timeSeriesData)
+
+    // // Extract time series data for plotting
+    // const timeSeriesData: number[] = []
+    // for (let i = 0; i < fftResult.windowSize; i++) {
+    //     timeSeriesData.push(fftResult.keypointData[i][0]) // x-coordinate
+    // }
+
+    // //    Extract time series data for plotting
+    // const timeSeriesData: number[] = fftResult.keypointData.map((
+    //     point: binary.Point,
+    // ) => point[0])
 
     // Calculate FFT magnitudes
     const fftMagnitudes: number[] = []
-    for (let i = 0; i < fftResult.windowSize / 2; i++) {
-        const real = fftResult.fftOutput[i * 2]
-        const imag = fftResult.fftOutput[i * 2 + 1]
+    for (let i = 0; i < timeSeriesData.length / 2; i++) {
+        const real = fftResult[i * 2]
+        const imag = fftResult[i * 2 + 1]
         const magnitude = Math.sqrt(real * real + imag * imag)
         fftMagnitudes.push(magnitude)
     }
