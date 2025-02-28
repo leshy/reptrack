@@ -5,7 +5,7 @@ import * as binary from "../binary/mod.ts"
 import * as ui from "../ui/mod.ts"
 import { DataSeries, Grapher } from "../ui/grapher2.ts"
 import { runFFT } from "../fft.ts"
-import { attachState, avg } from "../transform/transform.ts"
+import * as t from "../transform/transform.ts"
 import * as utils from "../utils/mod.ts"
 
 export async function fft() {
@@ -101,7 +101,6 @@ export async function fft() {
         ).map((point: binary.Point) => point[1][0]),
     )
 
-    console.log(timeSeriesData)
     const fftResult = await runFFT(timeSeriesData)
 
     // // Extract time series data for plotting
@@ -140,9 +139,7 @@ export async function fft() {
     }
 
     // Apply averaging smoother to FFT magnitudes
-    const smoothedMagnitudes = fftMagnitudes.map(
-        attachState(avg(5)),
-    ) as number[]
+    const smoothedMagnitudes = fftMagnitudes.map(t.pipe(t.avg(5))) as number[]
 
     // Create data series for both full and filtered FFT magnitude graphs
     const fftDataSeries: { [key: string]: DataSeries } = {

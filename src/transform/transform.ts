@@ -105,6 +105,38 @@ export function spyStateEmit<T, STATE>(
     }
 }
 
+// Convert a generator function into a transform function
+export function fromGenerator<T>(
+    generatorFn: (input: Generator<T>) => Generator<T>,
+): GenericTransform<T> {
+    let gen: Generator<T> | null = null
+    const inputs: T[] = []
+
+    return (input: T): T | undefined => {
+        inputs.push(input)
+
+        // Create a generator that yields all inputs so far
+        const inputGenerator = (function* () {
+            for (const item of inputs) {
+                yield item
+            }
+        })()
+
+        // Create or recreate the generator with the updated inputs
+        gen = generatorFn(inputGenerator)
+
+        // Consume the generator until we reach the latest item
+        let result: IteratorResult<T>
+        let index = 0
+        do {
+            result = gen.next()
+            index++
+        } while (!result.done && index < inputs.length)
+
+        return result.done ? undefined : result.value
+    }
+}
+
 // Type guard to check if a value is a number
 function isNumber(value: unknown): value is number {
     return typeof value === "number"

@@ -1,4 +1,13 @@
 #!/usr/bin/env bash
+
+# Run typecheck
+OUTPUT_TYPECHECK=$(deno check src/ 2>&1)
+if [ $? -ne 0 ]; then
+  echo "Formatting check failed:"
+  echo "$OUTPUT_TYPECHECK"
+  exit 1
+fi
+
 # Run formatter check
 OUTPUT_FMT=$(deno fmt src/ 2>&1)
 if [ $? -ne 0 ]; then

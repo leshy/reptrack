@@ -13,7 +13,6 @@ export class HistoryControls extends Controls {
         super(window)
         this.display = new HistoryDisplay(window, this)
         this.initControls()
-        console.log("HistoryControls constructed")
     }
 
     get total() {
@@ -21,8 +20,8 @@ export class HistoryControls extends Controls {
     }
 
     // Type declarations to improve type safety
-    on(event: "frameChanged", listener: (frame: number) => void): this
-    off(event: "frameChanged", listener: (frame: number) => void): this
+    //on(event: "frameChanged", listener: (frame: number) => void): this
+    //off(event: "frameChanged", listener: (frame: number) => void): this
 
     nextFrame() {
         if (this.frame < this.total - 1) {

@@ -49,3 +49,17 @@ export function* takeN<T>(
         n--
     }
 }
+
+export function* skipN<T>(
+    n: number,
+    iterator: IterableIterator<T>,
+): IterableIterator<T> {
+    console.log(iterator)
+    for (const item of iterator) {
+        if (n > 0) {
+            n--
+            continue
+        }
+        yield item
+    }
+}

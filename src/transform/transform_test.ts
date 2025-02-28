@@ -1,4 +1,5 @@
 import { assertEquals } from "https://deno.land/std@0.201.0/assert/mod.ts"
+
 import {
     attachState,
     GenericStateTransform,
@@ -172,3 +173,28 @@ Deno.test("pipe function properly incorporates attachState with complex state", 
     assertEquals(finalDirect, finalAttached)
     assertEquals(finalDirect, 16) // (10 + 20 + 5 + 30 + 15) / 5 = 16
 })
+
+// Deno.test("fromGenerator", () => {
+//     function* genAddFive(nums: Generator<number>): Generator<number> {
+//         let cnt = 0
+//         for (const num of nums) {
+//             yield num + cnt
+//             cnt++
+//         }
+//     }
+
+//     const pipedGen = pipe(
+//         // @ts-ignore
+//         fromGenerator((x) => utils.skipN(1, x)),
+//         fromGenerator(genAddFive),
+//     )
+
+//     const inputs = [10, 20, 5, 30]
+//     const outputs = [undefined, 21, 7, 33]
+//     for (const [index, input] of inputs.entries()) {
+//         // @ts-ignore
+//         const result = pipedGen(input)
+//         console.log(index, input, result)
+//         assertEquals(result, outputs[index])
+//     }
+// })

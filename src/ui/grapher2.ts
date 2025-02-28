@@ -103,14 +103,14 @@ export class Grapher extends SvgWindow {
      */
     set data(dataDict: { [key: string]: DataSeries }) {
         // Track which series need to be updated
-        const currentKeys = new Set(Object.keys(this._data))
-        const newKeys = new Set(Object.keys(dataDict))
+        const currentNames = new Set(Object.keys(this._data))
+        const newNames = new Set(Object.keys(dataDict))
 
         // Identify which series to add, update, or remove
-        const toAdd = [...newKeys].filter((k) => !currentKeys.has(k))
-        const toUpdate = [...newKeys].filter((k) => {
+        const toAdd = [...newNames].filter((k) => !currentNames.has(k))
+        const toUpdate = [...newNames].filter((k) => {
             // If we have the key, check if the array reference changed or length is different
-            if (!currentKeys.has(k)) return false
+            if (!currentNames.has(k)) return false
 
             const oldSeries = this._data[k]
             const newSeries = dataDict[k]
@@ -120,7 +120,7 @@ export class Grapher extends SvgWindow {
                 oldSeries.points.length !== newSeries.points.length ||
                 oldSeries.options !== newSeries.options
         })
-        const toRemove = [...currentKeys].filter((k) => !newKeys.has(k))
+        const toRemove = [...currentNames].filter((k) => !newNames.has(k))
 
         // Remove series that aren't in the new data
         for (const key of toRemove) {
