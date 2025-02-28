@@ -1,7 +1,7 @@
 import { assertEquals } from "https://deno.land/std@0.201.0/assert/mod.ts"
 import {
     attachState,
-    Averagable,
+    AveragableObj,
     avg,
     GenericStateTransform,
     GenericTransform,
@@ -12,7 +12,7 @@ import {
 } from "./transform.ts"
 
 // Define a simple Averagable Number class for testing
-export class AveragableNumber implements Averagable<AveragableNumber> {
+export class AveragableNumber implements AveragableObj<AveragableNumber> {
     constructor(public value: number) {}
 
     avg(others: AveragableNumber[]): AveragableNumber {

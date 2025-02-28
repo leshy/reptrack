@@ -1,8 +1,8 @@
 import { assertEquals } from "https://deno.land/std@0.201.0/assert/mod.ts"
-import { attachState, Averagable, avg, pipe } from "./transform.ts"
+import { attachState, AveragableObj, avg, pipe } from "./transform.ts"
 
 // Define a 2D Vector class that implements Averagable
-export class Vector2D implements Averagable<Vector2D> {
+export class Vector2D implements AveragableObj<Vector2D> {
     constructor(public x: number, public y: number) {}
 
     avg(others: Vector2D[]): Vector2D {

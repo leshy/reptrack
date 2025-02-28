@@ -1,8 +1,10 @@
 import { EventEmitter } from "npm:eventemitter3"
 
-export interface Averagable<T> {
+export interface AveragableObj<T> {
     avg(others: T[]): T
 }
+
+export type Averagable<T> = AveragableObj<T> | number
 
 // Generic transform types
 export type GenericTransform<T> = (
@@ -143,7 +145,7 @@ function isNumber(value: unknown): value is number {
 }
 
 // Generic averaging transform for types that implement Averagable or are numbers
-export function avg<T extends Averagable<T> | number>(
+export function avg<T extends Averagable<T>>(
     windowSize: number = 10,
 ): GenericStateTransform<T, T[]> {
     return (
@@ -167,7 +169,7 @@ export function avg<T extends Averagable<T> | number>(
         // Otherwise use the Averagable interface
         // The cast is necessary because we know item is Averagable<T> at this point
         // but TypeScript doesn't know that window is T[] rather than (T | number)[]
-        const averagableItem = item as Averagable<T>
+        const averagableItem = item as AveragableObj<T>
         const result = window.length > 0
             ? averagableItem.avg(window as unknown as T[])
             : item

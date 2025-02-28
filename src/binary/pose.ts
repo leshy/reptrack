@@ -1,5 +1,5 @@
 import { aget, compose } from "../utils/mod.ts"
-import { Averagable } from "../transform/mod.ts"
+import { AveragableObj } from "../transform/mod.ts"
 import * as poseDetection from "npm:@tensorflow-models/pose-detection"
 
 export type Point = [number, number, number]
@@ -50,7 +50,7 @@ export const isEmptyIndexed: (point: [number, Point]) => boolean = compose(
     isEmpty,
 )
 
-export class Pose implements Averagable<Pose> {
+export class Pose implements AveragableObj<Pose> {
     // 4 bytes for timestamp, 1 byte for overall score, plus 3 bytes per keypoint.
     static KEYPOINT_COUNT = 18
     static RECORD_SIZE = 4 + 1 + 3 * Pose.KEYPOINT_COUNT
