@@ -25,7 +25,7 @@ export function curry<Args extends any[], R>(
     fn: (...args: Args) => R,
 ): Curried<Args, R>
 
-// deno-lint-ignore no-explicit-any
+// deno-lint-ignore ban-types
 export function curry(fn: Function) {
     // deno-lint-ignore no-explicit-any
     return function curried(this: any, ...args: any[]): any {
