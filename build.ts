@@ -1,7 +1,10 @@
 import * as esbuild from "npm:esbuild"
 import { denoPlugins } from "jsr:@luca/esbuild-deno-loader"
 
-await esbuild.build({
+const args = Deno.args
+const watchMode = args.includes("--watch")
+
+const buildOptions = {
     plugins: [...denoPlugins()],
     conditions: ["browser", "deno", "node"],
     entryPoints: [
@@ -15,6 +18,13 @@ await esbuild.build({
         "import.meta.url": '""',
         "import.meta": "false",
     },
-})
+}
 
-esbuild.stop()
+if (watchMode) {
+    const context = await esbuild.context(buildOptions)
+    await context.watch()
+    console.log("Watching for changes...")
+} else {
+    await esbuild.build(buildOptions)
+    esbuild.stop()
+}
