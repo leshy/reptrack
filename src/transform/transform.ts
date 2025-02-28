@@ -30,7 +30,6 @@ export function attachState<T, STATE>(
 
 // Generic pipe function for any transform type
 export function pipe<T>(
-    // Accept any transforms, since at runtime we just care about the functionality
     // deno-lint-ignore no-explicit-any
     ...transforms: Array<any>
 ): GenericTransform<T> {

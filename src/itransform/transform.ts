@@ -13,6 +13,7 @@ export function smooth(
             if (window.length > windowSize) {
                 window.shift()
             }
+            // @ts-ignore
             yield average(window)
         }
     }
@@ -24,5 +25,14 @@ export function* range(
 ): Iterable<number> {
     for (let i = min; i <= max; i++) {
         yield i
+    }
+}
+
+export function* map<T, U>(
+    input: Iterable<T>,
+    fn: (item: T) => U,
+): Iterable<U> {
+    for (const item of input) {
+        yield fn(item)
     }
 }

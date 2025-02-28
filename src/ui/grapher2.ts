@@ -1,11 +1,5 @@
 import { SvgWindow } from "./wm.ts"
 
-// Types for the data series
-export type DataSeries = {
-    points: [number, number][] | number[] // Either [x,y] pairs or just y values
-    options?: LineOptions
-}
-
 export interface LineOptions {
     color?: string
     width?: number
@@ -13,6 +7,12 @@ export interface LineOptions {
     label?: string
     visible?: boolean
     opacity?: number
+}
+
+// Types for the data series
+export type DataSeries = {
+    points: [number, number][] | number[] // Either [x,y] pairs or just y values
+    options?: LineOptions
 }
 
 export interface GrapherSettings {
@@ -139,6 +139,11 @@ export class Grapher extends SvgWindow {
 
         // Update internal data store
         this._data = { ...dataDict }
+
+        // Auto-calculate ranges if autoScale is enabled
+        if (this.settings.autoScale) {
+            //this.calculateRanges()
+        }
     }
 
     /**

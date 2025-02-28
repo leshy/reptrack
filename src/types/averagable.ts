@@ -1,41 +1,55 @@
-export type AveragableObj = {
-    avg: (items: AveragableObj[]) => AveragableObj
+export interface AveragableObj {
+    avg(items: this[]): this
+    equals(item: this): boolean
 }
 
-export type Averagable = AveragableObj | number
-
-export type NonEmptyArray<T> = [T, ...T[]]
-
-export function notEmpty<T>(x: T[]): x is NonEmptyArray<T> {
-    return x.length > 0
-}
+export type Averagable = number | AveragableObj
 
 export function isNumber(value: unknown): value is number {
     return typeof value === "number"
 }
 
-export function isNumberArray(
-    values: unknown[],
-): values is NonEmptyArray<number> {
-    return typeof values[0] === "number"
-}
-
 const averageNumbers = (items: number[]) =>
     items.reduce((sum: number, val: number) => sum + val, 0) / items.length
 
-const averageObj = (items: NonEmptyArray<AveragableObj>): AveragableObj =>
-    items[0].avg(items.slice(1))
+const averageObj = (items: AveragableObj[]): AveragableObj => {
+    const first = items[0]
+    const rest = items.slice(1) as AveragableObj[]
+    return first.avg(rest)
+}
 
 export function average(items: Iterable<number>): number
 export function average(items: Iterable<AveragableObj>): AveragableObj
-
 export function average(items: Iterable<Averagable>): Averagable {
     const itemsArray = [...items]
 
-    if (!notEmpty(itemsArray)) {
+    if (!itemsArray.length) {
         throw new Error("collection is empty, can't determine type")
     }
 
-    if (isNumberArray(itemsArray)) return averageNumbers(itemsArray)
-    return averageObj(itemsArray as NonEmptyArray<AveragableObj>)
+    if (typeof itemsArray[0] === "number") {
+        return averageNumbers(itemsArray as number[])
+    } else return averageObj(itemsArray as AveragableObj[])
+}
+
+export class Vector2D implements AveragableObj {
+    constructor(public x: number, public y: number) {}
+
+    avg(items: this[]): this {
+        const allItems = [this, ...items]
+        const sumX = allItems.reduce((sum, v) => sum + v.x, 0)
+        const sumY = allItems.reduce((sum, v) => sum + v.y, 0)
+        return new Vector2D(
+            sumX / allItems.length,
+            sumY / allItems.length,
+        ) as this
+    }
+
+    equals(item: this): boolean {
+        return this.x === item.x && this.y === item.y
+    }
+
+    toString(): string {
+        return `Vector2D(${this.x}, ${this.y})`
+    }
 }
