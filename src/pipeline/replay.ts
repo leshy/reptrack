@@ -32,18 +32,24 @@ export async function replay() {
 
     //const euclidean1 = pt.node(history, pt.euclideanFilter(10))
 
-    const euclideanSpy = (state: pt.ConfidentEuclideanState | undefined) => {
+    const euclideanSpy = (state: unknown) => {
         if (!state) return
-        else euclideanSvg.title = `euclidean [${state.frame}]`
+        const confState = state as pt.ConfidentEuclideanState
+        euclideanSvg.title = `euclidean [${confState.frame}]`
+        return state
     }
 
     const euclidean2 = pt.node(
         smoother,
-        pt.spyStateEmit(pt.confidentEuclideanFilter(10), euclideanSpy),
+        pt.spyStateEmit(
+            pt.confidentEuclideanFilter(10),
+            euclideanSpy,
+        ),
     )
 
     const recorder = new binary.HistoryFile(50000)
     recorder.record(euclidean2)
+    // @ts-ignore
     globalThis.recorder = recorder
 
     const graphWindow = root.addWindow(new wm.Window())

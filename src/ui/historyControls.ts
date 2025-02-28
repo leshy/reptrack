@@ -20,8 +20,19 @@ export class HistoryControls extends Controls {
     }
 
     // Type declarations to improve type safety
-    //on(event: "frameChanged", listener: (frame: number) => void): this
-    //off(event: "frameChanged", listener: (frame: number) => void): this
+    override on(
+        event: "frameChanged",
+        listener: (frame: number) => void,
+    ): this {
+        return super.on(event, listener)
+    }
+
+    override off(
+        event: "frameChanged",
+        listener: (frame: number) => void,
+    ): this {
+        return super.off(event, listener)
+    }
 
     nextFrame() {
         if (this.frame < this.total - 1) {
@@ -112,7 +123,7 @@ export class HistoryControls extends Controls {
             ],
             1, // Default speed is 1x
             (value) => {
-                this.speed = value
+                this.speed = value as number
             },
         )
 

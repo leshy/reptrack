@@ -41,7 +41,7 @@ export function compose<T, U, V>(
 
 export function* takeN<T>(
     n: number,
-    iterator: IterableIterator<T>,
+    iterator: Iterable<T>,
 ): IterableIterator<T> {
     for (const item of iterator) {
         if (n <= 0) break

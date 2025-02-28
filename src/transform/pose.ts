@@ -47,8 +47,8 @@ function isSimple(
 export const node = (
     poseEmitter: BinaryPoseEmitter,
     ...transforms: Array<
-        // @ts-ignore
-        PoseTransform | PoseStateTransform<unknown>
+        // deno-lint-ignore no-explicit-any
+        PoseTransform | PoseStateTransform<any>
     >
 ) => new Node(
     poseEmitter,

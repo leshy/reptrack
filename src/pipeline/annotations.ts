@@ -156,7 +156,7 @@ export async function annotationsDemo() {
     }
 
     // Hook into player events
-    player.on("frameChanged", (frame) => {
+    player.on("frameChanged", (frame: number) => {
         console.log("UPDATE PLAYEHAD", frame)
         currentFrame = frame
         updatePlayhead()

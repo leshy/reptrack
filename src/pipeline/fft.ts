@@ -94,12 +94,16 @@ export async function fft() {
         }),
     )
 
-    const timeSeriesData: number[] = Array.from(
+    const pointData = Array.from(
         utils.takeN(
             1024,
             euclidHistory.keypoints(binary.KeypointName.right_wrist),
-        ).map((point: binary.Point) => point[1][0]),
+        ),
     )
+
+    const timeSeriesData: number[] = pointData.map((
+        point: [number, [number, number, number]],
+    ) => point[1][0])
 
     const fftResult = await runFFT(timeSeriesData)
 
@@ -179,7 +183,7 @@ export async function fft() {
     const euclidPlayer = new ui.HistoryControls(euclidHistory, euclidInputSvg)
 
     // Update playhead position when frame changes
-    euclidPlayer.on("frameChanged", (frame) => {
+    euclidPlayer.on("frameChanged", (frame: number) => {
         // Get the timestamp for the current frame
         const pose = euclidHistory.getPoseAt(frame)
         const timestamp = pose.timestamp

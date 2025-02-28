@@ -42,16 +42,20 @@ export async function euclidcomparison() {
 
     const euclideanSpy = (state: pt.ConfidentEuclideanState | undefined) => {
         if (!state) return
-        else euclideanSvg.title = `euclid euclidean [${state.frame}]`
+        euclideanSvg.title = `euclid euclidean [${state.frame}]`
     }
 
     const euclidEuclidean = pt.node(
         euclidSmoother,
-        pt.spyStateEmit(pt.confidentEuclideanFilter(10), euclideanSpy),
+        pt.spyStateEmit(
+            pt.confidentEuclideanFilter(10),
+            euclideanSpy,
+        ),
     )
 
     const euclidRecorder = new binary.HistoryFile(50000)
     euclidRecorder.record(euclidEuclidean)
+    // @ts-ignore
     globalThis.euclidRecorder = euclidRecorder
 
     // Lightning pipeline
@@ -70,6 +74,7 @@ export async function euclidcomparison() {
 
     const lightningRecorder = new binary.HistoryFile(50000)
     lightningRecorder.record(lightningEuclidean)
+    // @ts-ignore
     globalThis.lightningRecorder = lightningRecorder
 
     // Create graph containers

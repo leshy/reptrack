@@ -59,6 +59,7 @@ export class Window extends EventEmitter {
 
 type SvgWindowConfig = {
     preserveRatio: boolean
+    viewbox?: string
 }
 
 export class SvgWindow extends Window {
@@ -84,7 +85,9 @@ export class SvgWindow extends Window {
             "svg",
         )
 
-        // No viewBox - we'll use client coordinates directly
+        if (fullConfig.viewbox) {
+            // .. set viewbox
+        }
         if (!fullConfig.preserveRatio) {
             this.svgElement.setAttribute("preserveAspectRatio", "none")
         }

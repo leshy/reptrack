@@ -20,7 +20,7 @@ export async function record() {
 
     const recorder = new binary.HistoryFile(50000)
     recorder.record(pose)
-
+    // @ts-ignore
     globalThis.recorder = recorder
     await pose.init()
 }
