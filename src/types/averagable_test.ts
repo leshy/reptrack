@@ -1,23 +1,41 @@
-import { Averagable, average, Vector2D } from "./averagable.ts"
+import { Averagable, average, equals, Vector2D } from "./averagable.ts"
+import {
+    assert,
+    assertEquals,
+} from "https://deno.land/std@0.224.0/assert/mod.ts"
 
-type TestSpec<T> = {
-    type: typeof T
+type TestEntry<T extends Averagable> = {
+    name: string
     data: T[]
     result: T
 }
 
-const tests: TestSpec<Averagable>[] = [
-    { type: Number, data: [4, 3, 2, 1], result: 2.5 },
+const testGrid: TestEntry<Averagable>[] = [
+    { name: "number", data: [4, 2, 3, 1], result: 2.5 },
     {
-        type: Vector2D,
+        name: "vector",
         data: [new Vector2D(1, 2), new Vector2D(3, 4)],
         result: new Vector2D(2, 3),
     },
 ]
 
-tests.forEach(({ type, data, result }) => {
-    Deno.test(`average ${type.name}`, () => {
-        const actual = average(data as Iterable<Averagable>)
-        assertEquals(actual, result)
-    })
-})
+testGrid.forEach(
+    <T extends Averagable>({ name, data, result }: TestEntry<T>) => {
+        Deno.test(`average ${name}`, () => {
+            // @ts-ignore
+            const actual = average(data)
+            // @ts-ignore
+            assertEquals(actual, result)
+        })
+
+        Deno.test(`average ${name} against itself`, () => {
+            assert(
+                equals(
+                    data[0],
+                    // @ts-ignore
+                    average([data[0], data[0]]),
+                ),
+            )
+        })
+    },
+)

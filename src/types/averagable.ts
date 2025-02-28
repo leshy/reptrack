@@ -32,6 +32,11 @@ export function average(items: Iterable<Averagable>): Averagable {
     } else return averageObj(itemsArray as AveragableObj[])
 }
 
+export function equals(x: Averagable, y: Averagable): boolean {
+    if (isNumber(x) && isNumber(y)) return x === y
+    return (x as AveragableObj).equals(y as AveragableObj)
+}
+
 export class Vector2D implements AveragableObj {
     constructor(public x: number, public y: number) {}
 
