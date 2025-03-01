@@ -18,10 +18,16 @@ const averageObj = (items: AveragableObj[]): AveragableObj => {
     return first.avg(rest)
 }
 
+function ensureArray<T>(data: Iterable<T>): T[] {
+    if (!Array.isArray(data)) {
+        return [...data]
+    } else return data
+}
+
 export function average(items: Iterable<number>): number
 export function average(items: Iterable<AveragableObj>): AveragableObj
 export function average(items: Iterable<Averagable>): Averagable {
-    const itemsArray = [...items]
+    const itemsArray = ensureArray(items)
 
     if (!itemsArray.length) {
         throw new Error("collection is empty, can't determine type")

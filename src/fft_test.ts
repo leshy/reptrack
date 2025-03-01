@@ -47,7 +47,7 @@ async function runFFTTest(
     const fft = new Webfft(fftsize)
 
     const keypointData: [number, number, number][] = []
-    for (const [_, keypoint] of history.keypoints(keypointIndex)) {
+    for (const [_, keypoint] of history.timePoints(keypointIndex)) {
         keypointData.push(keypoint)
     }
 

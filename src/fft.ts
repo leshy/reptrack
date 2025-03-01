@@ -13,7 +13,6 @@ export function* runFFT(
     // check if we are an array or iterator, build array if needed
     const dataArray = ensureArray(data)
 
-    console.log(dataArray)
     const windowSize = dataArray.length
     const fft = new Webfft(windowSize)
 

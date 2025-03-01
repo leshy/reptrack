@@ -107,25 +107,26 @@ export async function fft() {
     // Filter out DC component (first value) and create filtered data series
     // const dcComponentCutoff = 5 // Skip the first few frequencies, including DC component
     // const filteredMagnitudes = fftMagnitudes.slice(dcComponentCutoff)
-    //
-    //
 
     const windowLen = 1024
 
-    const timeSeriesData = [...it.pipe(
+    const timeSeriesData = Uint8Array.from(it.pipe(
         euclidHistory.points(binary.KeypointName.right_wrist),
         it.take(windowLen),
         it.map((point: binary.Point) => point[0]),
-    )]
+    ))
 
     const fftMagnitudes = new Uint16Array(windowLen / 2)
 
-    const smoothFftMagnitudes = [...it.pipe(
+    // we are smoothing and copying the data into fftMagnitudes in one pass
+    const smoothFftMagnitudes = Uint16Array.from(it.pipe(
         runFFT(timeSeriesData),
-        it.skip(5),
         it.copy(fftMagnitudes),
         it.smooth(5),
-    )] as number[]
+    ) as Iterable<number>)
+
+    console.log("non smooth", fftMagnitudes)
+    console.log("smooth", smoothFftMagnitudes)
 
     // Create data series for time series graph
     const timeSeriesDataSeries: { [key: string]: DataSeries } = {

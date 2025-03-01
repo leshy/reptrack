@@ -123,7 +123,7 @@ Deno.test("History keypoints iteration", () => {
 
     // Test iteration over a specific keypoint across all poses
     const noseIndex = 0 // Index for "nose" keypoint
-    const keypointsArray = Array.from(history.keypoints(noseIndex))
+    const keypointsArray = Array.from(history.timePoints(noseIndex))
 
     assertEquals(keypointsArray.length, 2)
 

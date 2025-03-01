@@ -107,7 +107,7 @@ export async function replay() {
 
     fft.profile()
 
-    const target = Array.from(history.keypoints(5)).slice(0, 1024 * 2)
+    const target = Array.from(history.timePoints(5)).slice(0, 1024 * 2)
     console.log(target)
     const inputData = new Float32Array(target.map((x) => x[1][1]))
     console.log(fft.fft(inputData))

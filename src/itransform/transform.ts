@@ -1,4 +1,4 @@
-import { AnyArray, Averagable, average, TypedArray } from "../types/mod.ts"
+import { AnyArray, Averagable, average } from "../types/mod.ts"
 
 export type Transform<X, Y> = (input: Iterable<X>) => Iterable<Y>
 

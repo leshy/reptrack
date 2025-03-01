@@ -6,8 +6,8 @@ export function* range(start: number, end: number): Generator<number> {
 
 export function* filter<T>(
     predicate: (item: T) => boolean,
-    iter: IterableIterator<T>,
-): IterableIterator<T> {
+    iter: Iterable<T>,
+): Iterable<T> {
     for (const item of iter) {
         if (predicate(item)) {
             yield item
@@ -17,8 +17,8 @@ export function* filter<T>(
 
 export function* map<T, U>(
     fn: (item: T) => U,
-    iter: IterableIterator<T>,
-): IterableIterator<U> {
+    iter: Iterable<T>,
+): Iterable<U> {
     for (const item of iter) {
         yield fn(item)
     }
@@ -47,17 +47,6 @@ export function* takeN<T>(
         if (n <= 0) break
         yield item
         n--
-    }
-}
-
-export function* store<T>(
-    array: T[],
-    iterator: Iterable<T>,
-): Iterable<T> {
-    let index = 0
-    for (const item of iterator) {
-        array[index++] = item
-        yield item
     }
 }
 

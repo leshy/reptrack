@@ -1,6 +1,8 @@
 import { SvgWindow } from "./wm.ts"
 import { AnyArray } from "../types/mod.ts"
 
+export type GraphPoints = [number, number][] | AnyArray<number> // Either [x,y] pairs or just y values
+
 export interface LineOptions {
     color?: string
     width?: number
@@ -12,7 +14,7 @@ export interface LineOptions {
 
 // Types for the data series
 export type DataSeries = {
-    points: [number, number][] | AnyArray<number> // Either [x,y] pairs or just y values
+    points: GraphPoints
     options?: LineOptions
 }
 
@@ -263,7 +265,7 @@ export class Grapher extends SvgWindow {
     /**
      * Generate SVG path data from data points
      */
-    private generatePathData(points: [number, number][] | number[]): string {
+    private generatePathData(points: GraphPoints): string {
         if (points.length === 0) return ""
 
         const rect = this.svg.getBoundingClientRect()
@@ -297,9 +299,9 @@ export class Grapher extends SvgWindow {
             }
         } else {
             // Array of [x,y] pairs
-            const xyPoints = points as [number, number][]
-            for (let i = 0; i < xyPoints.length; i++) {
-                const [xVal, yVal] = xyPoints[i]
+            const xyGraphPoints = points as [number, number][]
+            for (let i = 0; i < xyGraphPoints.length; i++) {
+                const [xVal, yVal] = xyGraphPoints[i]
                 const x = this.settings.padding +
                     (((xVal - xMin) / xRange) * width)
                 const y = height + this.settings.padding -
