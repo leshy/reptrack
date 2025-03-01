@@ -28,11 +28,10 @@ export function curried(fn: Function) {
             return fn.apply(this, args)
         } else {
             // Partially apply and return a function to accept the rest
-            // Capture 'this' context for later use
-            const context = this
-            return function (this: any, ...nextArgs: any[]) {
+            // Use arrow function to preserve 'this' context
+            return (...nextArgs: any[]) => {
                 // Pass the original 'this' context when recursively calling curried
-                return curried.apply(context, [...args, ...nextArgs])
+                return curried.apply(this, [...args, ...nextArgs])
             }
         }
     }
