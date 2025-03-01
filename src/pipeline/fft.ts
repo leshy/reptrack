@@ -6,6 +6,7 @@ import * as ui from "../ui/mod.ts"
 import { DataSeries, Grapher } from "../ui/grapher2.ts"
 import { runFFT } from "../fft.ts"
 import * as it from "../itransform/mod.ts"
+import { average } from "../types/mod.ts"
 
 export async function fft() {
     // Load the history file
@@ -116,17 +117,17 @@ export async function fft() {
         it.map((point: binary.Point) => point[0]),
     ))
 
-    const fftMagnitudes = new Uint16Array(windowLen / 2)
+    const fftMagnitudes = new Uint16Array((windowLen / 2) - 2)
 
     // we are smoothing and copying the data into fftMagnitudes in one pass
     const smoothFftMagnitudes = Uint16Array.from(it.pipe(
         runFFT(timeSeriesData),
+        it.skip(2),
         it.copy(fftMagnitudes),
-        it.smooth(5),
+        it.chunk(5),
+        // @ts-ignore
+        it.map(average) as it.Transform<number[], number>,
     ) as Iterable<number>)
-
-    console.log("non smooth", fftMagnitudes)
-    console.log("smooth", smoothFftMagnitudes)
 
     // Create data series for time series graph
     const timeSeriesDataSeries: { [key: string]: DataSeries } = {
