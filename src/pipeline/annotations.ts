@@ -18,9 +18,6 @@ export async function annotationsDemo() {
     document.getElementById("window-container")?.appendChild(root.element)
 
     // Create visualization windows
-    const skeletonWindow = root.addWindow(
-        new wm.SvgWindow("Skeleton View"),
-    )
 
     const graphWindow = root.addWindow(new wm.Window("Graph Windows"))
 
@@ -59,7 +56,9 @@ export async function annotationsDemo() {
     }
 
     // Draw skeleton
-    new ui.Skeleton(history, skeletonWindow, { minScore: 0.2 })
+    const skeletonWindow = root.addWindow(
+        new ui.Skeleton(history, "Skeleton View", { minScore: 0.2 }),
+    )
 
     // Add history controls for playback
     const player = new ui.HistoryControls(history, skeletonWindow)

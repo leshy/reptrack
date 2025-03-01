@@ -3,20 +3,6 @@ import { BinaryPoseEmitter, Pose } from "../types.ts"
 import { center } from "../transform/mod.ts"
 import { SvgWindow } from "./wm.ts"
 
-type SkeletonDrawSettings = {
-    stats: boolean
-    keypoints: boolean
-    skeleton: boolean
-    center: boolean
-    focus: boolean
-    relative: boolean
-    minScore: number
-    color: (score: number) => string
-    keypointRadius: string
-    lineWidth: string
-    interactive: boolean
-}
-
 export function colorInterpolator(
     endColor: [number, number, number],
     startColor: [number, number, number],
@@ -97,6 +83,20 @@ function removeQuickDisplay() {
     document.removeEventListener("mousemove", removeQuickDisplay)
 }
 
+type SkeletonDrawSettings = {
+    stats: boolean
+    keypoints: boolean
+    skeleton: boolean
+    center: boolean
+    focus: boolean
+    relative: boolean
+    minScore: number
+    color: (score: number) => string
+    keypointRadius: string
+    lineWidth: string
+    interactive: boolean
+}
+
 const defaultSettings: SkeletonDrawSettings = {
     relative: true,
     minScore: 0.3,
@@ -111,7 +111,7 @@ const defaultSettings: SkeletonDrawSettings = {
     interactive: true,
 }
 
-export class Skeleton {
+export class Skeleton extends SvgWindow {
     private skeletonGroup: SVGGElement
     private lineMap = new Map<string, Element>()
     private keypointMap = new Map<number, Element>()
@@ -120,9 +120,11 @@ export class Skeleton {
 
     constructor(
         private poseEmitter: BinaryPoseEmitter,
-        private svgWindow: SvgWindow,
+        title: string,
         settings: Partial<SkeletonDrawSettings> = {},
     ) {
+        super(title, { preserveRatio: true })
+
         this.settings = { ...defaultSettings, ...settings }
         this.poseEmitter.on("pose", this.drawPose)
 
@@ -132,7 +134,7 @@ export class Skeleton {
         )
 
         this.skeletonGroup.setAttribute("id", "skeleton-group")
-        this.svgWindow.svg.appendChild(this.skeletonGroup)
+        this.svg.appendChild(this.skeletonGroup)
     }
 
     private drawPose = (pose: Pose) => {
@@ -192,8 +194,8 @@ export class Skeleton {
         color: string = "white",
     ) {
         // Scale coordinates to SVG client dimensions
-        const width = this.svgWindow.svg.clientWidth
-        const height = this.svgWindow.svg.clientHeight
+        const width = this.svg.clientWidth
+        const height = this.svg.clientHeight
 
         // Scale from normalized 0-255 range to actual SVG dimensions
         const x1 = (kp1[0] / 255) * width
@@ -244,6 +246,10 @@ export class Skeleton {
         if (this.settings.interactive) {
             circle.classList.add("clickable-keypoint")
             circle.addEventListener("click", (event: Event) => {
+                this.emit("keypointClick", {
+                    pose: this.pose,
+                    index: index,
+                })
                 quickDisplay(
                     (event as unknown) as MouseEvent,
                     // @ts-ignore
@@ -277,8 +283,8 @@ export class Skeleton {
         color: string,
     ) {
         // Scale coordinates to SVG client dimensions
-        const width = this.svgWindow.svg.clientWidth
-        const height = this.svgWindow.svg.clientHeight
+        const width = this.svg.clientWidth
+        const height = this.svg.clientHeight
 
         // Scale from normalized 0-255 range to actual SVG dimensions
         const cx = (kp[0] / 255) * width

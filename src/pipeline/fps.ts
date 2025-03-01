@@ -13,24 +13,7 @@ export async function replay() {
     const root = new wm.Window()
     document.getElementById("window-container")?.appendChild(root.element)
 
-    const inputSvg = root.addWindow(
-        new wm.SvgWindow("history", {
-            viewbox: "0 0 255 255",
-            preserveRatio: true,
-        }),
-    )
-    const fpspegSvg = root.addWindow(
-        new wm.SvgWindow("fpspeg", {
-            viewbox: "0 0 255 255",
-            preserveRatio: true,
-        }),
-    )
-    const euclideanSvg = root.addWindow(
-        new wm.SvgWindow("euclidean", {
-            viewbox: "0 0 255 255",
-            preserveRatio: true,
-        }),
-    )
+    // Create skeleton windows directly
 
     const fpsPegSpy = (state: pt.FPState | undefined) => {
         if (!state) return
@@ -94,9 +77,15 @@ export async function replay() {
         )
     }
 
-    new ui.Skeleton(history, inputSvg, { minScore: 0 })
-    new ui.Skeleton(fpspeg, fpspegSvg, { minScore: 0.2 })
-    new ui.Skeleton(euclidean2, euclideanSvg, { minScore: 0.2 })
+    const inputSvg = root.addWindow(
+        new ui.Skeleton(history, "history", { minScore: 0 }),
+    )
+    const fpspegSvg = root.addWindow(
+        new ui.Skeleton(fpspeg, "fpspeg", { minScore: 0.2 }),
+    )
+    root.addWindow(
+        new ui.Skeleton(euclidean2, "euclidean", { minScore: 0.2 }),
+    )
 
     const player = new ui.HistoryControls(history, inputSvg)
 

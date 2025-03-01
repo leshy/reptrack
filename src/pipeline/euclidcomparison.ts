@@ -20,16 +20,7 @@ export async function euclidcomparison() {
     const root = new wm.Window()
     document.getElementById("window-container")?.appendChild(root.element)
 
-    // Euclid windows
-    const euclidInputSvg = root.addWindow(
-        new wm.SvgWindow("euclid history"),
-    )
-    const euclidSmootherSvg = root.addWindow(
-        new wm.SvgWindow("euclid smoother"),
-    )
-    const euclideanSvg = root.addWindow(
-        new wm.SvgWindow("euclid euclidean"),
-    )
+    // Euclid windows will be created directly as Skeleton windows
 
     // No window display for lightning, only graphs
 
@@ -147,9 +138,15 @@ export async function euclidcomparison() {
     }
 
     // Set up skeletons (only for euclid)
-    new ui.Skeleton(euclidHistory, euclidInputSvg, { minScore: 0 })
-    new ui.Skeleton(euclidSmoother, euclidSmootherSvg, { minScore: 0.2 })
-    new ui.Skeleton(euclidEuclidean, euclideanSvg, { minScore: 0.2 })
+    const euclidInputSvg = root.addWindow(
+        new ui.Skeleton(euclidHistory, "euclid history", { minScore: 0 }),
+    )
+    root.addWindow(
+        new ui.Skeleton(euclidSmoother, "euclid smoother", { minScore: 0.2 }),
+    )
+    const euclideanSvg = root.addWindow(
+        new ui.Skeleton(euclidEuclidean, "euclid euclidean", { minScore: 0.2 }),
+    )
 
     // Set up player controls only for euclid
     const euclidPlayer = new ui.HistoryControls(euclidHistory, euclidInputSvg)

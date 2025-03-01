@@ -18,10 +18,6 @@ export async function fft() {
     const root = new wm.Window()
     document.getElementById("window-container")?.appendChild(root.element)
 
-    const euclidInputSvg = root.addWindow(
-        new wm.SvgWindow("euclid history"),
-    )
-
     // graph windows
     const graphsWindow = root.addWindow(new wm.Window("graphs"))
     const euclidGrapherXWindow = graphsWindow.addWindow(
@@ -33,6 +29,11 @@ export async function fft() {
 
     // graph drawing
     const euclidGrapher = new ui.KeypointGrapher(euclidHistory, {})
+
+    const skeleton = new ui.Skeleton(euclidHistory, "Euclid", { minScore: 0 })
+    const euclidInputSvg = root.addWindow(
+        skeleton,
+    )
 
     const poi = [
         "nose",
@@ -56,8 +57,6 @@ export async function fft() {
             "x",
         )
     }
-
-    new ui.Skeleton(euclidHistory, euclidInputSvg, { minScore: 0 })
 
     // Add playhead annotations to the graphs
     const playheadIdX = euclidGrapher.addAnnotation(euclidGrapherXWindow, {
@@ -109,71 +108,80 @@ export async function fft() {
     // const dcComponentCutoff = 5 // Skip the first few frequencies, including DC component
     // const filteredMagnitudes = fftMagnitudes.slice(dcComponentCutoff)
 
-    const windowLen = 1024
+    function FFTKeypoint(keypointId: number) {
+        const windowLen = 1024
 
-    const timeSeriesData = Uint8Array.from(it.pipe(
-        euclidHistory.points(binary.KeypointName.right_wrist),
-        it.take(windowLen),
-        it.map((point: binary.Point) => point[0]),
-    ))
+        const timeSeriesData = Uint8Array.from(it.pipe(
+            euclidHistory.points(keypointId),
+            it.take(windowLen),
+            it.map((point: binary.Point) => point[0]),
+        ))
 
-    const fftMagnitudes = new Uint16Array((windowLen / 2) - 2)
+        const fftMagnitudes = new Uint16Array((windowLen / 2) - 2)
 
-    // we are smoothing and copying the data into fftMagnitudes in one pass
-    const smoothFftMagnitudes = Uint16Array.from(it.pipe(
-        runFFT(timeSeriesData),
-        it.skip(2),
-        it.copy(fftMagnitudes),
-        it.chunk(5),
-        // @ts-ignore
-        it.map(average) as it.Transform<number[], number>,
-    ) as Iterable<number>)
+        // we are smoothing and copying the data into fftMagnitudes in one pass
+        const smoothFftMagnitudes = Uint16Array.from(it.pipe(
+            runFFT(timeSeriesData),
+            it.skip(2),
+            it.copy(fftMagnitudes),
+            it.chunk(5),
+            // @ts-ignore
+            it.map(average) as it.Transform<number[], number>,
+        ) as Iterable<number>)
 
-    // Create data series for time series graph
-    const timeSeriesDataSeries: { [key: string]: DataSeries } = {
-        "right_wrist_x": {
-            points: timeSeriesData,
-            options: {
-                color: "#2196F3",
-                label: "Source: Right Wrist X Position",
+        // Create data series for time series graph
+        const timeSeriesDataSeries: { [key: string]: DataSeries } = {
+            "right_wrist_x": {
+                points: timeSeriesData,
+                options: {
+                    color: "#2196F3",
+                    label: "Source: Right Wrist X Position",
+                },
             },
-        },
+        }
+
+        // Create data series for both full and filtered FFT magnitude graphs
+        const fftDataSeries: { [key: string]: DataSeries } = {
+            "fft_magnitude": {
+                points: fftMagnitudes,
+                options: {
+                    color: "#E91E63",
+                    label: "FFT Magnitude (Raw)",
+                    opacity: 0.5,
+                    width: 2,
+                },
+            },
+            "fft_magnitude_smoothed": {
+                points: smoothFftMagnitudes,
+                options: {
+                    color: "#E91E63",
+                    label: "FFT Magnitude (Smoothed)",
+                    width: 3,
+                },
+            },
+        }
+
+        // Set data ranges
+        timeSeriesGrapher.xRange = [0, timeSeriesData.length - 1]
+        timeSeriesGrapher.yRange = [
+            Math.min(...timeSeriesData) - 10,
+            Math.max(...timeSeriesData) + 10,
+        ]
+
+        fftGrapher.xRange = [0, fftMagnitudes.length - 1]
+        fftGrapher.yRange = [0, Math.max(...fftMagnitudes) * 1.1]
+
+        // Update the graphs with data
+        timeSeriesGrapher.data = timeSeriesDataSeries
+        fftGrapher.data = fftDataSeries
     }
 
-    // Create data series for both full and filtered FFT magnitude graphs
-    const fftDataSeries: { [key: string]: DataSeries } = {
-        "fft_magnitude": {
-            points: fftMagnitudes,
-            options: {
-                color: "#E91E63",
-                label: "FFT Magnitude (Raw)",
-                opacity: 0.5,
-                width: 2,
-            },
-        },
-        "fft_magnitude_smoothed": {
-            points: smoothFftMagnitudes,
-            options: {
-                color: "#E91E63",
-                label: "FFT Magnitude (Smoothed)",
-                width: 3,
-            },
-        },
-    }
+    skeleton.on("keypointClick", (event) => {
+        FFTKeypoint(event.index)
+        timeSeriesGrapher.title = "keypoint " + binary.KeypointName[event.index]
+    })
 
-    // Set data ranges
-    timeSeriesGrapher.xRange = [0, timeSeriesData.length - 1]
-    timeSeriesGrapher.yRange = [
-        Math.min(...timeSeriesData) - 10,
-        Math.max(...timeSeriesData) + 10,
-    ]
-
-    fftGrapher.xRange = [0, fftMagnitudes.length - 1]
-    fftGrapher.yRange = [0, Math.max(...fftMagnitudes) * 1.1]
-
-    // Update the graphs with data
-    timeSeriesGrapher.data = timeSeriesDataSeries
-    fftGrapher.data = fftDataSeries
+    FFTKeypoint(binary.KeypointName.left_knee)
 
     const euclidPlayer = new ui.HistoryControls(euclidHistory, euclidInputSvg)
 
