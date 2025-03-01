@@ -10,7 +10,7 @@ import { average } from "../types/mod.ts"
 
 export async function fft() {
     // Load the history file
-    const euclidHistory = await binary.HistoryFile.load("euclid10.bin.gz")
+    const euclidHistory = await binary.HistoryFile.load("../euclid10.bin.gz")
 
     // @ts-ignore
     globalThis.h = euclidHistory
