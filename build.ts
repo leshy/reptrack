@@ -1,10 +1,11 @@
 import * as esbuild from "npm:esbuild"
 import { denoPlugins } from "jsr:@luca/esbuild-deno-loader"
+import type { BuildOptions } from "npm:esbuild"
 
 const args = Deno.args
 const watchMode = args.includes("--watch")
 
-const buildOptions = {
+const buildOptions: BuildOptions = {
     plugins: [...denoPlugins()],
     conditions: ["browser", "deno", "node"],
     entryPoints: [
@@ -20,11 +21,31 @@ const buildOptions = {
     },
 }
 
+async function build() {
+    try {
+        const timestamp = new Date().toLocaleTimeString()
+        await esbuild.build(buildOptions)
+        console.log(`[${timestamp}] Build completed successfully`)
+    } catch (error) {
+        console.error(`Build failed:`, error)
+    }
+}
+
 if (watchMode) {
-    const context = await esbuild.context(buildOptions)
-    await context.watch()
+    // Use Deno's built-in watch functionality
+    const watcher = Deno.watchFs(["./src"], { recursive: true })
+
+    // Initial build
+    await build()
     console.log("Watching for changes...")
+
+    for await (const event of watcher) {
+        if (["create", "modify"].includes(event.kind)) {
+            console.log(`Changes detected in ${event.paths}`)
+            await build()
+        }
+    }
 } else {
-    await esbuild.build(buildOptions)
+    await build()
     esbuild.stop()
 }
