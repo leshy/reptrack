@@ -5,8 +5,7 @@ import * as binary from "../binary/mod.ts"
 import * as ui from "../ui/mod.ts"
 import { DataSeries, Grapher } from "../ui/grapher2.ts"
 import { runFFT } from "../fft.ts"
-import * as t from "../transform/transform.ts"
-import * as utils from "../utils/mod.ts"
+import * as it from "../itransform/mod.ts"
 
 export async function fft() {
     // Load the history file
@@ -94,19 +93,6 @@ export async function fft() {
         }),
     )
 
-    const pointData = Array.from(
-        utils.takeN(
-            1024,
-            euclidHistory.keypoints(binary.KeypointName.right_wrist),
-        ),
-    )
-
-    const timeSeriesData: number[] = pointData.map((
-        point: [number, [number, number, number]],
-    ) => point[1][0])
-
-    const fftResult = await runFFT(timeSeriesData)
-
     // // Extract time series data for plotting
     // const timeSeriesData: number[] = []
     // for (let i = 0; i < fftResult.windowSize; i++) {
@@ -118,18 +104,28 @@ export async function fft() {
     //     point: binary.Point,
     // ) => point[0])
 
-    // Calculate FFT magnitudes
-    const fftMagnitudes: number[] = []
-    for (let i = 0; i < timeSeriesData.length / 2; i++) {
-        const real = fftResult[i * 2]
-        const imag = fftResult[i * 2 + 1]
-        const magnitude = Math.sqrt(real * real + imag * imag)
-        fftMagnitudes.push(magnitude)
-    }
-
     // Filter out DC component (first value) and create filtered data series
-    const dcComponentCutoff = 5 // Skip the first few frequencies, including DC component
-    const filteredMagnitudes = fftMagnitudes.slice(dcComponentCutoff)
+    // const dcComponentCutoff = 5 // Skip the first few frequencies, including DC component
+    // const filteredMagnitudes = fftMagnitudes.slice(dcComponentCutoff)
+    //
+    //
+
+    const windowLen = 1024
+
+    const timeSeriesData = [...it.pipe(
+        euclidHistory.points(binary.KeypointName.right_wrist),
+        it.take(windowLen),
+        it.map((point: binary.Point) => point[0]),
+    )]
+
+    const fftMagnitudes = new Uint16Array(windowLen / 2)
+
+    const smoothFftMagnitudes = [...it.pipe(
+        runFFT(timeSeriesData),
+        it.skip(5),
+        it.copy(fftMagnitudes),
+        it.smooth(5),
+    )] as number[]
 
     // Create data series for time series graph
     const timeSeriesDataSeries: { [key: string]: DataSeries } = {
@@ -137,13 +133,10 @@ export async function fft() {
             points: timeSeriesData,
             options: {
                 color: "#2196F3",
-                label: "Right Wrist X Position",
+                label: "Source: Right Wrist X Position",
             },
         },
     }
-
-    // Apply averaging smoother to FFT magnitudes
-    const smoothedMagnitudes = fftMagnitudes.map(t.pipe(t.avg(5))) as number[]
 
     // Create data series for both full and filtered FFT magnitude graphs
     const fftDataSeries: { [key: string]: DataSeries } = {
@@ -157,7 +150,7 @@ export async function fft() {
             },
         },
         "fft_magnitude_smoothed": {
-            points: smoothedMagnitudes,
+            points: smoothFftMagnitudes,
             options: {
                 color: "#E91E63",
                 label: "FFT Magnitude (Smoothed)",
@@ -174,7 +167,7 @@ export async function fft() {
     ]
 
     fftGrapher.xRange = [0, fftMagnitudes.length - 1]
-    fftGrapher.yRange = [0, Math.max(...filteredMagnitudes) * 1.1]
+    fftGrapher.yRange = [0, Math.max(...fftMagnitudes) * 1.1]
 
     // Update the graphs with data
     timeSeriesGrapher.data = timeSeriesDataSeries

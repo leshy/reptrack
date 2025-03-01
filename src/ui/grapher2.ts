@@ -1,4 +1,5 @@
 import { SvgWindow } from "./wm.ts"
+import { AnyArray } from "../types/mod.ts"
 
 export interface LineOptions {
     color?: string
@@ -11,7 +12,7 @@ export interface LineOptions {
 
 // Types for the data series
 export type DataSeries = {
-    points: [number, number][] | number[] // Either [x,y] pairs or just y values
+    points: [number, number][] | AnyArray<number> // Either [x,y] pairs or just y values
     options?: LineOptions
 }
 

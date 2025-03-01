@@ -1,4 +1,4 @@
-export function* range(start: number, end: number): IterableIterator<number> {
+export function* range(start: number, end: number): Generator<number> {
     for (let i = start; i < end; i++) {
         yield i
     }
@@ -42,7 +42,7 @@ export function compose<T, U, V>(
 export function* takeN<T>(
     n: number,
     iterator: Iterable<T>,
-): IterableIterator<T> {
+): Iterable<T> {
     for (const item of iterator) {
         if (n <= 0) break
         yield item
@@ -50,11 +50,21 @@ export function* takeN<T>(
     }
 }
 
+export function* store<T>(
+    array: T[],
+    iterator: Iterable<T>,
+): Iterable<T> {
+    let index = 0
+    for (const item of iterator) {
+        array[index++] = item
+        yield item
+    }
+}
+
 export function* skipN<T>(
     n: number,
-    iterator: IterableIterator<T>,
-): IterableIterator<T> {
-    console.log(iterator)
+    iterator: Iterable<T>,
+): Iterable<T> {
     for (const item of iterator) {
         if (n > 0) {
             n--

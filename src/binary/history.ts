@@ -1,6 +1,8 @@
 import { EventEmitter } from "npm:eventemitter3"
 import { BinaryPoseEmitter, BinaryPoseEvent } from "../types.ts"
-import { Pose } from "./pose.ts"
+import { Point, Pose } from "./pose.ts"
+
+export type TimePoint = [number, Point]
 
 export class History extends EventEmitter<BinaryPoseEvent> {
     public buffer: ArrayBuffer
@@ -38,9 +40,15 @@ export class History extends EventEmitter<BinaryPoseEvent> {
         }
     }
 
-    *keypoints(index: number): Iterable<[number, [number, number, number]]> {
+    *timePoints(index: number): Iterable<TimePoint> {
         for (const pose of this.poses()) {
             yield [pose.timestamp, pose.getKeypoint(index)]
+        }
+    }
+
+    *points(index: number): Iterable<Point> {
+        for (const pose of this.poses()) {
+            yield pose.getKeypoint(index)
         }
     }
 

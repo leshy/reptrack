@@ -1,28 +1,96 @@
-import { Averagable, average } from "../types/mod.ts"
+import { AnyArray, Averagable, average, TypedArray } from "../types/mod.ts"
 
 export type Transform<X, Y> = (input: Iterable<X>) => Iterable<Y>
 
+// this is so fucking stupid
+export function join<A, B, C>(
+    t1: Transform<A, B>,
+    t2: Transform<B, C>,
+): Transform<A, C>
+export function join<A, B, C, D>(
+    t1: Transform<A, B>,
+    t2: Transform<B, C>,
+    t3: Transform<C, D>,
+): Transform<A, D>
+export function join<A, B, C, D, E>(
+    t1: Transform<A, B>,
+    t2: Transform<B, C>,
+    t3: Transform<C, D>,
+    t4: Transform<D, E>,
+): Transform<A, E>
+export function join(
+    // deno-lint-ignore no-explicit-any
+    ...transforms: Transform<any, any>[]
+    // deno-lint-ignore no-explicit-any
+): Transform<any, any> {
+    // deno-lint-ignore no-explicit-any
+    return (input: Iterable<any>): Iterable<any> => {
+        let result = input
+        for (const transform of transforms) {
+            result = transform(result)
+        }
+        return result
+    }
+}
+
+// unbeliveable
+export function pipe<A, B>(
+    i: Iterable<A>,
+    t1: Transform<A, B>,
+): Iterable<B>
+
+export function pipe<A, B, C>(
+    i: Iterable<A>,
+    t1: Transform<A, B>,
+    t2: Transform<B, C>,
+): Iterable<C>
+
+export function pipe<A, B, C, D>(
+    i: Iterable<A>,
+    t1: Transform<A, B>,
+    t2: Transform<B, C>,
+    t3: Transform<C, D>,
+): Iterable<D>
+
+export function pipe<A, B, C, D, E>(
+    i: Iterable<A>,
+    t1: Transform<A, B>,
+    t2: Transform<B, C>,
+    t3: Transform<C, D>,
+    t4: Transform<D, E>,
+): Iterable<E>
+
+export function pipe<A, B, C, D, E, F>(
+    i: Iterable<A>,
+    t1: Transform<A, B>,
+    t2: Transform<B, C>,
+    t3: Transform<C, D>,
+    t4: Transform<D, E>,
+    t5: Transform<E, F>,
+): Iterable<F>
+
+export function* pipe<X, Y>(
+    iterable: Iterable<X>,
+    ...transforms: Transform<unknown, unknown>[]
+): Iterable<Y> {
+    // @ts-ignore
+    for (const item of join(...transforms)(iterable)) {
+        yield item as Y
+    }
+}
+
 // data generators
-export function* range(
-    min: number,
-    max: number,
-): Iterable<number> {
-    for (let i = min; i <= max; i++) {
+export function* range(start: number, end: number): Generator<number> {
+    for (let i = start; i < end; i++) {
         yield i
     }
 }
 
 // transforms
-export function smooth(windowSize: number): Transform<Averagable, Averagable>
-export function smooth(
+export const smooth = (
     windowSize: number,
-    input: Iterable<Averagable>,
-): Iterable<Averagable>
-export function smooth(
-    windowSize: number,
-    input?: Iterable<Averagable>,
-): Transform<Averagable, Averagable> | Iterable<Averagable> {
-    const smoothFn = function* (
+): Transform<Averagable, Averagable> =>
+    function* (
         input: Iterable<Averagable>,
     ): Iterable<Averagable> {
         const window: Averagable[] = []
@@ -37,20 +105,9 @@ export function smooth(
         }
     }
 
-    if (input === undefined) {
-        return smoothFn
-    }
-    return smoothFn(input)
-}
-
 // skip N elements
-export function skip<T>(n: number): Transform<T, T>
-export function skip<T>(n: number, input: Iterable<T>): Iterable<T>
-export function skip<T>(
-    n: number,
-    input?: Iterable<T>,
-): Transform<T, T> | Iterable<T> {
-    const skipFn = function* (input: Iterable<T>): Iterable<T> {
+export const skip = <T>(n: number): Transform<T, T> =>
+    function* (input: Iterable<T>): Iterable<T> {
         let cnt = 0
         for (const item of input) {
             if (cnt < n) {
@@ -61,29 +118,24 @@ export function skip<T>(
         }
     }
 
-    if (input === undefined) {
-        return skipFn
+// take N elements
+export const take = <T>(n: number): Transform<T, T> =>
+    function* (input: Iterable<T>): Iterable<T> {
+        let cnt = 0
+        for (const item of input) {
+            if (cnt < n) {
+                cnt++
+                yield item
+            } else break
+        }
     }
-    return skipFn(input)
-}
 
-export function map<T, U>(fn: (item: T) => U): Transform<T, U>
-export function map<T, U>(fn: (item: T) => U, input: Iterable<T>): Iterable<U>
-export function map<T, U>(
-    fn: (item: T) => U,
-    input?: Iterable<T>,
-): Transform<T, U> | Iterable<U> {
-    const mapFn = function* (input: Iterable<T>): Iterable<U> {
+export const map = <T, U>(fn: (item: T) => U): Transform<T, U> =>
+    function* (input: Iterable<T>): Iterable<U> {
         for (const item of input) {
             yield fn(item)
         }
     }
-
-    if (input === undefined) {
-        return mapFn
-    }
-    return mapFn(input)
-}
 
 // just for chunk implementation below
 export function mutableClear<T>(array: T[]): T[] {
@@ -92,13 +144,8 @@ export function mutableClear<T>(array: T[]): T[] {
     return copy
 }
 
-export function chunk<T>(windowSize: number): Transform<T, T[]>
-export function chunk<T>(windowSize: number, input: Iterable<T>): Iterable<T[]>
-export function chunk<T>(
-    windowSize: number,
-    input?: Iterable<T>,
-): Transform<T, T[]> | Iterable<T[]> {
-    const chunkFn = function* (input: Iterable<T>): Iterable<T[]> {
+export const chunk = <T>(windowSize: number): Transform<T, T[]> =>
+    function* (input: Iterable<T>): Iterable<T[]> {
         const window: T[] = []
         for (const item of input) {
             window.push(item)
@@ -108,38 +155,11 @@ export function chunk<T>(
         }
     }
 
-    if (input === undefined) {
-        return chunkFn
-    }
-    return chunkFn(input)
-}
-
-export function pipe<A, B, C>(
-    t1: Transform<A, B>,
-    t2: Transform<B, C>,
-): Transform<A, C>
-export function pipe<A, B, C, D>(
-    t1: Transform<A, B>,
-    t2: Transform<B, C>,
-    t3: Transform<C, D>,
-): Transform<A, D>
-export function pipe<A, B, C, D, E>(
-    t1: Transform<A, B>,
-    t2: Transform<B, C>,
-    t3: Transform<C, D>,
-    t4: Transform<D, E>,
-): Transform<A, E>
-export function pipe(
-    // deno-lint-ignore no-explicit-any
-    ...transforms: Transform<any, any>[]
-    // deno-lint-ignore no-explicit-any
-): Transform<any, any> {
-    // deno-lint-ignore no-explicit-any
-    return (input: Iterable<any>): Iterable<any> => {
-        let result = input
-        for (const transform of transforms) {
-            result = transform(result)
+export const copy = <T>(array: AnyArray<T>): Transform<T, T> =>
+    function* (input: Iterable<T>): Iterable<T> {
+        let index = 0
+        for (const item of input) {
+            array[index++] = item
+            yield item
         }
-        return result
     }
-}

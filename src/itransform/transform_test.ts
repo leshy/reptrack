@@ -10,37 +10,42 @@ Deno.test("mutableClear", () => {
 
 Deno.test("chunk", () => {
     const target = [1, 2, 3, 4, 5, 6]
-    assertEquals(Array.from(chunk(2, target)), [[1, 2], [3, 4], [5, 6]])
     assertEquals(Array.from(chunk(2)(target)), [[1, 2], [3, 4], [5, 6]])
 })
 
 Deno.test("skip", () => {
     const target = [1, 2, 3, 4, 5, 6]
-    assertEquals(Array.from(skip(2, target)), [3, 4, 5, 6])
+    assertEquals(Array.from(skip(2)(target)), [3, 4, 5, 6])
 })
 
 Deno.test("typed curried skip", () => {
     const target = [1, 2, 3, 4, 5, 6]
-    const doubleSkip: Transform<number, number> = skip<number>(2)
+    const doubleSkip: Transform<number, number> = skip(2)
     assertEquals(Array.from(doubleSkip(target)), [3, 4, 5, 6])
 })
 
 Deno.test("pipe", () => {
     const target: number[] = [1, 2, 3, 4, 5, 6]
 
-    const skipFn = skip<number>(2)
-
-    const chunkFn = chunk(2)
-    assertEquals(Array.from(pipe(skipFn, chunkFn)(target)), [[3, 4], [5, 6]])
-
-    const mapFn = map((x: number) => x + 1)
     assertEquals(
         Array.from(
             pipe(
-                skipFn,
-                mapFn,
-                chunkFn,
-            )(target),
+                target,
+                skip(2),
+                chunk(2),
+            ),
+        ),
+        [[3, 4], [5, 6]],
+    )
+
+    assertEquals(
+        Array.from(
+            pipe(
+                target,
+                skip(2),
+                map((x: number) => x + 1),
+                chunk(2),
+            ),
         ),
         [[4, 5], [6, 7]],
     )
