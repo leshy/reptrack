@@ -1,4 +1,3 @@
-import { aget, compose } from "../utils/mod.ts"
 import { AveragableObj } from "../transform/mod.ts"
 import * as poseDetection from "npm:@tensorflow-models/pose-detection"
 
@@ -44,11 +43,6 @@ export function isEmpty(
     if (score < minScore) return true
     return x === 0 && y === 0 && score === 0
 }
-
-export const isEmptyIndexed: (point: [number, Point]) => boolean = compose(
-    aget(1),
-    isEmpty,
-)
 
 export class Pose implements AveragableObj<Pose> {
     // 4 bytes for timestamp, 1 byte for overall score, plus 3 bytes per keypoint.
