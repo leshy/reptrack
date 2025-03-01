@@ -37,6 +37,7 @@ export function equals(x: Averagable, y: Averagable): boolean {
     return (x as AveragableObj).equals(y as AveragableObj)
 }
 
+// test class
 export class Vector2D implements AveragableObj {
     constructor(public x: number, public y: number) {}
 

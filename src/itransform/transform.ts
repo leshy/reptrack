@@ -1,5 +1,5 @@
 import { Averagable, average } from "../types/mod.ts"
-import { curry } from "../utils/mod.ts"
+import { curried } from "../utils/mod.ts"
 
 export type Transform<X, Y> = (input: Iterable<X>) => Iterable<Y>
 
@@ -44,7 +44,7 @@ export function mutableClear<T>(array: T[]): T[] {
     return copy
 }
 
-export const chunk = curry(function* <T>(
+export const chunk = curried(function* <T>(
     windowSize: number,
     input: Iterable<T>,
 ): Iterable<T[]> {

@@ -7,7 +7,7 @@ if [ $? -ne 0 ]; then
   echo "$OUTPUT_FMT"
   exit 1
 fi
-echo -e "Formatting\t OK"
+echo -e "Formatting...\t OK"
 
 # Run typecheck
 OUTPUT_TYPECHECK=$(deno check src/ 2>&1)
@@ -17,7 +17,7 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-echo -e "Typecheck\t OK"
+echo -e "Typecheck...\t OK"
 
 
 # Run linter
@@ -27,16 +27,16 @@ if [ $? -ne 0 ]; then
   echo "$OUTPUT_LINT"
   exit 1
 fi
-echo -e "Lint\t\t OK"
+echo -e "Lint...\t\t OK"
 
-# Run tests using testsilent.sh
+# Run tests
 OUTPUT_TEST=$(./scripts/testsilent.sh 2>&1)
 if [ $? -ne 0 ]; then
   echo "tests failed:"
   echo "$OUTPUT_TEST"
   exit 1
 fi
-echo -e "Tests\t\t OK"
+echo -e "Tests...\t OK"
 
 # Run build
 OUTPUT_BUILD=$(deno task build 2>&1)
@@ -45,5 +45,5 @@ if [ $? -ne 0 ]; then
   echo "$OUTPUT_BUILD"
   exit 1
 fi
-echo -e "Build\t\t OK"
+echo -e "Build...\t OK"
 

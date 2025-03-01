@@ -12,23 +12,28 @@ export type Curried<Args extends any[], R> = <P extends Partial<Args>>(
     : never
 
 /** Overload for generator functions (function*) */
-export function curry<Args extends any[], Y, Ret, N>(
+export function curried<Args extends any[], Y, Ret, N>(
     fn: (...args: Args) => Generator<Y, Ret, N>,
 ): Curried<Args, Generator<Y, Ret, N>>
 
 /** Overload for regular (non-generator) functions */
-export function curry<Args extends any[], R>(
+export function curried<Args extends any[], R>(
     fn: (...args: Args) => R,
 ): Curried<Args, R>
 
-export function curry(fn: Function) {
+export function curried(fn: Function) {
     return function curried(this: any, ...args: any[]): any {
         if (args.length >= fn.length) {
             // All arguments provided – invoke the original function
             return fn.apply(this, args)
         } else {
             // Partially apply and return a function to accept the rest
-            return (...nextArgs: any[]) => curried(...args, ...nextArgs)
+            // Capture 'this' context for later use
+            const context = this
+            return function (this: any, ...nextArgs: any[]) {
+                // Pass the original 'this' context when recursively calling curried
+                return curried.apply(context, [...args, ...nextArgs])
+            }
         }
     }
 }
