@@ -143,6 +143,16 @@ function isNumber(value: unknown): value is number {
     return typeof value === "number"
 }
 
+export function skip<T>(n: number): GenericTransform<T> {
+    let cnt = 0
+    return (input: T): T | undefined => {
+        if (cnt < n) {
+            cnt++
+            return undefined
+        } else return input
+    }
+}
+
 // Generic averaging transform for types that implement Averagable or are numbers
 export function avg<T extends Averagable<T>>(
     windowSize: number = 10,

@@ -3,10 +3,22 @@ import { curried } from "../utils/mod.ts"
 
 export type Transform<X, Y> = (input: Iterable<X>) => Iterable<Y>
 
-export function smooth(
-    windowSize: number = 10,
-): Transform<Averagable, Averagable> {
-    return function* (input: Iterable<Averagable>): Iterable<Averagable> {
+// data generators
+export function* range(
+    min: number,
+    max: number,
+): Iterable<number> {
+    for (let i = min; i <= max; i++) {
+        yield i
+    }
+}
+
+// transforms
+export const smooth = curried(
+    function* (
+        windowSize: number,
+        input: Iterable<Averagable>,
+    ): Iterable<Averagable> {
         const window: Averagable[] = []
 
         for (const item of input) {
@@ -17,27 +29,34 @@ export function smooth(
             // @ts-ignore
             yield average(window)
         }
-    }
-}
+    },
+)
 
-export function* range(
-    min: number,
-    max: number,
-): Iterable<number> {
-    for (let i = min; i <= max; i++) {
-        yield i
-    }
-}
-
-export function* map<T, U>(
+// skip N elements
+export const skip = curried(function* <T>(
+    n: number,
     input: Iterable<T>,
+): Iterable<T> {
+    let cnt = 0
+    for (const item of input) {
+        if (cnt < n) {
+            cnt++
+        } else {
+            yield item
+        }
+    }
+})
+
+export const map = curried(function* map<T, U>(
     fn: (item: T) => U,
+    input: Iterable<T>,
 ): Iterable<U> {
     for (const item of input) {
         yield fn(item)
     }
-}
+})
 
+// just for chunk implementation below
 export function mutableClear<T>(array: T[]): T[] {
     const copy = [...array]
     array.length = 0

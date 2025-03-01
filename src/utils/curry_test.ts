@@ -12,9 +12,7 @@ Deno.test("basic curry", () => {
 Deno.test("generator curry", () => {
     const add = curried(
         function* (x: number, iterable: Iterable<number>): Iterable<number> {
-            for (const n of iterable) {
-                yield x + n
-            }
+            for (const n of iterable) yield x + n
         },
     )
 
