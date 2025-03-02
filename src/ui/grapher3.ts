@@ -3,24 +3,38 @@ import * as Plotly from "npm:plotly.js-dist-min"
 import * as utils from "../utils/mod.ts"
 
 export interface GrapherSettings {
-    padding: number
     graph: Partial<Plotly.Config>
     layout: Partial<Plotly.Layout>
 }
 
 const defaultSettings: GrapherSettings = {
-    padding: 10,
     graph: { displayModeBar: false, responsive: true },
     layout: {
         template: "plotly_dark",
-        margin: { l: 50, r: 30, t: 30, b: 50 },
+        margin: { l: 25, r: 10, t: 10, b: 25 },
         autosize: true,
         paper_bgcolor: "black",
         plot_bgcolor: "black",
         font: {
             family: "monospace",
-            size: "1.2rem",
+            size: "1.5rem",
             color: "white",
+        },
+        xaxis: {
+            gridcolor: "rgba(255, 255, 255, 0.2)",
+            gridwidth: 1,
+        },
+        yaxis: {
+            gridcolor: "rgba(255, 255, 255, 0.2)",
+            gridwidth: 1,
+        },
+        legend: {
+            orientation: "h",
+            xanchor: "right",
+            yanchor: "bottom",
+            x: 1,
+            y: 0.05,
+            bgcolor: "rgba(0,0,0,0)",
         },
     },
 }
@@ -67,6 +81,6 @@ export class Grapher3 extends Window {
             this.settings.graph,
         )
 
-        Plotly.Plots.resize(this.element)
+        setTimeout(() => Plotly.Plots.resize(this.element), 0)
     }
 }
