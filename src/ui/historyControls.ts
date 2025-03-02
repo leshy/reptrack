@@ -2,6 +2,9 @@ import { History } from "../binary/history.ts"
 import { Window } from "./wm.ts"
 import { Controls } from "./controls.ts"
 
+export class KeypointControls extends Controls {
+}
+
 export class HistoryControls extends Controls {
     public frame = 0
     public isPlaying = false

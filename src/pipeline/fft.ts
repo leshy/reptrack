@@ -7,6 +7,7 @@ import * as grapher3 from "../ui/grapher3.ts"
 import { DataSeries, Grapher } from "../ui/grapher2.ts"
 import { runFFT } from "../fft.ts"
 import * as it from "../itransform/mod.ts"
+import * as Plotly from "npm:plotly.js-dist-min"
 
 export async function fft() {
     // Load the history file
@@ -19,12 +20,12 @@ export async function fft() {
     document.getElementById("window-container")?.appendChild(root.element)
 
     // graph windows
-    const graphsWindow = root.addWindow(new wm.Window("graphs"))
-    const euclidGrapherXWindow = graphsWindow.addWindow(
-        new grapher3.Grapher3("Euclidian History X Positions"),
+    const graphsWindow = root.addWindow(new wm.Window("Euclidian History"))
+    const sourceXgraph = graphsWindow.addWindow(
+        new grapher3.Grapher3("X Positions"),
     )
-    const euclidGrapherYWindow = graphsWindow.addWindow(
-        new grapher3.Grapher3("Euclidian History Y Positions"),
+    const sourceYgraph = graphsWindow.addWindow(
+        new grapher3.Grapher3("Y Positions"),
         //        new wm.SvgWindow("Euclid Y Positions", { preserveRatio: false }),
     )
 
@@ -44,18 +45,7 @@ export async function fft() {
     ]
 
     for (const name of poi) {
-        // euclidGrapher.drawKeypointGraph(
-        //     euclidGrapherYWindow,
-        //     name as keyof typeof binary.KeypointName,
-        //     "y",
-        // )
-
-        //euclidGrapher.drawKeypointGraph(
-        //    euclidGrapherXWindow,
-        //    name as keyof typeof binary.KeypointName,
-        //    "x",
-        //)
-        euclidGrapherXWindow.plotData(
+        sourceXgraph.plotData(
             [...euclidHistory.points(
                 binary.KeypointName[name],
             )].map((
@@ -63,7 +53,7 @@ export async function fft() {
             ) => point[0]),
             { name: name, color: ui.getRandomColor(name) },
         )
-        euclidGrapherYWindow.plotData(
+        sourceYgraph.plotData(
             [...euclidHistory.points(
                 binary.KeypointName[name],
             )].map((
@@ -72,58 +62,6 @@ export async function fft() {
             { name: name, color: ui.getRandomColor(name) },
         )
     }
-
-    euclidGrapherXWindow.linkGraph(euclidGrapherYWindow)
-
-    // // Add playhead annotations to the graphs
-    // const playheadIdX = euclidGrapher.addAnnotation(euclidGrapherXWindow, {
-    //     type: "line",
-    //     orientation: "vertical",
-    //     value: 0,
-    //     color: "#ff0000",
-    //     opacity: 0.8,
-    //     zIndex: 100,
-    // })
-
-    // const playheadIdY = euclidGrapher.addAnnotation(euclidGrapherYWindow, {
-    //     type: "line",
-    //     orientation: "vertical",
-    //     value: 0,
-    //     color: "#ff0000",
-    //     opacity: 0.8,
-    //     zIndex: 100,
-    // })
-
-    const fftWindow = root.addWindow(new wm.Window("FFT"))
-
-    const timeSeriesGrapher = fftWindow.addWindow(
-        new Grapher("Source Series", {
-            autoScale: true,
-            enableZoom: true,
-        }),
-    )
-
-    const fftGrapher = fftWindow.addWindow(
-        new Grapher("Output", {
-            autoScale: true,
-            enableZoom: true,
-        }),
-    )
-
-    // // Extract time series data for plotting
-    // const timeSeriesData: number[] = []
-    // for (let i = 0; i < fftResult.windowSize; i++) {
-    //     timeSeriesData.push(fftResult.keypointData[i][0]) // x-coordinate
-    // }
-
-    // //    Extract time series data for plotting
-    // const timeSeriesData: number[] = fftResult.keypointData.map((
-    //     point: binary.Point,
-    // ) => point[0])
-
-    // Filter out DC component (first value) and create filtered data series
-    // const dcComponentCutoff = 5 // Skip the first few frequencies, including DC component
-    // const filteredMagnitudes = fftMagnitudes.slice(dcComponentCutoff)
 
     const g3 = root.addWindow(
         new grapher3.Grapher3("Grapher3", {
@@ -136,76 +74,35 @@ export async function fft() {
         }),
     )
 
-    function FFTKeypoint(keypointId: number) {
-        const name = binary.keypointNames[keypointId]
-        const windowLen = 1024
+    function FFTKeypoint(
+        keypointId: number,
+        from: number,
+        to: number,
+    ) {
+        const name = binary.KeypointName[keypointId]
 
-        const timeSeriesData = Uint8Array.from(it.pipe(
+        const timeSeriesData = Array.from(it.pipe(
             euclidHistory.points(keypointId),
-            it.take(windowLen),
-            it.map((point: binary.Point) => point[0]),
+            it.skip(from),
+            it.take(to - from),
+            it.map((point: binary.Point) => point[1]),
         ))
 
-        const fftMagnitudes = new Uint16Array((windowLen / 2) - 2)
+        //        const fftMagnitudes = new Uint16Array((windowLen / 2) - 2)
 
         // we are smoothing and copying the data into fftMagnitudes in one pass
         const smoothFftMagnitudes = Uint16Array.from(it.pipe(
             runFFT(timeSeriesData),
-            it.skip(2),
-            it.copy(fftMagnitudes),
-            //it.chunk(5),
-            // @ts-ignore
-            //it.map(average) as it.Transform<number[], number>,
-            it.smooth(5),
+            it.skip(1),
+            //            it.copy(fftMagnitudes),
+            //it.smooth(3),
         ) as Iterable<number>)
 
-        // Create data series for time series graph
-        const timeSeriesDataSeries: { [key: string]: DataSeries } = {
-            "right_wrist_x": {
-                points: timeSeriesData,
-                options: {
-                    color: "#2196F3",
-                    label: "Source: Right Wrist X Position",
-                },
-            },
-        }
-
-        // Create data series for both full and filtered FFT magnitude graphs
-        const fftDataSeries: { [key: string]: DataSeries } = {
-            "fft_magnitude": {
-                points: fftMagnitudes,
-                options: {
-                    color: "#E91E63",
-                    label: "FFT Magnitude (Raw)",
-                    opacity: 0.5,
-                    width: 2,
-                },
-            },
-            "fft_magnitude_smoothed": {
-                points: smoothFftMagnitudes,
-                options: {
-                    color: "#E91E63",
-                    label: "FFT Magnitude (Smoothed)",
-                    width: 3,
-                },
-            },
-        }
-
-        // Set data ranges
-        timeSeriesGrapher.xRange = [0, timeSeriesData.length - 1]
-        timeSeriesGrapher.yRange = [
-            Math.min(...timeSeriesData) - 10,
-            Math.max(...timeSeriesData) + 10,
-        ]
-
-        fftGrapher.xRange = [0, fftMagnitudes.length - 1]
-        fftGrapher.yRange = [0, Math.max(...fftMagnitudes) * 1.1]
-
-        g3.plotData(fftMagnitudes, {
-            //color: "rgba(233, 30, 99, 0.75)",
-            name,
-            color: ui.getRandomColor(name),
-        })
+        // g3.plotData(fftMagnitudes, {
+        //     //color: "rgba(233, 30, 99, 0.75)",
+        //     name,
+        //     color: ui.getRandomColor(name),
+        // })
 
         g3.plotData(smoothFftMagnitudes, {
             //color: "rgb(233, 30, 99)",
@@ -214,20 +111,42 @@ export async function fft() {
             mode: "lines+markers",
             width: 3,
         })
-
-        // Update the graphs with data
-        timeSeriesGrapher.data = timeSeriesDataSeries
-        fftGrapher.data = fftDataSeries
     }
 
     skeleton.on("keypointClick", (event) => {
-        FFTKeypoint(event.index)
-        timeSeriesGrapher.title = "keypoint " + binary.KeypointName[event.index]
+        fftWindow.title = "keypoint " + binary.KeypointName[event.index]
     })
 
-    FFTKeypoint(binary.KeypointName.left_knee)
+    //FFTKeypoint(binary.KeypointName.left_knee)
 
     const euclidPlayer = new ui.HistoryControls(euclidHistory, euclidInputSvg)
+
+    // sourceXgraph.linkGraph(sourceYgraph, ([from, to]) => {
+    //     g3.clear()
+    //     for (const keypointName of poi) {
+    //         FFTKeypoint(binary.KeypointName[keypointName], from, to)
+    //     }
+    // })
+
+    euclidPlayer.on("frameChanged", (frame: number) => {
+        const windowSize = 64
+        if (frame < windowSize) return
+
+        g3.clear()
+
+        for (const keypointName of poi) {
+            FFTKeypoint(
+                binary.KeypointName[keypointName],
+                frame - windowSize,
+                frame,
+            )
+        }
+
+        sourceXgraph.setRange([frame - windowSize - 1, frame])
+        sourceYgraph.setRange([frame - windowSize - 1, frame])
+
+        g3.setRange([0, (windowSize / 2) - 2])
+    })
 
     // // Update playhead position when frame changes
     // euclidPlayer.on("frameChanged", (frame: number) => {
@@ -236,11 +155,11 @@ export async function fft() {
     //     const timestamp = pose.timestamp
 
     //     // Update playhead position in both graphs
-    //     euclidGrapher.updateAnnotation(euclidGrapherXWindow, playheadIdX, {
+    //     euclidGrapher.updateAnnotation(sourceXgraph, playheadIdX, {
     //         value: timestamp,
     //     })
 
-    //     euclidGrapher.updateAnnotation(euclidGrapherYWindow, playheadIdY, {
+    //     euclidGrapher.updateAnnotation(sourceYgraph, playheadIdY, {
     //         value: timestamp,
     //     })
     // })

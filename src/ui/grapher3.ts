@@ -18,7 +18,6 @@ export interface PlotlyLineOptions {
 
 const defaultLineOptions: PlotlyLineOptions = {
     width: 1,
-    shape: "spline",
 }
 
 export interface GrapherSettings {
@@ -46,7 +45,6 @@ const defaultSettings: GrapherSettings = {
         // time
         yaxis: {
             gridcolor: "rgba(255, 255, 255, 0)",
-            fixedrange: true,
         },
         legend: {
             orientation: "h",
@@ -59,13 +57,14 @@ const defaultSettings: GrapherSettings = {
     },
 }
 
+type Range = [number, number]
 /**
  * A graph component that extends Window to provide data visualization with Plotly
  */
 export class Grapher3 extends Window {
     // Core properties
     private settings: GrapherSettings
-
+    private drawn: boolean = false
     constructor(
         title: string = "",
         settings: Partial<GrapherSettings> = {},
@@ -79,13 +78,17 @@ export class Grapher3 extends Window {
         ) as GrapherSettings
     }
 
-    linkGraph(other: Grapher3) {
+    linkGraph(other: Grapher3, callback?: (range: Range) => any) {
         function applyZoom(
             // deno-lint-ignore no-explicit-any
             eventData: any,
             toGraph: Grapher3,
         ) {
-            console.log(eventData)
+            if (eventData["xaxis.range[0]"] && callback) {
+                callback(
+                    [eventData["xaxis.range[0]"], eventData["xaxis.range[1]"]],
+                )
+            }
             Plotly.relayout(toGraph.element, eventData)
         }
 
@@ -95,6 +98,12 @@ export class Grapher3 extends Window {
             // deno-lint-ignore no-explicit-any
             (eventData: any) => applyZoom(eventData, other),
         )
+    }
+
+    setRange(range: Range) {
+        Plotly.relayout(this.element, {
+            "xaxis.range": range,
+        })
     }
 
     /**
@@ -108,7 +117,7 @@ export class Grapher3 extends Window {
      * @param data The GraphPoints data to plot
      * @param options Additional plot options
      */
-    plotData(
+    async plotData(
         data: GraphPoints,
         options: {
             name?: string
@@ -144,18 +153,20 @@ export class Grapher3 extends Window {
         }
 
         // Check if a plot already exists by checking if Plotly data exists
-        const plotlyDiv = this.element as unknown as { data?: unknown[] }
-        if (plotlyDiv.data && plotlyDiv.data.length > 0) {
+        if (this.drawn) {
             Plotly.addTraces(this.element, trace)
         } else {
-            Plotly.newPlot(
-                this.element,
-                [trace],
-                this.settings.layout,
-                this.settings.graph,
+            this.drawn = true
+            console.log(
+                await Plotly.newPlot(
+                    this.element,
+                    [trace],
+                    this.settings.layout,
+                    this.settings.graph,
+                ),
             )
-            requestAnimationFrame(this.initPlot)
         }
+        //requestAnimationFrame(this.initPlot)
     }
 
     /**
