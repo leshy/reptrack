@@ -17,6 +17,8 @@
     "npm:eventemitter3@*": "5.0.1",
     "npm:fft-js@^0.0.12": "0.0.12",
     "npm:fp-ts@*": "2.16.9",
+    "npm:lodash@*": "4.17.21",
+    "npm:lodash@^4.17.21": "4.17.21",
     "npm:plotly.js-dist-min@*": "3.0.1",
     "npm:plotly@*": "1.0.6",
     "npm:plotly@^1.0.6": "1.0.6",
@@ -336,6 +338,9 @@
     "inherits@2.0.4": {
       "integrity": "sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ=="
     },
+    "lodash@4.17.21": {
+      "integrity": "sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg=="
+    },
     "long@4.0.0": {
       "integrity": "sha512-XsP+KhQif4bjX1kbuSiySJFNAehNxgLb6hPRGJ9QsUr8ajHkuXGdrHmFUTUUXhDwVX2R5bY4JNZEwbUiMhV+MA=="
     },
@@ -507,6 +512,7 @@
       "jsr:@std/assert@1",
       "npm:@tensorflow-models/pose-detection@^2.1.3",
       "npm:fft-js@^0.0.12",
+      "npm:lodash@^4.17.21",
       "npm:plotly@^1.0.6",
       "npm:prettier@^3.5.1",
       "npm:ts-deepmerge@^7.0.2",

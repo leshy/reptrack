@@ -29,9 +29,6 @@ export async function fft() {
         //        new wm.SvgWindow("Euclid Y Positions", { preserveRatio: false }),
     )
 
-    // graph drawing
-    const euclidGrapher = new ui.KeypointGrapher(euclidHistory, {})
-
     const skeleton = new ui.Skeleton(euclidHistory, "Euclid", { minScore: 0 })
     const euclidInputSvg = root.addWindow(
         skeleton,
@@ -195,12 +192,18 @@ export async function fft() {
         fftGrapher.yRange = [0, Math.max(...fftMagnitudes) * 1.1]
 
         g3.plotData(fftMagnitudes, {
-            name: "raw",
-            color: "rgba(233, 30, 99, 0.5)",
+            color: "rgba(233, 30, 99, 0.75)",
         })
+
         g3.plotData(smoothFftMagnitudes, {
-            name: "smooth",
             color: "rgb(233, 30, 99)",
+            mode: "lines+markers",
+            width: 3,
+        })
+
+        g3.plotData(smoothFftMagnitudes, {
+            color: "rgb(233, 30, 99)",
+            width: 1,
         })
 
         // Update the graphs with data

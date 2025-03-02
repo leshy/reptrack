@@ -2,8 +2,24 @@ import { Window } from "./wm.ts"
 import { AnyArray } from "../types/mod.ts"
 import * as Plotly from "npm:plotly.js-dist-min"
 import * as utils from "../utils/mod.ts"
+import { omit } from "npm:lodash"
 
 export type GraphPoints = [number, number][] | AnyArray<number> // Either [x,y] pairs or just y values
+
+export interface PlotlyLineOptions {
+    color?: string
+    width?: number
+    dash?: "solid" | "dot" | "dash" | "longdash" | "dashdot" | "longdashdot"
+    shape?: "linear" | "spline" | "hv" | "vh" | "hvh" | "vhv"
+    smoothing?: number
+    simplify?: boolean
+    mode?: "lines" | "markers" | "lines+markers"
+}
+
+const defaultLineOptions: PlotlyLineOptions = {
+    width: 1,
+    shape: "spline",
+}
 
 export interface GrapherSettings {
     graph: Partial<Plotly.Config>
@@ -69,25 +85,6 @@ export class Grapher3 extends Window {
      * Initialize the plot with default data
      */
     initPlot() {
-        // const trace1 = {
-        //     x: [1, 2, 3, 4],
-        //     y: [10, 15, 13, 17],
-        //     type: "scatter",
-        // }
-
-        // const trace2 = {
-        //     x: [1, 2, 3, 4],
-        //     y: [16, 5, 11, 9],
-        //     type: "scatter",
-        // }
-
-        // Plotly.newPlot(
-        //     this.element,
-        //     [trace1, trace2],
-        //     this.settings.layout,
-        //     this.settings.graph,
-        // )
-
         setTimeout(() => Plotly.Plots.resize(this.element), 0)
     }
 
@@ -100,15 +97,11 @@ export class Grapher3 extends Window {
         data: GraphPoints,
         options: {
             name?: string
-            color?: string
-            mode?: "lines" | "markers" | "lines+markers"
-        } = {},
+        } & PlotlyLineOptions = {},
     ) {
         // Default options
         const {
             name = "",
-            color = undefined,
-            mode = "lines",
         } = options
 
         const x: number[] = []
@@ -131,8 +124,8 @@ export class Grapher3 extends Window {
             y,
             name,
             type: "scatter",
-            mode,
-            ...(color ? { line: { color, width: 1 } } : { width: 1 }),
+            mode: options.mode || "lines",
+            line: { ...defaultLineOptions, ...omit(options, "name", "mode") },
         }
 
         // Check if a plot already exists by checking if Plotly data exists
