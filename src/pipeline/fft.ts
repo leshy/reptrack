@@ -4,13 +4,15 @@ import * as wm from "../ui/wm.ts"
 import * as binary from "../binary/mod.ts"
 import * as ui from "../ui/mod.ts"
 import { DataSeries, Grapher } from "../ui/grapher2.ts"
+import { PlotlyGrapher } from "../ui/plotlyGrapher.ts"
+import type { DataSeries as PlotlyDataSeries } from "../ui/plotlyGrapher.ts"
 import { runFFT } from "../fft.ts"
 import * as it from "../itransform/mod.ts"
 import { average } from "../types/mod.ts"
 
 export async function fft() {
     // Load the history file
-    const euclidHistory = await binary.HistoryFile.load("../euclid10.bin.gz")
+    const euclidHistory = await binary.HistoryFile.load("euclid10.bin.gz")
 
     // @ts-ignore
     globalThis.h = euclidHistory
@@ -90,6 +92,66 @@ export async function fft() {
         new Grapher("Output", {
             autoScale: true,
             enableZoom: true,
+        }),
+    )
+
+    // Add Plotly FFT Window for comparison
+    const plotlyFftWindow = root.addWindow(new wm.Window("Plotly FFT"))
+
+    const plotlyTimeSeriesGrapher = plotlyFftWindow.addWindow(
+        new PlotlyGrapher("Source Series (Plotly)", {
+            autoScale: true,
+            enableZoom: true,
+            xAxisTitle: "Frame",
+            yAxisTitle: "Position",
+            plotLayout: {
+                paper_bgcolor: "black",
+                plot_bgcolor: "black",
+                font: {
+                    color: "white",
+                },
+                xaxis: {
+                    gridcolor: "#333",
+                    zerolinecolor: "#666",
+                },
+                yaxis: {
+                    gridcolor: "#333",
+                    zerolinecolor: "#666",
+                },
+            },
+        }),
+    )
+
+    const plotlyFftGrapher = plotlyFftWindow.addWindow(
+        new PlotlyGrapher("FFT Output (Plotly)", {
+            autoScale: true,
+            enableZoom: true,
+            xAxisTitle: "Frequency",
+            yAxisTitle: "Magnitude",
+            plotLayout: {
+                hovermode: "x",
+                legend: {
+                    orientation: "h",
+                    y: -0.2,
+                    font: {
+                        color: "white",
+                    },
+                    bgcolor: "rgba(0,0,0,0.5)",
+                },
+                paper_bgcolor: "black",
+                plot_bgcolor: "black",
+                font: {
+                    color: "white",
+                },
+                xaxis: {
+                    gridcolor: "#333",
+                    zerolinecolor: "#666",
+                },
+                yaxis: {
+                    gridcolor: "#333",
+                    zerolinecolor: "#666",
+                },
+            },
         }),
     )
 
@@ -174,6 +236,46 @@ export async function fft() {
         // Update the graphs with data
         timeSeriesGrapher.data = timeSeriesDataSeries
         fftGrapher.data = fftDataSeries
+
+        // Create data series for Plotly time series graph
+        const plotlyTimeSeriesData: { [key: string]: PlotlyDataSeries } = {
+            "source_data": {
+                points: [...timeSeriesData],
+                options: {
+                    color: "#2196F3",
+                    name: "Source Data",
+                    width: 2,
+                    mode: "lines",
+                },
+            },
+        }
+
+        // Create data series for Plotly FFT magnitude graph
+        const plotlyFftData: { [key: string]: PlotlyDataSeries } = {
+            "fft_raw": {
+                points: [...fftMagnitudes],
+                options: {
+                    color: "#E91E63",
+                    name: "FFT Raw",
+                    width: 1,
+                    opacity: 0.5,
+                    mode: "lines",
+                },
+            },
+            "fft_smoothed": {
+                points: [...smoothFftMagnitudes],
+                options: {
+                    color: "#9C27B0",
+                    name: "FFT Smoothed",
+                    width: 2.5,
+                    mode: "lines",
+                },
+            },
+        }
+
+        // Update Plotly graphs with the data
+        plotlyTimeSeriesGrapher.data = plotlyTimeSeriesData
+        plotlyFftGrapher.data = plotlyFftData
     }
 
     skeleton.on("keypointClick", (event) => {
