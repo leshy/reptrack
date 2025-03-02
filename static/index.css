@@ -38,7 +38,7 @@ body {
     padding: 0;
     max-width: calc(min(100ch, round(down, 100%, 1ch)));
     line-height: var(--line-height);
-    overflow-x: hidden;
+    overflow: hidden;
     background-color: black;
 }
 
@@ -153,8 +153,8 @@ input[type="range"]::-moz-range-thumb:hover {
     border: 1px solid #ccc;
     box-sizing: border-box;
     min-width: 33vw;
-    flex: 1 1 33vh;
-    min-height: 33vh;
+    flex: 1 1 30vh;
+    min-height: 30vh;
     display: flex;
     flex-direction: column;
 }
