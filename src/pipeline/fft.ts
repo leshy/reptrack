@@ -7,7 +7,6 @@ import * as grapher3 from "../ui/grapher3.ts"
 import { DataSeries, Grapher } from "../ui/grapher2.ts"
 import { runFFT } from "../fft.ts"
 import * as it from "../itransform/mod.ts"
-import { average } from "../types/mod.ts"
 
 export async function fft() {
     // Load the history file
@@ -22,10 +21,10 @@ export async function fft() {
     // graph windows
     const graphsWindow = root.addWindow(new wm.Window("graphs"))
     const euclidGrapherXWindow = graphsWindow.addWindow(
-        new grapher3.Grapher3("Euclid X Positions"),
+        new grapher3.Grapher3("Euclidian History X Positions"),
     )
     const euclidGrapherYWindow = graphsWindow.addWindow(
-        new grapher3.Grapher3("Euclid Y Positions"),
+        new grapher3.Grapher3("Euclidian History Y Positions"),
         //        new wm.SvgWindow("Euclid Y Positions", { preserveRatio: false }),
     )
 
@@ -73,6 +72,8 @@ export async function fft() {
             { name: name, color: ui.getRandomColor(name) },
         )
     }
+
+    euclidGrapherXWindow.linkGraph(euclidGrapherYWindow)
 
     // // Add playhead annotations to the graphs
     // const playheadIdX = euclidGrapher.addAnnotation(euclidGrapherXWindow, {
@@ -124,11 +125,19 @@ export async function fft() {
     // const dcComponentCutoff = 5 // Skip the first few frequencies, including DC component
     // const filteredMagnitudes = fftMagnitudes.slice(dcComponentCutoff)
 
-    const g3 = root.addWindow(new grapher3.Grapher3("Grapher3"))
-
-    root.addWindow(new ui.Window("test"))
+    const g3 = root.addWindow(
+        new grapher3.Grapher3("Grapher3", {
+            layout: {
+                legend: {
+                    x: 0.95,
+                    y: 1,
+                },
+            },
+        }),
+    )
 
     function FFTKeypoint(keypointId: number) {
+        const name = binary.keypointNames[keypointId]
         const windowLen = 1024
 
         const timeSeriesData = Uint8Array.from(it.pipe(
@@ -144,9 +153,10 @@ export async function fft() {
             runFFT(timeSeriesData),
             it.skip(2),
             it.copy(fftMagnitudes),
-            it.chunk(5),
+            //it.chunk(5),
             // @ts-ignore
-            it.map(average) as it.Transform<number[], number>,
+            //it.map(average) as it.Transform<number[], number>,
+            it.smooth(5),
         ) as Iterable<number>)
 
         // Create data series for time series graph
@@ -192,18 +202,17 @@ export async function fft() {
         fftGrapher.yRange = [0, Math.max(...fftMagnitudes) * 1.1]
 
         g3.plotData(fftMagnitudes, {
-            color: "rgba(233, 30, 99, 0.75)",
+            //color: "rgba(233, 30, 99, 0.75)",
+            name,
+            color: ui.getRandomColor(name),
         })
 
         g3.plotData(smoothFftMagnitudes, {
-            color: "rgb(233, 30, 99)",
+            //color: "rgb(233, 30, 99)",
+            name,
+            color: ui.getRandomColor(name),
             mode: "lines+markers",
             width: 3,
-        })
-
-        g3.plotData(smoothFftMagnitudes, {
-            color: "rgb(233, 30, 99)",
-            width: 1,
         })
 
         // Update the graphs with data

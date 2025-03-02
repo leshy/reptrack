@@ -153,8 +153,8 @@ input[type="range"]::-moz-range-thumb:hover {
     border: 1px solid #ccc;
     box-sizing: border-box;
     min-width: 33vw;
-    flex: 1 1 30vh;
-    min-height: 30vh;
+    flex: 1 1 33vh;
+    min-height: 33vh;
     display: flex;
     flex-direction: column;
 }

@@ -77,17 +77,32 @@ export class Grapher3 extends Window {
             defaultSettings,
             settings,
         ) as GrapherSettings
+    }
 
-        this.initPlot()
+    linkGraph(other: Grapher3) {
+        function applyZoom(
+            // deno-lint-ignore no-explicit-any
+            eventData: any,
+            toGraph: Grapher3,
+        ) {
+            console.log(eventData)
+            Plotly.relayout(toGraph.element, eventData)
+        }
+
+        // @ts-ignore
+        this.element.on(
+            "plotly_relayout",
+            // deno-lint-ignore no-explicit-any
+            (eventData: any) => applyZoom(eventData, other),
+        )
     }
 
     /**
      * Initialize the plot with default data
      */
-    initPlot() {
-        setTimeout(() => Plotly.Plots.resize(this.element), 0)
+    initPlot = () => {
+        Plotly.Plots.resize(this.element)
     }
-
     /**
      * Plot data from GraphPoints
      * @param data The GraphPoints data to plot
@@ -139,9 +154,8 @@ export class Grapher3 extends Window {
                 this.settings.layout,
                 this.settings.graph,
             )
+            requestAnimationFrame(this.initPlot)
         }
-
-        setTimeout(() => Plotly.Plots.resize(this.element), 0)
     }
 
     /**
