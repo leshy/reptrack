@@ -22,10 +22,11 @@ export async function fft() {
     // graph windows
     const graphsWindow = root.addWindow(new wm.Window("graphs"))
     const euclidGrapherXWindow = graphsWindow.addWindow(
-        new wm.SvgWindow("Euclid X Positions", { preserveRatio: false }),
+        new grapher3.Grapher3("Euclid X Positions"),
     )
     const euclidGrapherYWindow = graphsWindow.addWindow(
-        new wm.SvgWindow("Euclid Y Positions", { preserveRatio: false }),
+        new grapher3.Grapher3("Euclid Y Positions"),
+        //        new wm.SvgWindow("Euclid Y Positions", { preserveRatio: false }),
     )
 
     // graph drawing
@@ -36,7 +37,7 @@ export async function fft() {
         skeleton,
     )
 
-    const poi = [
+    const poi: binary.KeypointNameType[] = [
         "nose",
         "left_wrist",
         "right_wrist",
@@ -47,36 +48,53 @@ export async function fft() {
     ]
 
     for (const name of poi) {
-        euclidGrapher.drawKeypointGraph(
-            euclidGrapherYWindow,
-            name as keyof typeof binary.KeypointName,
-            "y",
+        // euclidGrapher.drawKeypointGraph(
+        //     euclidGrapherYWindow,
+        //     name as keyof typeof binary.KeypointName,
+        //     "y",
+        // )
+
+        //euclidGrapher.drawKeypointGraph(
+        //    euclidGrapherXWindow,
+        //    name as keyof typeof binary.KeypointName,
+        //    "x",
+        //)
+        euclidGrapherXWindow.plotData(
+            [...euclidHistory.points(
+                binary.KeypointName[name],
+            )].map((
+                point: binary.Point,
+            ) => point[0]),
+            { name: name, color: ui.getRandomColor(name) },
         )
-        euclidGrapher.drawKeypointGraph(
-            euclidGrapherXWindow,
-            name as keyof typeof binary.KeypointName,
-            "x",
+        euclidGrapherYWindow.plotData(
+            [...euclidHistory.points(
+                binary.KeypointName[name],
+            )].map((
+                point: binary.Point,
+            ) => point[1]),
+            { name: name, color: ui.getRandomColor(name) },
         )
     }
 
-    // Add playhead annotations to the graphs
-    const playheadIdX = euclidGrapher.addAnnotation(euclidGrapherXWindow, {
-        type: "line",
-        orientation: "vertical",
-        value: 0,
-        color: "#ff0000",
-        opacity: 0.8,
-        zIndex: 100,
-    })
+    // // Add playhead annotations to the graphs
+    // const playheadIdX = euclidGrapher.addAnnotation(euclidGrapherXWindow, {
+    //     type: "line",
+    //     orientation: "vertical",
+    //     value: 0,
+    //     color: "#ff0000",
+    //     opacity: 0.8,
+    //     zIndex: 100,
+    // })
 
-    const playheadIdY = euclidGrapher.addAnnotation(euclidGrapherYWindow, {
-        type: "line",
-        orientation: "vertical",
-        value: 0,
-        color: "#ff0000",
-        opacity: 0.8,
-        zIndex: 100,
-    })
+    // const playheadIdY = euclidGrapher.addAnnotation(euclidGrapherYWindow, {
+    //     type: "line",
+    //     orientation: "vertical",
+    //     value: 0,
+    //     color: "#ff0000",
+    //     opacity: 0.8,
+    //     zIndex: 100,
+    // })
 
     const fftWindow = root.addWindow(new wm.Window("FFT"))
 
@@ -109,7 +127,7 @@ export async function fft() {
     // const dcComponentCutoff = 5 // Skip the first few frequencies, including DC component
     // const filteredMagnitudes = fftMagnitudes.slice(dcComponentCutoff)
 
-    const _g3 = root.addWindow(new grapher3.Grapher3("Grapher3"))
+    const g3 = root.addWindow(new grapher3.Grapher3("Grapher3"))
 
     root.addWindow(new ui.Window("test"))
 
@@ -176,6 +194,15 @@ export async function fft() {
         fftGrapher.xRange = [0, fftMagnitudes.length - 1]
         fftGrapher.yRange = [0, Math.max(...fftMagnitudes) * 1.1]
 
+        g3.plotData(fftMagnitudes, {
+            name: "raw",
+            color: "rgba(233, 30, 99, 0.5)",
+        })
+        g3.plotData(smoothFftMagnitudes, {
+            name: "smooth",
+            color: "rgb(233, 30, 99)",
+        })
+
         // Update the graphs with data
         timeSeriesGrapher.data = timeSeriesDataSeries
         fftGrapher.data = fftDataSeries
@@ -190,21 +217,21 @@ export async function fft() {
 
     const euclidPlayer = new ui.HistoryControls(euclidHistory, euclidInputSvg)
 
-    // Update playhead position when frame changes
-    euclidPlayer.on("frameChanged", (frame: number) => {
-        // Get the timestamp for the current frame
-        const pose = euclidHistory.getPoseAt(frame)
-        const timestamp = pose.timestamp
+    // // Update playhead position when frame changes
+    // euclidPlayer.on("frameChanged", (frame: number) => {
+    //     // Get the timestamp for the current frame
+    //     const pose = euclidHistory.getPoseAt(frame)
+    //     const timestamp = pose.timestamp
 
-        // Update playhead position in both graphs
-        euclidGrapher.updateAnnotation(euclidGrapherXWindow, playheadIdX, {
-            value: timestamp,
-        })
+    //     // Update playhead position in both graphs
+    //     euclidGrapher.updateAnnotation(euclidGrapherXWindow, playheadIdX, {
+    //         value: timestamp,
+    //     })
 
-        euclidGrapher.updateAnnotation(euclidGrapherYWindow, playheadIdY, {
-            value: timestamp,
-        })
-    })
+    //     euclidGrapher.updateAnnotation(euclidGrapherYWindow, playheadIdY, {
+    //         value: timestamp,
+    //     })
+    // })
 
     euclidPlayer.nextFrame()
 }

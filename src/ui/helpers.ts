@@ -77,3 +77,14 @@ function removeQuickDisplay() {
     if (line) line.remove()
     document.removeEventListener("mousemove", removeQuickDisplay)
 }
+
+export function getRandomColor(str: string): string {
+    let hash = 0
+    for (let i = 0; i < str.length; i++) {
+        hash = str.charCodeAt(i) + ((hash << 5) - hash)
+    }
+    const hue = Math.abs(hash % 360)
+    const saturation = (hash % 31) + 70 // 70-100%
+    const lightness = (hash % 31) + 60 // 60-90%
+    return `hsl(${hue}, ${saturation}%, ${lightness}%)`
+}
