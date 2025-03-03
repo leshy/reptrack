@@ -25,14 +25,16 @@ export enum KeypointName {
     "right_ankle",
 }
 
-export type KeypointNameType = keyof typeof KeypointName
+type KeypointNameType = keyof typeof KeypointName
 
-export const keypointNames: KeypointNameType[] = Object.keys(
-    KeypointName,
-)
-    .filter(
-        (key) => isNaN(Number(key)),
-    ) as KeypointNameType[]
+export const keypointNameSet: Set<KeypointNameType> = new Set(
+    Object.keys(
+        KeypointName,
+    )
+        .filter(
+            (key) => isNaN(Number(key)),
+        ),
+) as Set<KeypointNameType>
 
 export function isEmpty(
     point: Point | undefined,

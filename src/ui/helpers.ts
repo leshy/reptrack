@@ -78,7 +78,8 @@ function removeQuickDisplay() {
     document.removeEventListener("mousemove", removeQuickDisplay)
 }
 
-export function getRandomColor(str: string): string {
+export function getRandomColor(str: string | number): string {
+    str = String(str)
     let hash = 0
     for (let i = 0; i < str.length; i++) {
         hash = str.charCodeAt(i) + ((hash << 5) - hash)

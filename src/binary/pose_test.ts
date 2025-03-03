@@ -1,4 +1,4 @@
-import { KeypointName, Pose } from "./pose.ts"
+import { KeypointName, keypointNameSet, Pose } from "./pose.ts"
 import {
     assert,
     assertAlmostEquals,
@@ -162,4 +162,50 @@ Deno.test("indexedKeypoints iterator", () => {
         assertEquals(y, Math.round(index + 0.7))
         assertAlmostEquals(score, (index % 256) / 255, 0.01)
     }
+})
+
+Deno.test("keypoint enum", () => {
+    const data = {
+        "0": "nose",
+        "1": "left_eye",
+        "2": "right_eye",
+        "3": "left_ear",
+        "4": "right_ear",
+        "5": "left_shoulder",
+        "6": "right_shoulder",
+        "7": "left_elbow",
+        "8": "right_elbow",
+        "9": "left_wrist",
+        "10": "right_wrist",
+        "11": "left_hip",
+        "12": "right_hip",
+        "13": "left_knee",
+        "14": "right_knee",
+        "15": "left_ankle",
+        "16": "right_ankle",
+        nose: 0,
+        left_eye: 1,
+        right_eye: 2,
+        left_ear: 3,
+        right_ear: 4,
+        left_shoulder: 5,
+        right_shoulder: 6,
+        left_elbow: 7,
+        right_elbow: 8,
+        left_wrist: 9,
+        right_wrist: 10,
+        left_hip: 11,
+        right_hip: 12,
+        left_knee: 13,
+        right_knee: 14,
+        left_ankle: 15,
+        right_ankle: 16,
+    }
+
+    assertEquals(KeypointName, data)
+
+    console.log(keypointNameSet)
+
+    const bla: KeypointName[] = [KeypointName.nose]
+    console.log(bla)
 })

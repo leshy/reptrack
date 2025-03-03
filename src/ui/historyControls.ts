@@ -1,8 +1,72 @@
 import { History } from "../binary/history.ts"
+import { KeypointName } from "../binary/pose.ts"
 import { Window } from "./wm.ts"
 import { Controls } from "./controls.ts"
 
 export class KeypointControls extends Controls {
+    private selectedKeypoints: Set<number> = new Set()
+
+    constructor(window: Window) {
+        super(window)
+        // Set grid layout for keypoint controls to allow flexible wrapping
+        this.setLayout("grid")
+        this.initControls()
+    }
+
+    private initControls() {
+        // Create checkbox buttons for each keypoint from the KeypointName enum
+        const options = Object.keys(KeypointName)
+            .filter((key) => isNaN(Number(key)))
+            .map((name) => ({
+                id: `keypoint-${name}`,
+                label: name.replace("_", " "),
+                value: KeypointName[name as keyof typeof KeypointName],
+            }))
+
+        // Add the checkbox group
+        this.addCheckboxGroup(
+            "keypoints",
+            options,
+            [], // No initial selections
+            (value, isChecked) => {
+                const keypointIndex = value as number
+
+                if (isChecked) {
+                    this.selectedKeypoints.add(keypointIndex)
+                } else {
+                    this.selectedKeypoints.delete(keypointIndex)
+                }
+
+                this.emit("keypointChanged", keypointIndex, isChecked)
+            },
+        )
+    }
+
+    // Get all selected keypoint indices
+    getSelectedKeypoints(): number[] {
+        return Array.from(this.selectedKeypoints)
+    }
+
+    // Check if a keypoint is selected
+    isKeypointSelected(index: number): boolean {
+        return this.selectedKeypoints.has(index)
+    }
+
+    // Toggle a keypoint selection programmatically
+    toggleKeypoint(index: number, isChecked?: boolean) {
+        if (index >= 0 && index < Object.keys(KeypointName).length / 2) {
+            const newState = isChecked ?? !this.isKeypointSelected(index)
+
+            if (newState) {
+                this.selectedKeypoints.add(index)
+            } else {
+                this.selectedKeypoints.delete(index)
+            }
+
+            this.setCheckboxState("keypoints", index, newState)
+            this.emit("keypointChanged", index, newState)
+        }
+    }
 }
 
 export class HistoryControls extends Controls {
@@ -20,21 +84,6 @@ export class HistoryControls extends Controls {
 
     get total() {
         return this.history.count
-    }
-
-    // Type declarations to improve type safety
-    override on(
-        event: "frameChanged",
-        listener: (frame: number) => void,
-    ): this {
-        return super.on(event, listener)
-    }
-
-    override off(
-        event: "frameChanged",
-        listener: (frame: number) => void,
-    ): this {
-        return super.off(event, listener)
     }
 
     nextFrame() {

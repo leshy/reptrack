@@ -22,12 +22,10 @@ export function runFFT(data: Iterable<number> | AnyArray<number>) {
     const input = new Float32Array(windowSize * 2)
     input.fill(0)
 
-    // Fill the real parts; imaginary parts remain 0.
     for (let i = 0; i < windowSize; i++) {
         input[i * 2] = dataArray[i]
     }
 
-    // Run FFT and clean up.
     return fft.fft(input)
 }
 
@@ -40,8 +38,6 @@ export function* magnitudes(output: Float32Array): Generator<number> {
 }
 
 export function findDominant(output: Float32Array): [number, number] {
-    // Determine number of unique bins:
-    // For even windowSize, unique bins = windowSize/2 + 1, else (windowSize+1)/2.
     let maxMagnitude = 0
     let maxFrequency = 0
     for (let i = 0; i < output.length; i++) {

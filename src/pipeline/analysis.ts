@@ -1,6 +1,7 @@
 import _webfft from "npm:webfft"
 import "npm:@tensorflow/tfjs-backend-webgl"
 import * as wm from "../ui/wm.ts"
+import { KeypointName } from "../binary/mod.ts"
 import * as binary from "../binary/mod.ts"
 import * as ui from "../ui/mod.ts"
 import * as grapher3 from "../ui/grapher3.ts"
@@ -22,7 +23,8 @@ export async function analysis() {
         new ui.Skeleton(euclidHistory, "Euclid"),
     )
 
-    const bla = root.addWindow(new wm.Window("Test"))
+    const controlsWindow = root.addWindow(new wm.Window("Keypoint Selection"))
+    new ui.KeypointControls(controlsWindow)
 
     const xgraph = graphsWindow.addWindow(
         new grapher3.Grapher3("X Positions"),
@@ -34,20 +36,23 @@ export async function analysis() {
 
     const euclidPlayer = new ui.HistoryControls(euclidHistory, skeleton)
 
-    const poi: binary.KeypointNameType[] = [
-        "nose",
-        "left_wrist",
-        "right_wrist",
-        "left_knee",
-        "right_knee",
-        "left_ankle",
-        "right_ankle",
+    // Initial keypoints of interest
+    const poi: KeypointName[] = [
+        KeypointName.nose,
+        KeypointName.left_wrist,
+        KeypointName.right_wrist,
+        KeypointName.left_knee,
+        KeypointName.right_knee,
+        KeypointName.left_ankle,
+        KeypointName.right_ankle,
     ]
 
-    for (const name of poi) {
+    // Plot initial data
+    for (const kp of poi) {
+        const name = KeypointName[kp]
         xgraph.plotData(
             [...euclidHistory.points(
-                binary.KeypointName[name],
+                kp,
             )].map((
                 point: binary.Point,
             ) => point[0]),
@@ -55,7 +60,7 @@ export async function analysis() {
         )
         ygraph.plotData(
             [...euclidHistory.points(
-                binary.KeypointName[name],
+                kp,
             )].map((
                 point: binary.Point,
             ) => point[1]),

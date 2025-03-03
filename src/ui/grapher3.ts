@@ -78,7 +78,7 @@ export class Grapher3 extends Window {
         ) as GrapherSettings
     }
 
-    linkGraph(other: Grapher3, callback?: (range: Range) => any) {
+    linkGraph(other: Grapher3, callback?: (range: Range) => void) {
         function applyZoom(
             // deno-lint-ignore no-explicit-any
             eventData: any,

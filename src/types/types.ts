@@ -9,3 +9,18 @@ export type TypedArray =
     | Float64Array
 
 export type AnyArray<T> = TypedArray | Array<T>
+
+export function isTypedArray(data: unknown): data is TypedArray {
+    return data instanceof Int8Array ||
+        data instanceof Uint8Array ||
+        data instanceof Int16Array ||
+        data instanceof Uint16Array ||
+        data instanceof Int32Array ||
+        data instanceof Uint32Array ||
+        data instanceof Float32Array ||
+        data instanceof Float64Array
+}
+
+export function isAnyArray<T>(data: unknown): data is AnyArray<T> {
+    return Array.isArray(data) || isTypedArray(data)
+}
