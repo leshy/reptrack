@@ -1,21 +1,22 @@
 import Webfft from "npm:webfft"
 import { AnyArray } from "./types/mod.ts"
-import { collect, padToPowerOfTwo } from "./utils/mod.ts"
+import { collect, padToPowerOfTwo, setValue } from "./utils/mod.ts"
 
-const fftInstances = {}
+const fftInstances: { [key: string]: Webfft } = {}
+
+export function getFFT(windowSize: number): Webfft {
+    const fft = fftInstances[windowSize]
+    if (fft) return fft
+    return setValue(windowSize, new Webfft(windowSize), fftInstances)
+}
 
 export function runFFT(data: Iterable<number> | AnyArray<number>) {
-    // Ensure data is an array
-    //@ts-ignore
     const dataArray = padToPowerOfTwo(collect(data))
     const windowSize = dataArray.length
-    // @ts-ignore
     if (!fftInstances[windowSize]) {
-        // @ts-ignore
         fftInstances[windowSize] = new Webfft(windowSize)
     }
 
-    // @ts-ignore
     const fft = fftInstances[windowSize]
 
     const input = new Float32Array(windowSize * 2)
