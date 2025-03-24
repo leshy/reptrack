@@ -1,5 +1,5 @@
 import { Window } from "./wm.ts"
-import { AnyArray } from "../types/mod.ts"
+import { AnyArray, isObject } from "../types/mod.ts"
 import * as Plotly from "npm:plotly.js-dist-min"
 import * as utils from "../utils/mod.ts"
 import { omit } from "npm:lodash"
@@ -131,14 +131,25 @@ export class Grapher3 extends Window {
         const x: number[] = []
         const y: number[] = []
 
+        const size: number[] = []
+        const color: string[] = []
+        
         let cnt = 0
         for (const item of data) {
+            cnt++
             if (Array.isArray(item)) {
                 y.push(item[1])
                 x.push(item[0])
+            } else if (isObject(item)) {
+                x.push(item.x)
+                if (item.y) y.push(item.y)
+                else y.push(cnt)
+
+                if (item.size) { size.push(item.size) }
+                if (item.color) { color.push(item.color) }
             } else {
                 y.push(item)
-                x.push(cnt++)
+                x.push(cnt)
             }
         }
 
@@ -147,6 +158,7 @@ export class Grapher3 extends Window {
             x,
             y,
             name,
+            marker: {size, color, opacity: 1, line: { width: 0 }},
             type: "scatter",
             mode: options.mode || "lines",
             line: { ...defaultLineOptions, ...omit(options, "name", "mode") },

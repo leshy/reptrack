@@ -40,7 +40,8 @@ export function* magnitudes(output: Float32Array): Generator<number> {
 export function findDominant(output: Float32Array): [number, number] {
     let maxMagnitude = 0
     let maxFrequency = 0
-    for (let i = 0; i < output.length; i++) {
+    console.log(output.length)
+    for (let i = 2; i < output.length / 4; i++) {
         const real = output[i * 2]
         const imag = output[i * 2 + 1]
         const magnitude = Math.sqrt(real * real + imag * imag)

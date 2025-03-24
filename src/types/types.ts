@@ -24,3 +24,7 @@ export function isTypedArray(data: unknown): data is TypedArray {
 export function isAnyArray<T>(data: unknown): data is AnyArray<T> {
     return Array.isArray(data) || isTypedArray(data)
 }
+
+export function isObject<T>(value: unknown): value is Record<string, T> {
+    return typeof value === "object" && value !== null
+}

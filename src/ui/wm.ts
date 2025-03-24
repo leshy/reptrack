@@ -41,7 +41,7 @@ export class Window extends EventEmitter {
         return window
     }
 
-    removeWindow(window: Window) {
+     removeWindow(window: Window) {
         const index = this.subWindows.indexOf(window)
         if (index !== -1) {
             this.subWindows.splice(index, 1)

@@ -89,3 +89,13 @@ export function getRandomColor(str: string | number): string {
     const lightness = (hash % 31) + 60 // 60-90%
     return `hsl(${hue}, ${saturation}%, ${lightness}%)`
 }
+export function getRangedColor(range: number, value: number): string {
+    // Ensure value is within the range
+    const clampedValue = value % range
+
+    // Calculate hue (0 to 360 degrees)
+    const hue = (clampedValue / range) * 360
+
+    // Return the HSL color string
+    return `hsl(${Math.round(hue)}, 60%, 50%)`
+}
