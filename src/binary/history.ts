@@ -145,7 +145,7 @@ export class HistoryFile extends History {
                 // Handle relative paths - in browser add leading slash, in Deno use import.meta.url
                 if (typeof document !== "undefined") {
                     // Browser environment
-                    url = "/" + urlInput
+                    url = urlInput
                 } else {
                     // Deno environment
                     url = new URL(urlInput, import.meta.url).toString()
